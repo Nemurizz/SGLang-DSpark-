@@ -1,0 +1,264 @@
+{
+  "base_url": "http://127.0.0.1:30000",
+  "tp_size": 1,
+  "dp_size": 1,
+  "verify_num_draft_tokens": 8,
+  "simulate_acc_len": 1.0,
+  "batch_size_per_rank_sweep": [
+    1,
+    4,
+    8
+  ],
+  "fracs": [
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "settings": {
+    "input_len": 16,
+    "temperature": 1.0,
+    "min_steady_steps": 16,
+    "min_steady_seconds": 2.0,
+    "round_timeout_seconds": 120.0,
+    "ramp_token_slack": 0
+  },
+  "repeats": 1,
+  "seed": 42,
+  "timestamp": 1788095077.7787673,
+  "timestamp_iso": "2026-08-30T21:04:37+0800",
+  "conversion_formula": "batch_tokens = num_running_reqs_per_rank * verify_num_draft_tokens; steps_per_sec = 1 / median(server-side step_time over aligned steady steps)",
+  "static_conditioning_caveat": "Profiled with SGLANG_RAGGED_VERIFY_MODE=static: a verify step of B tokens comes from B/(gamma+1) requests, the fewest possible for that B. A compact-mode step with the same B usually spans more requests and reads more KV history, so the table slightly over-estimates steps_per_sec and the scheduler may admit slightly more than optimal. Much smaller bias than the retired non-spec decode proxy, and in the opposite direction.",
+  "records_jsonl": "qwen3-14b-rtxpro6000-additive-sps.records.jsonl",
+  "rounds_jsonl": "qwen3-14b-rtxpro6000-additive-sps.rounds.jsonl",
+  "round_summaries": [
+    {
+      "repeat": 0,
+      "batch_size": 1,
+      "batch_size_per_rank": 1,
+      "frac": 0.25,
+      "batch_tokens": 2,
+      "steps_per_sec": 39.68883949833307,
+      "num_steady_steps": 153,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.025196000000000003
+      ],
+      "load_info": {
+        "num_requests": 1,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.134,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 1,
+      "batch_size_per_rank": 1,
+      "frac": 0.5,
+      "batch_tokens": 4,
+      "steps_per_sec": 39.70207562451365,
+      "num_steady_steps": 157,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.0251876
+      ],
+      "load_info": {
+        "num_requests": 1,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.199,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 1,
+      "batch_size_per_rank": 1,
+      "frac": 0.75,
+      "batch_tokens": 6,
+      "steps_per_sec": 39.690729833140175,
+      "num_steady_steps": 157,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.0251948
+      ],
+      "load_info": {
+        "num_requests": 1,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.191,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 1,
+      "batch_size_per_rank": 1,
+      "frac": 1.0,
+      "batch_tokens": 8,
+      "steps_per_sec": 39.73457305201255,
+      "num_steady_steps": 159,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.025167000000000002
+      ],
+      "load_info": {
+        "num_requests": 1,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.242,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 4,
+      "batch_size_per_rank": 4,
+      "frac": 0.25,
+      "batch_tokens": 11,
+      "steps_per_sec": 37.75009437523594,
+      "num_steady_steps": 145,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.02649
+      ],
+      "load_info": {
+        "num_requests": 4,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.282,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 4,
+      "batch_size_per_rank": 4,
+      "frac": 0.5,
+      "batch_tokens": 18,
+      "steps_per_sec": 37.77305194927834,
+      "num_steady_steps": 153,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.0264739
+      ],
+      "load_info": {
+        "num_requests": 4,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.301,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 4,
+      "batch_size_per_rank": 4,
+      "frac": 0.75,
+      "batch_tokens": 25,
+      "steps_per_sec": 37.758361589173916,
+      "num_steady_steps": 153,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.026484200000000003
+      ],
+      "load_info": {
+        "num_requests": 4,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.301,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 4,
+      "batch_size_per_rank": 4,
+      "frac": 1.0,
+      "batch_tokens": 32,
+      "steps_per_sec": 37.73727310464545,
+      "num_steady_steps": 154,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.026499
+      ],
+      "load_info": {
+        "num_requests": 4,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.329,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 8,
+      "batch_size_per_rank": 8,
+      "frac": 0.25,
+      "batch_tokens": 22,
+      "steps_per_sec": 36.146233201038115,
+      "num_steady_steps": 145,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.027665400000000003
+      ],
+      "load_info": {
+        "num_requests": 8,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.279,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 8,
+      "batch_size_per_rank": 8,
+      "frac": 0.5,
+      "batch_tokens": 36,
+      "steps_per_sec": 36.163226338401,
+      "num_steady_steps": 145,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.0276524
+      ],
+      "load_info": {
+        "num_requests": 8,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.276,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 8,
+      "batch_size_per_rank": 8,
+      "frac": 0.75,
+      "batch_tokens": 50,
+      "steps_per_sec": 36.14348965392609,
+      "num_steady_steps": 146,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.027667499999999998
+      ],
+      "load_info": {
+        "num_requests": 8,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.304,
+        "reached_target": true
+      }
+    },
+    {
+      "repeat": 0,
+      "batch_size": 8,
+      "batch_size_per_rank": 8,
+      "frac": 1.0,
+      "batch_tokens": 64,
+      "steps_per_sec": 36.13460864412108,
+      "num_steady_steps": 148,
+      "match_fraction": 1.0,
+      "per_rank_median_step_time": [
+        0.0276743
+      ],
+      "load_info": {
+        "num_requests": 8,
+        "max_new_tokens": 172,
+        "wall_seconds": 4.363,
+        "reached_target": true
+      }
+    }
+  ]
+}

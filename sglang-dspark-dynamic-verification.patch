@@ -1,0 +1,817 @@
+diff --git a/python/sglang/srt/environ.py b/python/sglang/srt/environ.py
+index 8e055bb..d112d59 100644
+--- a/python/sglang/srt/environ.py
++++ b/python/sglang/srt/environ.py
+@@ -487,6 +487,8 @@ class Envs:
+     SGLANG_DSPARK_DEBUG_CONFIDENCE_METRICS = EnvBool(False)
+     SGLANG_DSPARK_DEBUG_DUMP = EnvTuple(tuple())
+     SGLANG_DSPARK_LOG_SPS_PRED_INTERVAL = EnvInt(0)
++    # Compact only when its padded graph saves at least this token fraction.
++    SGLANG_DSPARK_COMPACT_MIN_TOKEN_SAVINGS_RATIO = EnvFloat(0.0)
+     SGLANG_DSPARK_STS_COLLECT_PATH = EnvStr("")
+     SGLANG_DSPARK_BLOCK_ACCEPT_ESTIMATE_PATH = EnvStr("")
+     SGLANG_DSPARK_BLOCK_ACCEPT_ONLINE_INTERVAL = EnvInt(0)
+diff --git a/python/sglang/srt/managers/io_struct.py b/python/sglang/srt/managers/io_struct.py
+index 0329295..3645e63 100644
+--- a/python/sglang/srt/managers/io_struct.py
++++ b/python/sglang/srt/managers/io_struct.py
+@@ -2059,8 +2059,8 @@ class GetInternalStateReqOutput(BaseReq, kw_only=True):
+ 
+ 
+ class SetInternalStateReq(BaseReq, kw_only=True):
+-    # Only numeric scheduler knobs are accepted (see Scheduler.set_internal_state).
+-    server_args: Dict[str, Union[int, float]]
++    # Numeric scheduler knobs are accepted; None clears optional overrides.
++    server_args: Dict[str, Union[int, float, None]]
+ 
+ 
+ class SetInternalStateReqOutput(BaseReq, kw_only=True):
+diff --git a/python/sglang/srt/speculative/dspark_components/dspark_observability.py b/python/sglang/srt/speculative/dspark_components/dspark_observability.py
+index e08d11d..3689488 100644
+--- a/python/sglang/srt/speculative/dspark_components/dspark_observability.py
++++ b/python/sglang/srt/speculative/dspark_components/dspark_observability.py
+@@ -38,6 +38,7 @@ class InfoComponent(str, Enum):
+     STEP_GPU_TIME = "step_gpu_time"
+     DRAFT_GPU_TIME = "draft_gpu_time"
+     TARGET_VERIFY_GPU_TIME = "target_verify_gpu_time"
++    VERIFY_PATH = "verify_path"
+     REQS = "reqs"
+ 
+ 
+@@ -91,6 +92,21 @@ class ReqDetail(msgspec.Struct, omit_defaults=True):
+     survival: Optional[list[float]] = None
+ 
+ 
++class VerifyPathDetail(msgspec.Struct, omit_defaults=True):
++    global_num_reqs: int | None
++    compact_candidate_graph_tokens: int | None
++    full_logical_tokens: int
++    full_width_graph_tokens: int | None
++    selected_graph_tokens: int | None
++    selected_path: str
++    token_savings_ratio: float | None
++    run_compact: bool
++    can_run_cuda_graph: bool
++    pack_invocations: int
++    scatter_invocations: int
++    planning_skipped: bool = False
++
++
+ class DecodeStepRecord(msgspec.Struct, omit_defaults=True):
+     forward_ct: int
+     bs: int = -1
+@@ -108,6 +124,7 @@ class DecodeStepRecord(msgspec.Struct, omit_defaults=True):
+     step_gpu_ms: Optional[float] = None
+     draft_gpu_ms: Optional[float] = None
+     target_verify_gpu_ms: Optional[float] = None
++    verify_path: VerifyPathDetail | None = None
+     reqs: Optional[list[ReqDetail]] = None
+ 
+ 
+@@ -123,6 +140,7 @@ class DecodeStepObservation(msgspec.Struct):
+     verify_tokens_graph_key: int
+     predicted_step_ms: Optional[float]
+     predicted_theta: Optional[float]
++    verify_path: VerifyPathDetail | None
+     verify_lens: Optional[torch.Tensor]
+     confidence: Optional[torch.Tensor]
+     req_pool_indices: torch.Tensor
+@@ -147,6 +165,7 @@ class _PendingStep(msgspec.Struct):
+     verify_tokens_graph_key: int
+     predicted_step_ms: Optional[float]
+     predicted_theta: Optional[float]
++    verify_path: VerifyPathDetail | None
+     step_cpu_ms: Optional[float]
+     rids: Optional[list[str]]
+     future: Optional[FutureTensors]
+@@ -251,6 +270,7 @@ class DsparkInfoDumper:
+             verify_tokens_graph_key=int(obs.verify_tokens_graph_key),
+             predicted_step_ms=obs.predicted_step_ms,
+             predicted_theta=obs.predicted_theta,
++            verify_path=obs.verify_path,
+             step_cpu_ms=step_cpu_ms,
+             rids=obs.rids,
+             future=future,
+@@ -350,6 +370,8 @@ class DsparkInfoDumper:
+             record.verify_tokens_graph_key = pending.verify_tokens_graph_key
+             record.predicted_step_ms = pending.predicted_step_ms
+             record.predicted_theta = pending.predicted_theta
++        if InfoComponent.VERIFY_PATH in self._components:
++            record.verify_path = pending.verify_path
+         if InfoComponent.STEP_CPU_TIME in self._components:
+             record.step_cpu_ms = pending.step_cpu_ms
+         if InfoComponent.STEP_GPU_TIME in self._components:
+@@ -750,8 +772,12 @@ class DsparkStepObservers:
+             verify_num_draft_tokens=verify_num_draft_tokens,
+             tp_rank=tp_rank,
+         )
++        enabled_components = resolve_enabled_components()
++        self._verify_path_enabled = (
++            InfoComponent.VERIFY_PATH in enabled_components
++        )
+         self._info_dumper = DsparkInfoDumper(
+-            components=resolve_enabled_components(),
++            components=enabled_components,
+             gamma=gamma,
+             verify_num_draft_tokens=verify_num_draft_tokens,
+             attn_tp_rank=get_parallel().attn_tp_rank,
+@@ -759,6 +785,9 @@ class DsparkStepObservers:
+             mode_value=planner.mode_value,
+             sps_report_interval=envs.SGLANG_DSPARK_LOG_SPS_PRED_INTERVAL.get(),
+         )
++        planner.set_verify_path_observation_enabled(
++            self._verify_path_enabled
++        )
+         self._block_accept_recorder = create_block_accept_estimate_recorder(
+             gamma=gamma, device=device, tp_rank=tp_rank
+         )
+@@ -822,6 +851,8 @@ class DsparkStepObservers:
+         reqs,
+         bs: int,
+         proposal_folded: bool,
++        run_compact: bool,
++        can_run_cuda_graph: bool,
+         verify_ids_2d: torch.Tensor,
+         target_logits: Optional[torch.Tensor],
+         layout,
+@@ -900,6 +931,33 @@ class DsparkStepObservers:
+                 if layout is not None
+                 else int(verify_ids_2d.numel())
+             )
++            verify_path = None
++            if self._verify_path_enabled:
++                path_decision = planner.take_verify_path_decision()
++                if path_decision is not None:
++                    compact_executor_invocations = int(run_compact)
++                    verify_path = VerifyPathDetail(
++                        global_num_reqs=path_decision.global_num_reqs,
++                        compact_candidate_graph_tokens=(
++                            path_decision.compact_candidate_graph_tokens
++                        ),
++                        full_logical_tokens=path_decision.full_logical_tokens,
++                        full_width_graph_tokens=(
++                            path_decision.full_width_graph_tokens
++                        ),
++                        selected_graph_tokens=(
++                            path_decision.selected_graph_tokens
++                        ),
++                        selected_path=path_decision.selected_path,
++                        token_savings_ratio=(
++                            path_decision.token_savings_ratio
++                        ),
++                        run_compact=bool(run_compact),
++                        can_run_cuda_graph=bool(can_run_cuda_graph),
++                        pack_invocations=compact_executor_invocations,
++                        scatter_invocations=compact_executor_invocations,
++                        planning_skipped=path_decision.planning_skipped,
++                    )
+             self._info_dumper.observe_decode_step(
+                 DecodeStepObservation(
+                     forward_ct=forward_ct,
+@@ -915,6 +973,7 @@ class DsparkStepObservers:
+                     verify_tokens_graph_key=num_verify_tokens,
+                     predicted_step_ms=predicted_step_ms,
+                     predicted_theta=predicted_theta,
++                    verify_path=verify_path,
+                     verify_lens=layout.verify_lens if layout is not None else None,
+                     confidence=confidence,
+                     req_pool_indices=req_pool_indices,
+diff --git a/python/sglang/srt/speculative/dspark_components/dspark_planner.py b/python/sglang/srt/speculative/dspark_components/dspark_planner.py
+index edde1bb..264a5d4 100644
+--- a/python/sglang/srt/speculative/dspark_components/dspark_planner.py
++++ b/python/sglang/srt/speculative/dspark_components/dspark_planner.py
+@@ -61,12 +61,47 @@ _CONFIDENCE = Invariant(
+ _VERIFY_LEN_BUDGET = Invariant("dspark.verify_len_budget", Bucket.GUARD, IsTrue())
+ 
+ 
++def should_use_compact_verify(
++    *,
++    graph_num_tokens: int,
++    full_num_tokens: int,
++    min_token_savings_ratio: float,
++) -> bool:
++    if min_token_savings_ratio <= 0.0:
++        return True
++    if full_num_tokens <= 0:
++        return False
++
++    token_savings_ratio = max(
++        0.0,
++        1.0 - float(graph_num_tokens) / float(full_num_tokens),
++    )
++    return token_savings_ratio >= min_token_savings_ratio
++
++
+ class VerifyWindow(msgspec.Struct, frozen=True):
+     positions_2d: torch.Tensor
+     verify_cache_loc: torch.Tensor
+     verify_cache_loc_2d: torch.Tensor
+ 
+ 
++class VerifyPathDecision(msgspec.Struct, frozen=True):
++    global_num_reqs: int | None
++    compact_candidate_graph_tokens: int | None
++    full_logical_tokens: int
++    full_width_graph_tokens: int | None
++    selected_graph_tokens: int | None
++    selected_path: str
++    token_savings_ratio: float | None
++    run_compact: bool
++    planning_skipped: bool
++
++
++class VerifyPathPreselection(msgspec.Struct, frozen=True):
++    compact_candidate_graph_tokens: int
++    full_width_graph_tokens: int
++
++
+ class DSparkVerifyPlanner:
+     def __init__(
+         self,
+@@ -131,6 +166,17 @@ class DSparkVerifyPlanner:
+ 
+         self._ragged_verify_mode = read_ragged_verify_mode()
+         self._schedule_cfg = DSparkScheduleConfig(gamma=self.gamma)
++        self._compact_min_token_savings_ratio = float(
++            envs.SGLANG_DSPARK_COMPACT_MIN_TOKEN_SAVINGS_RATIO.get()
++        )
++        if not 0.0 <= self._compact_min_token_savings_ratio <= 1.0:
++            raise ValueError(
++                "SGLANG_DSPARK_COMPACT_MIN_TOKEN_SAVINGS_RATIO must be in "
++                f"[0, 1], got {self._compact_min_token_savings_ratio}"
++            )
++        self._verify_path_observation_enabled = False
++        self._last_verify_path_decision: VerifyPathDecision | None = None
++        self._preselected_verify_path: VerifyPathPreselection | None = None
+         self._budget_planner: Optional[HostConfidenceBudgetPlanner] = None
+         self._dynamic_graph_tier = False
+         self._dp_tier_gather_enabled = False
+@@ -244,11 +290,175 @@ class DSparkVerifyPlanner:
+             return None
+         return self._budget_planner.take_last_decision()
+ 
+-    def should_run_compact(self, *, layout: Optional[RaggedVerifyLayout]) -> bool:
+-        return (
+-            self._ragged_verify_mode is RaggedVerifyMode.COMPACT and layout is not None
++    def set_verify_path_observation_enabled(self, enabled: bool) -> None:
++        self._verify_path_observation_enabled = bool(enabled)
++        if not self._verify_path_observation_enabled:
++            self._last_verify_path_decision = None
++
++    def take_verify_path_decision(self) -> VerifyPathDecision | None:
++        decision = getattr(self, "_last_verify_path_decision", None)
++        self._last_verify_path_decision = None
++        return decision
++
++    def _record_verify_path_decision(
++        self,
++        *,
++        global_num_reqs: int | None,
++        compact_candidate_graph_tokens: int | None,
++        full_logical_tokens: int,
++        full_width_graph_tokens: int | None,
++        selected_graph_tokens: int | None,
++        selected_path: str,
++        token_savings_ratio: float | None,
++        run_compact: bool,
++        planning_skipped: bool = False,
++    ) -> None:
++        if not getattr(self, "_verify_path_observation_enabled", False):
++            return
++        self._last_verify_path_decision = VerifyPathDecision(
++            global_num_reqs=global_num_reqs,
++            compact_candidate_graph_tokens=compact_candidate_graph_tokens,
++            full_logical_tokens=full_logical_tokens,
++            full_width_graph_tokens=full_width_graph_tokens,
++            selected_graph_tokens=selected_graph_tokens,
++            selected_path=selected_path,
++            token_savings_ratio=token_savings_ratio,
++            run_compact=run_compact,
++            planning_skipped=planning_skipped,
+         )
+ 
++    def select_verify_path(
++        self,
++        *,
++        layout: RaggedVerifyLayout | None,
++        bs: int,
++        device: torch.device,
++        global_num_reqs: int | None,
++    ) -> tuple[RaggedVerifyLayout | None, bool]:
++        observe_path = getattr(
++            self, "_verify_path_observation_enabled", False
++        )
++        full_logical_tokens = bs * self.verify_num_draft_tokens
++        preselection = getattr(self, "_preselected_verify_path", None)
++        self._preselected_verify_path = None
++
++        if self._ragged_verify_mode is not RaggedVerifyMode.COMPACT or layout is None:
++            if observe_path:
++                self._record_verify_path_decision(
++                    global_num_reqs=global_num_reqs,
++                    compact_candidate_graph_tokens=None,
++                    full_logical_tokens=full_logical_tokens,
++                    full_width_graph_tokens=None,
++                    selected_graph_tokens=(
++                        None if layout is None else int(layout.graph_num_tokens)
++                    ),
++                    selected_path="non_compact",
++                    token_savings_ratio=None,
++                    run_compact=False,
++                )
++            return layout, False
++
++        if preselection is not None:
++            compact_candidate_graph_tokens = (
++                preselection.compact_candidate_graph_tokens
++            )
++            full_width_graph_tokens = preselection.full_width_graph_tokens
++            token_savings_ratio = (
++                max(
++                    0.0,
++                    1.0
++                    - float(compact_candidate_graph_tokens)
++                    / float(full_logical_tokens),
++                )
++                if observe_path and full_logical_tokens > 0
++                else None
++            )
++            if observe_path:
++                self._record_verify_path_decision(
++                    global_num_reqs=global_num_reqs,
++                    compact_candidate_graph_tokens=(
++                        compact_candidate_graph_tokens
++                    ),
++                    full_logical_tokens=full_logical_tokens,
++                    full_width_graph_tokens=full_width_graph_tokens,
++                    selected_graph_tokens=full_width_graph_tokens,
++                    selected_path="full_width_ragged",
++                    token_savings_ratio=token_savings_ratio,
++                    run_compact=True,
++                    planning_skipped=True,
++                )
++            return layout, True
++
++        compact_candidate_graph_tokens = int(layout.graph_num_tokens)
++        token_savings_ratio = (
++            max(
++                0.0,
++                1.0
++                - float(compact_candidate_graph_tokens)
++                / float(full_logical_tokens),
++            )
++            if observe_path and full_logical_tokens > 0
++            else None
++        )
++
++        if should_use_compact_verify(
++            graph_num_tokens=compact_candidate_graph_tokens,
++            full_num_tokens=full_logical_tokens,
++            min_token_savings_ratio=self._compact_min_token_savings_ratio,
++        ):
++            if observe_path:
++                self._record_verify_path_decision(
++                    global_num_reqs=global_num_reqs,
++                    compact_candidate_graph_tokens=compact_candidate_graph_tokens,
++                    full_logical_tokens=full_logical_tokens,
++                    full_width_graph_tokens=None,
++                    selected_graph_tokens=compact_candidate_graph_tokens,
++                    selected_path="compact",
++                    token_savings_ratio=token_savings_ratio,
++                    run_compact=True,
++                )
++            return layout, True
++
++        # Too little physical work is saved to justify trimming the verify
++        # window. Restore a full acceptance layout, but keep the ragged target
++        # executor: compact-mode decode CUDA graphs are captured only for
++        # ragged target-verify inputs, so selecting run_non_compact here would
++        # force every fallback step onto the eager path.
++        # A full-width ragged layout is constant for a planner-local
++        # (batch size, DP-global request tier). Reuse the same cache as the
++        # verify-all fast path instead of rebuilding its CPU/GPU metadata on
++        # every threshold fallback step.
++        key = (int(bs), global_num_reqs)
++        uniform_layout_cache = getattr(
++            self, "_uniform_layout_cache", None
++        )
++        if uniform_layout_cache is None:
++            uniform_layout_cache = {}
++            self._uniform_layout_cache = uniform_layout_cache
++        if key not in uniform_layout_cache:
++            uniform_layout_cache[key] = uniform_ragged_layout(
++                bs=bs,
++                device=device,
++                verify_num_draft_tokens=self.verify_num_draft_tokens,
++                ragged_verify_mode=RaggedVerifyMode.COMPACT,
++                model_runner=self.model_runner,
++                tier_num_reqs=global_num_reqs,
++            )
++        full_layout = uniform_layout_cache[key]
++        if observe_path:
++            full_width_graph_tokens = int(full_layout.graph_num_tokens)
++            self._record_verify_path_decision(
++                global_num_reqs=global_num_reqs,
++                compact_candidate_graph_tokens=compact_candidate_graph_tokens,
++                full_logical_tokens=full_logical_tokens,
++                full_width_graph_tokens=full_width_graph_tokens,
++                selected_graph_tokens=full_width_graph_tokens,
++                selected_path="full_width_ragged",
++                token_savings_ratio=token_savings_ratio,
++                run_compact=True,
++            )
++        return full_layout, True
++
+     def compute_confidence_tensor(
+         self,
+         *,
+@@ -415,6 +625,7 @@ class DSparkVerifyPlanner:
+         global_num_reqs: Optional[int] = None,
+         dp_tier_num_tokens: Optional[int] = None,
+     ) -> Optional[RaggedVerifyLayout]:
++        self._preselected_verify_path = None
+         if self._ragged_verify_mode is RaggedVerifyMode.STATIC:
+             return None
+         if self._is_verify_all and self._ragged_verify_mode is RaggedVerifyMode.COMPACT:
+@@ -432,17 +643,101 @@ class DSparkVerifyPlanner:
+                     tier_num_reqs=global_num_reqs,
+                 )
+             return self._uniform_layout_cache[key]
++
++        scheduled_budget = self._budget_aligned_to_graph_tier(
++            req_pool_indices=req_pool_indices,
++            budget=budget,
++            global_num_reqs=global_num_reqs,
++            dp_tier_num_tokens=dp_tier_num_tokens,
++        )
++
++        if (
++            self._ragged_verify_mode is RaggedVerifyMode.COMPACT
++            and self._budget_planner is not None
++            and confidence is not None
++            and scheduled_budget is not None
++        ):
++            bs = int(req_pool_indices.shape[0])
++            tier_num_reqs = bs if global_num_reqs is None else global_num_reqs
++            if dp_tier_num_tokens is not None:
++                if global_num_reqs is None:
++                    tier_num_tokens = None
++                else:
++                    tier_num_tokens = dp_tier_num_tokens
++            elif self._dynamic_graph_tier and budget is not None:
++                tier_num_tokens = local_verify_tier_num_tokens(
++                    bs=tier_num_reqs,
++                    verify_token_budget=budget,
++                    verify_num_draft_tokens=self.verify_num_draft_tokens,
++                    min_verify_len=self._schedule_cfg.min_verify_len,
++                )
++            else:
++                tier_num_tokens = None
++
++            candidate_is_captured = not ragged_layout_exceeds_captured_grid(
++                num_reqs=tier_num_reqs,
++                verify_num_draft_tokens=self.verify_num_draft_tokens,
++                model_runner=self.model_runner,
++                tier_tokens_hint=tier_num_tokens,
++            )
++            graph_num_tokens_floor = verify_layout_graph_num_tokens_floor(
++                num_reqs=tier_num_reqs,
++                ragged_verify_mode=self._ragged_verify_mode,
++                verify_num_draft_tokens=self.verify_num_draft_tokens,
++                model_runner=self.model_runner,
++                tier_num_tokens=tier_num_tokens,
++            )
++            capture_num_tokens = ragged_capture_num_tokens(
++                model_runner=self.model_runner
++            )
++
++            if (
++                candidate_is_captured
++                and graph_num_tokens_floor > 0
++                and capture_num_tokens is not None
++            ):
++                candidate_graph_tokens = round_up_grid(
++                    graph_num_tokens_floor,
++                    capture_num_tokens,
++                )
++                full_logical_tokens = bs * self.verify_num_draft_tokens
++                if not should_use_compact_verify(
++                    graph_num_tokens=candidate_graph_tokens,
++                    full_num_tokens=full_logical_tokens,
++                    min_token_savings_ratio=(
++                        self._compact_min_token_savings_ratio
++                    ),
++                ):
++                    key = (bs, global_num_reqs)
++                    if key not in self._uniform_layout_cache:
++                        self._uniform_layout_cache[key] = uniform_ragged_layout(
++                            bs=bs,
++                            device=device,
++                            verify_num_draft_tokens=(
++                                self.verify_num_draft_tokens
++                            ),
++                            ragged_verify_mode=self._ragged_verify_mode,
++                            model_runner=self.model_runner,
++                            tier_num_reqs=global_num_reqs,
++                        )
++                    full_layout = self._uniform_layout_cache[key]
++                    if full_layout is not None:
++                        self._preselected_verify_path = VerifyPathPreselection(
++                            compact_candidate_graph_tokens=(
++                                candidate_graph_tokens
++                            ),
++                            full_width_graph_tokens=int(
++                                full_layout.graph_num_tokens
++                            ),
++                        )
++                        return full_layout
++
+         verify_lens = self._schedule_verify_lens(
+             req_pool_indices=req_pool_indices,
+             prefix_lens=prefix_lens,
+             device=device,
+             confidence=confidence,
+-            budget=self._budget_aligned_to_graph_tier(
+-                req_pool_indices=req_pool_indices,
+-                budget=budget,
+-                global_num_reqs=global_num_reqs,
+-                dp_tier_num_tokens=dp_tier_num_tokens,
+-            ),
++            budget=scheduled_budget,
+         )
+         if verify_lens is None:
+             assert dp_tier_num_tokens is None, (
+@@ -944,6 +1239,7 @@ def compute_verify_token_budget(
+     history_survival_probs: torch.Tensor,
+     sps_table: Union[SpsCostTable, SpsAdditiveCostTable],
+     cfg: DSparkScheduleConfig,
++    cached_additive_step_time: Optional[torch.Tensor] = None,
+ ) -> VerifyBudgetDecision:
+     num_requests = history_survival_probs.shape[0]
+     max_len = cfg.resolved_max_verify_len()
+@@ -957,11 +1253,20 @@ def compute_verify_token_budget(
+         [torch.zeros(1, dtype=torch.float64), prefix_sum]
+     )
+     if isinstance(sps_table, SpsAdditiveCostTable):
+-        step_time = _additive_step_time_tensor(
+-            table=sps_table,
+-            num_requests=int(num_requests),
+-            num_budgets=int(tau_star.numel()),
+-        )
++        if cached_additive_step_time is None:
++            step_time = _additive_step_time_tensor(
++                table=sps_table,
++                num_requests=int(num_requests),
++                num_budgets=int(tau_star.numel()),
++            )
++        else:
++            if cached_additive_step_time.numel() < tau_star.numel():
++                raise ValueError(
++                    "cached additive step-time vector is shorter than the "
++                    f"candidate pool: {cached_additive_step_time.numel()} < "
++                    f"{tau_star.numel()}"
++                )
++            step_time = cached_additive_step_time[: tau_star.numel()]
+         theta = tau_star / step_time
+         idx = int(torch.argmax(theta))
+         predicted_step_seconds = float(step_time[idx])
+@@ -1031,6 +1336,7 @@ class HostConfidenceBudgetPlanner:
+         self._carry_confidence: Optional[torch.Tensor] = None
+         self._carry_generation: Optional[torch.Tensor] = None
+         self._carry_pos = 0
++        self._additive_step_time_cache: dict[int, torch.Tensor] = {}
+ 
+     def compute_budget(
+         self,
+@@ -1060,6 +1366,9 @@ class HostConfidenceBudgetPlanner:
+             history_survival_probs=survival,
+             sps_table=self.sps_table,
+             cfg=self.cfg,
++            cached_additive_step_time=self._cached_additive_step_time(
++                num_requests=int(survival.shape[0])
++            ),
+         )
+         self.last_decision = decision
+         return decision.budget
+@@ -1072,6 +1381,23 @@ class HostConfidenceBudgetPlanner:
+     def note_non_decode_step(self) -> None:
+         self.last_decision = None
+ 
++    def _cached_additive_step_time(
++        self, *, num_requests: int
++    ) -> Optional[torch.Tensor]:
++        if not isinstance(self.sps_table, SpsAdditiveCostTable):
++            return None
++        cached = self._additive_step_time_cache.get(num_requests)
++        if cached is None:
++            cached = _additive_step_time_tensor(
++                table=self.sps_table,
++                num_requests=num_requests,
++                num_budgets=(
++                    num_requests * self.cfg.resolved_max_verify_len() + 1
++                ),
++            )
++            self._additive_step_time_cache[num_requests] = cached
++        return cached
++
+     def _shift_to_lag(
+         self,
+         *,
+diff --git a/python/sglang/srt/speculative/dspark_components/dspark_worker_v2.py b/python/sglang/srt/speculative/dspark_components/dspark_worker_v2.py
+index 08c8d78..b08a14d 100644
+--- a/python/sglang/srt/speculative/dspark_components/dspark_worker_v2.py
++++ b/python/sglang/srt/speculative/dspark_components/dspark_worker_v2.py
+@@ -651,7 +651,12 @@ class DSparkWorkerV2(BaseSpecWorker):
+             global_num_reqs=global_num_reqs,
+             dp_tier_num_tokens=self._dp_verify_tier_num_tokens(batch),
+         )
+-        run_compact = self._verify_planner.should_run_compact(layout=layout)
++        layout, run_compact = self._verify_planner.select_verify_path(
++            layout=layout,
++            bs=bs,
++            device=device,
++            global_num_reqs=global_num_reqs,
++        )
+ 
+         verify_ids_2d = torch.cat(
+             [draft_block_ids[:, :1], draft_tokens], dim=1
+@@ -766,6 +771,8 @@ class DSparkWorkerV2(BaseSpecWorker):
+             reqs=batch.reqs,
+             bs=bs,
+             proposal_folded=proposal.folded,
++            run_compact=run_compact,
++            can_run_cuda_graph=can_run_cuda_graph,
+             verify_ids_2d=verify_ids_2d,
+             target_logits=logits_output.next_token_logits,
+             layout=layout,
+diff --git a/test/registered/spec/dspark/test_dspark_scheduler.py b/test/registered/spec/dspark/test_dspark_scheduler.py
+index 53715fa..9b97c23 100644
+--- a/test/registered/spec/dspark/test_dspark_scheduler.py
++++ b/test/registered/spec/dspark/test_dspark_scheduler.py
+@@ -11,8 +11,10 @@ from sglang.srt.speculative.dspark_components.dspark_planner import (
+     DSparkScheduleConfig,
+     HostConfidenceBudgetPlanner,
+     VerifyBudgetDecision,
++    _additive_step_time_tensor,
+     compute_verify_token_budget,
+     graph_tier_fill_budget,
++    should_use_compact_verify,
+ )
+ from sglang.srt.speculative.dspark_components.dspark_sps import (
+     SpsAdditiveCostTable,
+@@ -185,6 +187,47 @@ class TestComputeVerifyTokenBudget(CustomTestCase):
+         )
+         self.assertGreater(decision.predicted_theta, 0.0)
+ 
++    def test_cached_additive_cost_prefix_preserves_budget_decision(self):
++        table = _additive_table()
++        cfg = DSparkScheduleConfig(gamma=4)
++        planner = HostConfidenceBudgetPlanner(
++            sps_table=table,
++            cfg=cfg,
++            model_runner=None,
++        )
++        cached = planner._cached_additive_step_time(num_requests=2)
++        self.assertIs(
++            cached,
++            planner._cached_additive_step_time(num_requests=2),
++        )
++        self.assertTrue(
++            torch.equal(
++                cached[:5],
++                _additive_step_time_tensor(
++                    table=table,
++                    num_requests=2,
++                    num_budgets=5,
++                ),
++            )
++        )
++
++        survival = torch.tensor(
++            [[0.9, 0.7, 0.5, 0.3], [0.8, 0.6, 0.4, 0.2]],
++            dtype=torch.float32,
++        )
++        uncached = compute_verify_token_budget(
++            history_survival_probs=survival,
++            sps_table=table,
++            cfg=cfg,
++        )
++        from_cache = compute_verify_token_budget(
++            history_survival_probs=survival,
++            sps_table=table,
++            cfg=cfg,
++            cached_additive_step_time=cached,
++        )
++        self.assertEqual(from_cache, uncached)
++
+     def test_decision_predicted_step_is_inverse_sps_for_diagonal_table(self):
+         survival = torch.tensor([[0.9, 0.8, 0.7, 0.6]], dtype=torch.float32)
+         cfg = DSparkScheduleConfig(gamma=4)
+@@ -484,6 +527,74 @@ def _fake_model_runner(capture_num_tokens, max_bs):
+     return types.SimpleNamespace(decode_cuda_graph_runner=runner)
+ 
+ 
++class TestCompactVerifyPathSelection(CustomTestCase):
++    def test_zero_threshold_preserves_original_compact_behavior(self):
++        self.assertTrue(
++            should_use_compact_verify(
++                graph_num_tokens=128,
++                full_num_tokens=128,
++                min_token_savings_ratio=0.0,
++            )
++        )
++
++    def test_compact_requires_enough_graph_token_savings(self):
++        self.assertTrue(
++            should_use_compact_verify(
++                graph_num_tokens=112,
++                full_num_tokens=128,
++                min_token_savings_ratio=0.125,
++            )
++        )
++        self.assertFalse(
++            should_use_compact_verify(
++                graph_num_tokens=120,
++                full_num_tokens=128,
++                min_token_savings_ratio=0.125,
++            )
++        )
++
++    def test_fallback_keeps_ragged_graph_and_uses_compact_layout(self):
++        from types import SimpleNamespace
++        from unittest.mock import patch
++
++        from sglang.srt.speculative.dspark_components.dspark_planner import (
++            DSparkVerifyPlanner,
++        )
++        from sglang.srt.speculative.ragged_verify import RaggedVerifyMode
++
++        planner = DSparkVerifyPlanner.__new__(DSparkVerifyPlanner)
++        planner._ragged_verify_mode = RaggedVerifyMode.COMPACT
++        planner.verify_num_draft_tokens = 8
++        planner._compact_min_token_savings_ratio = 0.125
++        planner.model_runner = object()
++
++        scheduled_layout = SimpleNamespace(graph_num_tokens=120)
++        full_layout = object()
++        device = torch.device("cpu")
++
++        with patch(
++            "sglang.srt.speculative.dspark_components.dspark_planner.uniform_ragged_layout",
++            return_value=full_layout,
++        ) as build_layout:
++            selected_layout, run_compact = planner.select_verify_path(
++                layout=scheduled_layout,
++                bs=16,
++                device=device,
++                global_num_reqs=16,
++            )
++
++        self.assertIs(selected_layout, full_layout)
++        self.assertTrue(run_compact)
++        build_layout.assert_called_once_with(
++            bs=16,
++            device=device,
++            verify_num_draft_tokens=8,
++            ragged_verify_mode=RaggedVerifyMode.COMPACT,
++            model_runner=planner.model_runner,
++            tier_num_reqs=16,
++        )
++
++
+ class TestBudgetTierSelection(CustomTestCase):
+     def test_floor_uses_tier_hint_capped_at_uniform_window(self):
+         from sglang.srt.speculative.dspark_components.dspark_planner import (
+diff --git a/test/registered/unit/managers/test_io_struct.py b/test/registered/unit/managers/test_io_struct.py
+index 759054a..e463350 100644
+--- a/test/registered/unit/managers/test_io_struct.py
++++ b/test/registered/unit/managers/test_io_struct.py
+@@ -6,10 +6,12 @@ from array import array
+ import msgspec
+ import numpy as np
+ import torch
++from pydantic import TypeAdapter
+ 
+ from sglang.srt.managers.io_struct import (
+     EmbeddingReqInput,
+     GenerateReqInput,
++    SetInternalStateReq,
+     TokenizedEmbeddingReqInput,
+     TokenizedGenerateReqInput,
+     msgpack_decode,
+@@ -1165,5 +1167,15 @@ class TestEmbeddingReqInputGetItem(CustomTestCase):
+             req.normalize_batch_and_arguments()
+ 
+ 
++class TestSetInternalStateReq(unittest.TestCase):
++    def test_http_json_allows_null_to_clear_optional_override(self):
++        req = TypeAdapter(SetInternalStateReq).validate_json(
++            b'{"server_args":{"dspark_force_budget_frac":null}}'
++        )
++
++        self.assertIn("dspark_force_budget_frac", req.server_args)
++        self.assertIsNone(req.server_args["dspark_force_budget_frac"])
++
++
+ if __name__ == "__main__":
+     unittest.main()

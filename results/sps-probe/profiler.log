@@ -1,0 +1,15 @@
+Round bs=1 (per-rank 1, frac=0.25, batch_tokens=2) repeat=1/1: steps_per_sec=39.689 over 153 steady steps (match_fraction=1.00, wall=4.1s, per-rank median step_time=['0.0252'])
+Round bs=1 (per-rank 1, frac=0.5, batch_tokens=4) repeat=1/1: steps_per_sec=39.702 over 157 steady steps (match_fraction=1.00, wall=4.2s, per-rank median step_time=['0.0252'])
+Round bs=1 (per-rank 1, frac=0.75, batch_tokens=6) repeat=1/1: steps_per_sec=39.691 over 157 steady steps (match_fraction=1.00, wall=4.2s, per-rank median step_time=['0.0252'])
+Round bs=1 (per-rank 1, frac=1.0, batch_tokens=8) repeat=1/1: steps_per_sec=39.735 over 159 steady steps (match_fraction=1.00, wall=4.2s, per-rank median step_time=['0.0252'])
+Round bs=4 (per-rank 4, frac=0.25, batch_tokens=11) repeat=1/1: steps_per_sec=37.750 over 145 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0265'])
+Round bs=4 (per-rank 4, frac=0.5, batch_tokens=18) repeat=1/1: steps_per_sec=37.773 over 153 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0265'])
+Round bs=4 (per-rank 4, frac=0.75, batch_tokens=25) repeat=1/1: steps_per_sec=37.758 over 153 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0265'])
+Round bs=4 (per-rank 4, frac=1.0, batch_tokens=32) repeat=1/1: steps_per_sec=37.737 over 154 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0265'])
+Round bs=8 (per-rank 8, frac=0.25, batch_tokens=22) repeat=1/1: steps_per_sec=36.146 over 145 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0277'])
+Round bs=8 (per-rank 8, frac=0.5, batch_tokens=36) repeat=1/1: steps_per_sec=36.163 over 145 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0277'])
+Round bs=8 (per-rank 8, frac=0.75, batch_tokens=50) repeat=1/1: steps_per_sec=36.143 over 146 steady steps (match_fraction=1.00, wall=4.3s, per-rank median step_time=['0.0277'])
+Round bs=8 (per-rank 8, frac=1.0, batch_tokens=64) repeat=1/1: steps_per_sec=36.135 over 148 steady steps (match_fraction=1.00, wall=4.4s, per-rank median step_time=['0.0277'])
+Collected 12 rounds; wrote qwen3-14b-rtxpro6000-additive-sps.rounds.jsonl, qwen3-14b-rtxpro6000-additive-sps.records.jsonl and qwen3-14b-rtxpro6000-additive-sps.json.manifest.json
+Fit SpsAdditiveCostTable (3 bs probes x 2 M probes) -> /root/autodl-tmp/results/sps-probes/dspark14-sps-probe-20260830-210115/qwen3-14b-rtxpro6000-additive-sps.json
+Self-check passed: reloaded additive table (3 bs probes x 2 M probes), all step_time lookups positive.
