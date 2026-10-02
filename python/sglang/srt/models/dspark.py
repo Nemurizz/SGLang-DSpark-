@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Callable, Iterable, Optional, Tuple
 
 import torch
@@ -671,11 +672,11 @@ class DSparkDraftMixin:
         bundle = self._fused_kv_write_bundle(pool)
         if bundle is not None:
             from sglang.kernels.ops.speculative.dspark.fused_kv_write import (
+                fused_kv_gemm_norm_rope_write,
                 fused_kv_norm_rope_write,
             )
 
             w_all, meta, knw, cos_sin, eps, num_layers, kv_size, head_dim = bundle
-            kv_all = F.linear(ctx_hidden, w_all)
             if cache_loc_2d is not None and commit_lens is not None:
                 locs = cache_loc_2d.reshape(-1)
                 write_commit_lens = commit_lens
@@ -684,6 +685,24 @@ class DSparkDraftMixin:
                 locs = cache_loc
                 write_commit_lens = None
                 locs_row_width = None
+            if os.environ.get("SGLANG_DSPARK_MANUAL_FUSED_KV_GEMM", "0") == "1":
+                fused_kv_gemm_norm_rope_write(
+                    ctx_hidden,
+                    w_all,
+                    meta,
+                    knw,
+                    cos_sin,
+                    positions,
+                    locs,
+                    num_layers,
+                    kv_size,
+                    head_dim,
+                    eps,
+                    commit_lens=write_commit_lens,
+                    locs_row_width=locs_row_width,
+                )
+                return
+            kv_all = F.linear(ctx_hidden, w_all)
             fused_kv_norm_rope_write(
                 kv_all,
                 meta,
