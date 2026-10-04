@@ -1373,10 +1373,16 @@ class Req(ReqDllmMixin):
             and dspark_sidecar is not None
             and dspark_sidecar.should_reuse()
         )
+        dspark_shadow = (
+            is_dspark
+            and dspark_sidecar is not None
+            and bool(getattr(dspark_sidecar, "shadow", False))
+        )
         if (
             envs.SGLANG_DSPARK_DISABLE_RADIX_CACHE.get()
             and is_dspark
             and not dspark_paired_enabled
+            and not dspark_shadow
         ):
             key_limit = 0
 
