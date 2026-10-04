@@ -1036,7 +1036,7 @@ class Req(ReqDllmMixin):
         self.dspark_paired_prefix_len: int = 0
         self.dspark_draft_kv_ready: bool = False
         self.dspark_draft_fingerprint: str = DsparkPrefixCache.make_fingerprint(
-            get_spec()
+            get_spec(), get_serving()
         )
 
         # Whether or not if it is chunked. It increments whenever

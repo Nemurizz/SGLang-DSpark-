@@ -56,6 +56,7 @@ class DsparkPrefixCache:
             self.max_tokens = max(1, self.max_tokens)
 
         self._node_resolver = None
+        self._current_fingerprint: str | None = None
         self._states: dict[Any, DsparkNodeState] = {}
         self._lru: OrderedDict[Any, None] = OrderedDict()
         self._tracked_tokens = 0
@@ -102,7 +103,7 @@ class DsparkPrefixCache:
         return node
 
     @staticmethod
-    def make_fingerprint(spec: Any = None) -> str:
+    def make_fingerprint(spec: Any = None, serving: Any = None) -> str:
         """Build a stable compatibility key for target/draft KV reuse."""
 
         override = envs.SGLANG_DSPARK_PREFIX_CACHE_FINGERPRINT.get()
@@ -119,6 +120,7 @@ class DsparkPrefixCache:
             getattr(spec, "tp_size", None),
             getattr(spec, "pp_size", None),
             getattr(spec, "kv_cache_dtype", None),
+            getattr(serving, "weight_version", None),
         )
         payload = repr(fields).encode("utf-8")
         return hashlib.sha256(payload).hexdigest()[:24]
@@ -135,6 +137,18 @@ class DsparkPrefixCache:
         self._states.clear()
         self._lru.clear()
         self._tracked_tokens = 0
+        self._current_fingerprint = None
+
+    def _sync_fingerprint(self, fingerprint: str) -> None:
+        fingerprint = str(fingerprint)
+        if (
+            self._current_fingerprint is not None
+            and self._current_fingerprint != fingerprint
+        ):
+            # A draft/target weight or layout change must not retain stale
+            # readiness metadata. Physical target KV remains owned by radix.
+            self.reset()
+        self._current_fingerprint = fingerprint
 
     def invalidate_all(self) -> None:
         self.reset()
@@ -158,6 +172,7 @@ class DsparkPrefixCache:
 
         if not self.active or not ready or last_node is None:
             return
+        self._sync_fingerprint(fingerprint)
         ready_from = max(0, int(ready_from))
         node = self.resolve_node(last_node)
         path = []
@@ -252,6 +267,7 @@ class DsparkPrefixCache:
         self._stats["match_calls"] += 1
         if last_node is None:
             return 0
+        self._sync_fingerprint(fingerprint)
 
         path = []
         node = self.resolve_node(last_node)

@@ -83,3 +83,13 @@ def test_suffix_mark_does_not_promote_target_only_prefix():
     cold = _cache()
     cold.mark_inserted_path(leaf, ready=True, fingerprint="v1", ready_from=4)
     assert cold.paired_prefix_length(leaf, "v1") == 0
+
+
+def test_fingerprint_mismatch_invalidates_sidecar():
+    root = _Node(())
+    leaf = _Node(range(4), root)
+    cache = _cache()
+    cache.mark_inserted_path(leaf, ready=True, fingerprint="v1")
+    assert cache.paired_prefix_length(leaf, "v1") == 4
+    assert cache.paired_prefix_length(leaf, "v2") == 0
+    assert cache.stats()["tracked_tokens"] == 0
