@@ -504,11 +504,16 @@ class Envs:
     SGLANG_DSPARK_OPT_MARKOV_W2_TP_SHARD = EnvBool(True)
     SGLANG_DSPARK_ENABLE_MULTI_STREAM = EnvBool(True)
     SGLANG_DSPARK_CONFIDENCE_RELAY_LAG_STEPS = EnvInt(2)
-    # DSpark draft KV is derived from target hidden states and is not currently
-    # stored in the target radix cache. Keep prefix reuse disabled by default so
-    # greedy acceptance is deterministic across cold/cache-hit and mixed-batch
-    # requests. Set SGLANG_DSPARK_DISABLE_RADIX_CACHE=0 only for experiments.
+    # DSpark draft KV is derived from target hidden states. Keep the legacy
+    # target-only radix reuse disabled by default; the paired sidecar below is
+    # opt-in and only admits prefixes whose draft KV is known to be ready.
     SGLANG_DSPARK_DISABLE_RADIX_CACHE = EnvBool(True)
+    SGLANG_DSPARK_PREFIX_CACHE = EnvBool(False)
+    SGLANG_DSPARK_PREFIX_CACHE_SHADOW = EnvBool(False)
+    SGLANG_DSPARK_PREFIX_CACHE_BUDGET_FRACTION = EnvFloat(0.25)
+    # Optional operator supplied generation/model fingerprint. When empty, the
+    # scheduler derives one from the draft model and DSpark configuration.
+    SGLANG_DSPARK_PREFIX_CACHE_FINGERPRINT = EnvStr("")
 
     # ===================================================================
     # Memory pools and KV-cache sizing
