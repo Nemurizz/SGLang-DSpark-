@@ -97,6 +97,7 @@ from sglang.srt.mem_cache.allocation import (
 )
 from sglang.srt.mem_cache.allocation_sizing import get_alloc_reserve_per_decode
 from sglang.srt.mem_cache.allocator import BaseTokenToKVPoolAllocator
+from sglang.srt.mem_cache.dspark_prefix_cache import DsparkPrefixCache
 from sglang.srt.mem_cache.base_prefix_cache import (
     BasePrefixCache,
     MatchPrefixParams,
@@ -1031,6 +1032,12 @@ class Req(ReqDllmMixin):
         self.skip_lock_node_ids: dict = {}
         # The prefix length that is inserted into the tree cache
         self.cache_protected_len: int = 0
+        # DSpark paired-prefix observability and cache-insert readiness.
+        self.dspark_paired_prefix_len: int = 0
+        self.dspark_draft_kv_ready: bool = False
+        self.dspark_draft_fingerprint: str = DsparkPrefixCache.make_fingerprint(
+            get_spec()
+        )
 
         # Whether or not if it is chunked. It increments whenever
         # it is chunked, and decrement whenever chunked request is
@@ -1348,19 +1355,28 @@ class Req(ReqDllmMixin):
                 capped = max(0, input_len - reprefill_tail)
                 key_limit = capped if key_limit is None else min(key_limit, capped)
 
-        # DSpark's draft KV is materialized from target hidden states during
-        # prefill. Those hidden states are not part of the target radix-cache
-        # value, so reusing a cached prefix leaves the draft worker with a
-        # stale per-request KV view. This makes greedy acceptance depend on
-        # whether another request populated the same prefix first. Until a
-        # hidden-state-aware DSpark prefix cache exists, force a full prefill
-        # for DSpark requests; the target radix cache remains available to
-        # non-speculative algorithms.
+        # DSpark's draft KV is materialized from target hidden states. The
+        # legacy safety guard still forces a full prefill unless an opt-in
+        # paired sidecar is present; target-only radix reuse remains unsafe.
         spec_algorithm = getattr(get_spec(), "speculative_algorithm", None)
+        is_dspark = (
+            spec_algorithm is not None
+            and str(spec_algorithm).upper() == "DSPARK"
+        )
+        dspark_sidecar = (
+            getattr(tree_cache, "dspark_prefix_cache", None)
+            if tree_cache is not None
+            else None
+        )
+        dspark_paired_enabled = (
+            is_dspark
+            and dspark_sidecar is not None
+            and dspark_sidecar.should_reuse()
+        )
         if (
             envs.SGLANG_DSPARK_DISABLE_RADIX_CACHE.get()
-            and spec_algorithm is not None
-            and str(spec_algorithm).upper() == "DSPARK"
+            and is_dspark
+            and not dspark_paired_enabled
         ):
             key_limit = 0
 
@@ -1393,6 +1409,32 @@ class Req(ReqDllmMixin):
                     cow_mamba=cow_mamba,
                 )
             )
+            if dspark_sidecar is not None and dspark_sidecar.is_usable() and is_dspark:
+                target_hit_len = len(match_result.device_indices)
+                paired_hit_len = dspark_sidecar.paired_prefix_length(
+                    match_result.last_device_node,
+                    fingerprint=self.dspark_draft_fingerprint,
+                )
+                dspark_sidecar.observe_match(target_hit_len, paired_hit_len)
+                self.dspark_paired_prefix_len = paired_hit_len
+                if dspark_paired_enabled and paired_hit_len < target_hit_len:
+                    if paired_hit_len == 0:
+                        match_result = zero_match_result(
+                            tree_cache, match_result, extra_key=self.extra_key
+                        )
+                    else:
+                        match_result = tree_cache.match_prefix(
+                            MatchPrefixParams(
+                                key=RadixKey(
+                                    token_ids=token_ids_to_match,
+                                    extra_key=self.extra_key,
+                                    limit=paired_hit_len,
+                                    cache_salt=self.cache_salt,
+                                ),
+                                req=self,
+                                cow_mamba=cow_mamba,
+                            )
+                        )
             if envs.SGLANG_RADIX_FORCE_MISS.get():
                 match_result = zero_match_result(
                     tree_cache, match_result, extra_key=self.extra_key
