@@ -7,6 +7,9 @@ import triton.language as tl
 
 from sglang.kernels.ops.speculative.cache_locs import assign_extend_cache_locs_func
 from sglang.kernels.ops.speculative.dspark.dispatch import inputs_on_cuda
+from sglang.kernels.ops.speculative.dspark.dspark_compact_scan import (
+    fused_compact_scan,
+)
 from sglang.srt.managers.schedule_batch import ScheduleBatch
 from sglang.srt.speculative.ragged_verify import RaggedVerifyLayout
 from sglang.srt.utils import (
@@ -176,9 +179,19 @@ def build_ragged_verify_window_triton(
     verify_lens = layout.verify_lens.to(device=device, dtype=torch.int32)
     padded_total = layout.graph_num_tokens
 
-    req_id, within, _valid = compact_row_index_triton(
-        verify_lens=verify_lens, padded_total=padded_total, device=device
+    fused = fused_compact_scan(
+        verify_lens=verify_lens,
+        draft_block_ids=draft_block_ids,
+        draft_tokens=draft_tokens,
+        padded_total=padded_total,
     )
+    if fused is None:
+        req_id, within, _valid = compact_row_index_triton(
+            verify_lens=verify_lens, padded_total=padded_total, device=device
+        )
+        fused_verify_ids = None
+    else:
+        req_id, within, _valid, fused_verify_ids = fused
     real_cache_loc = assign_extend_cache_locs_func(
         req_pool_indices=batch.req_pool_indices,
         req_to_token=model_runner.req_to_token_pool.req_to_token,
@@ -208,13 +221,17 @@ def build_ragged_verify_window_triton(
         BLOCK=BLOCK,
     )
 
-    verify_ids = compact_verify_ids_triton(
-        draft_block_ids=draft_block_ids,
-        draft_tokens=draft_tokens,
-        layout=layout,
-        device=device,
-        req_id=req_id,
-        within=within,
+    verify_ids = (
+        fused_verify_ids
+        if fused_verify_ids is not None
+        else compact_verify_ids_triton(
+            draft_block_ids=draft_block_ids,
+            draft_tokens=draft_tokens,
+            layout=layout,
+            device=device,
+            req_id=req_id,
+            within=within,
+        )
     )
     return RaggedVerifyWindow(
         positions=positions,

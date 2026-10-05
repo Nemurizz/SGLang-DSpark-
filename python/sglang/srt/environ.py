@@ -496,6 +496,9 @@ class Envs:
     SGLANG_DSPARK_FAST_KERNEL = EnvBool(True)
     SGLANG_DSPARK_FP32_LM_HEAD = EnvBool(False)
     SGLANG_DSPARK_FAST_SAMPLING = EnvBool(True)
+    # Optional hand-written CUDA compact/scan+gather kernel. The safe default
+    # remains the existing Triton path; enable only after compiling/benchmarking.
+    SGLANG_DSPARK_COMPACT_SCAN_CUDA = EnvBool(False)
     SGLANG_DSPARK_FOLDED_SAMPLING = EnvInt(DsparkFoldedSampling.AUTO)
     SGLANG_DSPARK_FOLDED_PROPOSAL = EnvBool(True)
     SGLANG_DSPARK_STACKED_CTX_KV = EnvBool(True)
