@@ -499,6 +499,14 @@ class Envs:
     # Optional hand-written CUDA compact/scan+gather kernel. The safe default
     # remains the existing Triton path; enable only after compiling/benchmarking.
     SGLANG_DSPARK_COMPACT_SCAN_CUDA = EnvBool(False)
+    # Adapt the active DSpark verify/draft window from recent acceptance.
+    # Proposal graphs stay at the configured gamma; only the verified prefix is
+    # shortened, preserving exact target decisions while avoiding wasted verify work.
+    SGLANG_DSPARK_DYNAMIC_DRAFT_LENGTH = EnvBool(False)
+    SGLANG_DSPARK_DYNAMIC_DRAFT_MIN = EnvInt(2)
+    SGLANG_DSPARK_DYNAMIC_DRAFT_MAX = EnvInt(0)
+    SGLANG_DSPARK_DYNAMIC_DRAFT_TARGET_ACCEPT = EnvFloat(0.7)
+    SGLANG_DSPARK_DYNAMIC_DRAFT_EMA_ALPHA = EnvFloat(0.2)
     SGLANG_DSPARK_FOLDED_SAMPLING = EnvInt(DsparkFoldedSampling.AUTO)
     SGLANG_DSPARK_FOLDED_PROPOSAL = EnvBool(True)
     SGLANG_DSPARK_STACKED_CTX_KV = EnvBool(True)

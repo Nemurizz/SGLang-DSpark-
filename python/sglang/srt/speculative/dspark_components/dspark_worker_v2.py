@@ -300,6 +300,51 @@ class DSparkWorkerV2(BaseSpecWorker):
         )
 
         self._forced_budget_frac: Optional[float] = None
+        self._dynamic_draft_enabled = bool(
+            envs.SGLANG_DSPARK_DYNAMIC_DRAFT_LENGTH.get()
+        )
+        self._dynamic_draft_min = max(
+            1, min(
+                self.verify_num_draft_tokens,
+                int(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_MIN.get()),
+            )
+        )
+        configured_dynamic_max = int(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_MAX.get())
+        self._dynamic_draft_max = min(
+            self.verify_num_draft_tokens,
+            configured_dynamic_max if configured_dynamic_max > 0 else self.verify_num_draft_tokens,
+        )
+        self._dynamic_draft_active = self._dynamic_draft_max
+        self._dynamic_draft_accept_ema = 1.0
+        self._dynamic_draft_alpha = min(
+            1.0, max(0.01, float(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_EMA_ALPHA.get()))
+        )
+        self._dynamic_draft_target_accept = min(
+            1.0, max(0.0, float(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_TARGET_ACCEPT.get()))
+        )
+        if self._dynamic_draft_enabled and (
+            not self._verify_planner.is_compact_mode
+            or not self._verify_planner.schedules_verify_budget
+        ):
+            if self.ps.tp_rank == 0:
+                logger.warning(
+                    "DSpark dynamic draft length requires compact mode with an "
+                    "initialized SPS budget; keeping the fixed verify window."
+                )
+            self._dynamic_draft_enabled = False
+        if self._dynamic_draft_enabled:
+            self._verify_planner.set_dynamic_max_verify_len(
+                self._dynamic_draft_active
+            )
+            if self.ps.tp_rank == 0:
+                logger.info(
+                    "DSpark dynamic draft length enabled: active=%d range=[%d,%d] "
+                    "target_accept=%.3f",
+                    self._dynamic_draft_active,
+                    self._dynamic_draft_min,
+                    self._dynamic_draft_max,
+                    self._dynamic_draft_target_accept,
+                )
         self._need_mamba_verify_commit = False
 
         self._observers = DsparkStepObservers(
@@ -573,6 +618,46 @@ class DSparkWorkerV2(BaseSpecWorker):
             new_seq_lens=next_draft_input.new_seq_lens,
         )
 
+    def _update_dynamic_draft_length(
+        self, *, correct_len: torch.Tensor, layout: Optional[RaggedVerifyLayout]
+    ) -> None:
+        if not self._dynamic_draft_enabled or layout is None:
+            return
+        verify_lens = layout.verify_lens.to(
+            device=correct_len.device, dtype=torch.float32
+        )
+        # verify_len includes the anchor row; correct_len counts accepted draft
+        # rows. The clamp keeps the ratio well-defined for anchor-only verifies.
+        denom = (verify_lens - 1.0).clamp_min(1.0)
+        ratio = float(
+            (correct_len.to(torch.float32).sum() / denom.sum().clamp_min(1.0))
+            .clamp(0.0, 1.0)
+            .item()
+        )
+        alpha = self._dynamic_draft_alpha
+        self._dynamic_draft_accept_ema = (
+            (1.0 - alpha) * self._dynamic_draft_accept_ema + alpha * ratio
+        )
+        old = self._dynamic_draft_active
+        target = self._dynamic_draft_target_accept
+        if self._dynamic_draft_accept_ema < target * 0.85:
+            self._dynamic_draft_active = max(self._dynamic_draft_min, old - 1)
+        elif self._dynamic_draft_accept_ema > min(1.0, target + 0.2):
+            self._dynamic_draft_active = min(self._dynamic_draft_max, old + 1)
+        if old != self._dynamic_draft_active:
+            self._verify_planner.set_dynamic_max_verify_len(
+                self._dynamic_draft_active
+            )
+            if self.ps.tp_rank == 0:
+                logger.info(
+                    "DSpark dynamic draft length step: acceptance=%.3f ema=%.3f "
+                    "active=%d->%d",
+                    ratio,
+                    self._dynamic_draft_accept_ema,
+                    old,
+                    self._dynamic_draft_active,
+                )
+
     def _forward_decode(
         self, batch: ScheduleBatch, on_publish, grammar_barrier=None
     ) -> GenerationBatchResult:
@@ -740,6 +825,9 @@ class DSparkWorkerV2(BaseSpecWorker):
             layout=layout,
             prefix_lens=prefix_lens,
             draft_tokens=draft_tokens,
+        )
+        self._update_dynamic_draft_length(
+            correct_len=accept.correct_len, layout=layout
         )
         if batch.return_logprob:
             compute_spec_logprobs(
