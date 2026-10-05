@@ -507,6 +507,8 @@ class Envs:
     SGLANG_DSPARK_DYNAMIC_DRAFT_MAX = EnvInt(0)
     SGLANG_DSPARK_DYNAMIC_DRAFT_TARGET_ACCEPT = EnvFloat(0.7)
     SGLANG_DSPARK_DYNAMIC_DRAFT_EMA_ALPHA = EnvFloat(0.2)
+    # Comma-separated verify caps used by the adaptive controller.
+    SGLANG_DSPARK_DYNAMIC_DRAFT_BUCKETS = EnvStr("4,6,8")
     SGLANG_DSPARK_FOLDED_SAMPLING = EnvInt(DsparkFoldedSampling.AUTO)
     SGLANG_DSPARK_FOLDED_PROPOSAL = EnvBool(True)
     SGLANG_DSPARK_STACKED_CTX_KV = EnvBool(True)

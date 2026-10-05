@@ -313,9 +313,29 @@ class DSparkWorkerV2(BaseSpecWorker):
         configured_dynamic_max = int(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_MAX.get())
         self._dynamic_draft_max = min(
             self.verify_num_draft_tokens,
-            configured_dynamic_max if configured_dynamic_max > 0 else self.verify_num_draft_tokens,
+            configured_dynamic_max
+            if configured_dynamic_max > 0
+            else self.verify_num_draft_tokens,
         )
-        self._dynamic_draft_active = self._dynamic_draft_max
+        raw_buckets = str(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_BUCKETS.get())
+        try:
+            parsed_buckets = {int(item.strip()) for item in raw_buckets.split(",") if item.strip()}
+        except (TypeError, ValueError):
+            parsed_buckets = set()
+        parsed_buckets.update((self._dynamic_draft_min, self._dynamic_draft_max))
+        self._dynamic_draft_buckets = tuple(
+            sorted(
+                value
+                for value in parsed_buckets
+                if self._dynamic_draft_min <= value <= self._dynamic_draft_max
+            )
+        )
+        if not self._dynamic_draft_buckets:
+            self._dynamic_draft_buckets = (
+                self._dynamic_draft_min,
+                self._dynamic_draft_max,
+            )
+        self._dynamic_draft_active = self._dynamic_draft_buckets[-1]
         self._dynamic_draft_accept_ema = 1.0
         self._dynamic_draft_alpha = min(
             1.0, max(0.01, float(envs.SGLANG_DSPARK_DYNAMIC_DRAFT_EMA_ALPHA.get()))
@@ -340,10 +360,11 @@ class DSparkWorkerV2(BaseSpecWorker):
             if self.ps.tp_rank == 0:
                 logger.info(
                     "DSpark dynamic draft length enabled: active=%d range=[%d,%d] "
-                    "target_accept=%.3f",
+                    "buckets=%s target_accept=%.3f",
                     self._dynamic_draft_active,
                     self._dynamic_draft_min,
                     self._dynamic_draft_max,
+                    self._dynamic_draft_buckets,
                     self._dynamic_draft_target_accept,
                 )
         self._need_mamba_verify_commit = False
@@ -642,9 +663,15 @@ class DSparkWorkerV2(BaseSpecWorker):
         old = self._dynamic_draft_active
         target = self._dynamic_draft_target_accept
         if self._dynamic_draft_accept_ema < target * 0.85:
-            self._dynamic_draft_active = max(self._dynamic_draft_min, old - 1)
+            lower = [value for value in self._dynamic_draft_buckets if value < old]
+            self._dynamic_draft_active = (
+                lower[-1] if lower else self._dynamic_draft_buckets[0]
+            )
         elif self._dynamic_draft_accept_ema > min(1.0, target + 0.2):
-            self._dynamic_draft_active = min(self._dynamic_draft_max, old + 1)
+            upper = [value for value in self._dynamic_draft_buckets if value > old]
+            self._dynamic_draft_active = (
+                upper[0] if upper else self._dynamic_draft_buckets[-1]
+            )
         if old != self._dynamic_draft_active:
             self._verify_planner.set_dynamic_max_verify_len(
                 self._dynamic_draft_active
