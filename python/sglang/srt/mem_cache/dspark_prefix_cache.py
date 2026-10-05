@@ -29,6 +29,24 @@ class DsparkNodeState:
     last_access_ns: int = 0
 
 
+@dataclass(frozen=True)
+class DsparkRecoveryPlan:
+    """How much of a target hit must be re-prefilled to recover draft KV.
+
+    The target radix tree can be longer than the paired sidecar. In that
+    case the target-only suffix is intentionally re-prefilled: target hidden
+    states are needed to materialize the missing draft KV. The already paired
+    prefix remains cached, so this is suffix recovery rather than a full
+    prompt prefill.
+    """
+
+    target_hit_len: int
+    paired_hit_len: int
+    recovery_start: int
+    recovery_tokens: int
+    mode: str
+
+
 class DsparkPrefixCache:
     """Sidecar metadata for DSpark paired target/draft prefix reuse.
 
@@ -66,6 +84,10 @@ class DsparkPrefixCache:
             "paired_hit_tokens": 0,
             "ready_tokens": 0,
             "metadata_evictions": 0,
+            "partial_recovery_calls": 0,
+            "partial_recovery_tokens": 0,
+            "full_recovery_calls": 0,
+            "full_recovery_tokens": 0,
         }
 
     @staticmethod
@@ -287,6 +309,45 @@ class DsparkPrefixCache:
             paired_len += node_len
             self._touch(node)
         return paired_len
+
+    def plan_recovery(
+        self,
+        last_node: Any,
+        *,
+        target_hit_len: int,
+        fingerprint: str = "default",
+    ) -> DsparkRecoveryPlan:
+        """Build an explicit suffix-recovery plan from a target cache hit.
+
+        This does not copy target KV into the draft pool. The missing suffix
+        is recovered by the normal DSpark target prefill, which produces target
+        hidden states and injects draft KV. Keeping this plan explicit lets the
+        scheduler distinguish partial recovery from a cold prefill and avoids
+        re-prefilling the paired prefix.
+        """
+
+        target_hit_len = max(0, int(target_hit_len))
+        paired_hit_len = self.paired_prefix_length(last_node, fingerprint)
+        paired_hit_len = min(target_hit_len, max(0, int(paired_hit_len)))
+        recovery_tokens = target_hit_len - paired_hit_len
+        if paired_hit_len == target_hit_len:
+            mode = "paired"
+        elif paired_hit_len > 0:
+            mode = "partial"
+            self._stats["partial_recovery_calls"] += 1
+            self._stats["partial_recovery_tokens"] += recovery_tokens
+        else:
+            mode = "full"
+            if target_hit_len:
+                self._stats["full_recovery_calls"] += 1
+                self._stats["full_recovery_tokens"] += target_hit_len
+        return DsparkRecoveryPlan(
+            target_hit_len=target_hit_len,
+            paired_hit_len=paired_hit_len,
+            recovery_start=paired_hit_len,
+            recovery_tokens=recovery_tokens,
+            mode=mode,
+        )
 
     def observe_match(self, target_tokens: int, paired_tokens: int) -> None:
         self._stats["target_hit_tokens"] += max(0, int(target_tokens))

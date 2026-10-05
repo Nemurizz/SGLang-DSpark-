@@ -1034,6 +1034,10 @@ class Req(ReqDllmMixin):
         self.cache_protected_len: int = 0
         # DSpark paired-prefix observability and cache-insert readiness.
         self.dspark_paired_prefix_len: int = 0
+        self.dspark_target_prefix_len: int = 0
+        self.dspark_recovery_start: int = 0
+        self.dspark_recovery_tokens: int = 0
+        self.dspark_recovery_mode: str = "none"
         self.dspark_draft_kv_ready: bool = False
         self.dspark_draft_fingerprint: str = DsparkPrefixCache.make_fingerprint(
             get_spec(), get_serving()
@@ -1417,12 +1421,18 @@ class Req(ReqDllmMixin):
             )
             if dspark_sidecar is not None and dspark_sidecar.is_usable() and is_dspark:
                 target_hit_len = len(match_result.device_indices)
-                paired_hit_len = dspark_sidecar.paired_prefix_length(
+                recovery = dspark_sidecar.plan_recovery(
                     match_result.last_device_node,
+                    target_hit_len=target_hit_len,
                     fingerprint=self.dspark_draft_fingerprint,
                 )
+                paired_hit_len = recovery.paired_hit_len
                 dspark_sidecar.observe_match(target_hit_len, paired_hit_len)
+                self.dspark_target_prefix_len = recovery.target_hit_len
                 self.dspark_paired_prefix_len = paired_hit_len
+                self.dspark_recovery_start = recovery.recovery_start
+                self.dspark_recovery_tokens = recovery.recovery_tokens
+                self.dspark_recovery_mode = recovery.mode
                 if dspark_paired_enabled and paired_hit_len < target_hit_len:
                     if paired_hit_len == 0:
                         match_result = zero_match_result(
