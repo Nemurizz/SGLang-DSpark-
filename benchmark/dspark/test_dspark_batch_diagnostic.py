@@ -27,6 +27,12 @@ class TestDiagnostic(unittest.TestCase):
         self.assertEqual(cmd[cmd.index("--speculative-draft-attention-backend") + 1], "flashinfer")
         self.assertEqual(cmd[cmd.index("--speculative-algorithm") + 1], "DSPARK")
 
+    def test_builtin_triton_attention_keeps_existing_other_backends(self):
+        cmd, _ = diag.DiagnosticServer(self.args("dspark-triton"), "full", Path("/new")).command()
+        self.assertEqual(cmd[cmd.index("--attention-backend") + 1], "triton")
+        self.assertEqual(cmd[cmd.index("--decode-attention-backend") + 1], "fa4")
+        self.assertEqual(cmd[cmd.index("--speculative-draft-attention-backend") + 1], "flashinfer")
+
     def test_target_comparison_does_not_require_spec_metadata(self):
         reference = {"output_ids": [1, 2], "meta_info": {}}
         row = {"output_ids": [1, 2], "meta_info": {}, "cell": "p2048_c8", "variant": 3, "phase": "concurrent"}

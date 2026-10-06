@@ -27,7 +27,8 @@ class DiagnosticServer(ab.ManagedServer):
                     cleaned.append(cmd[i])
                     i += 1
             cmd = cleaned
-        backend = "fa4" if a.profile.endswith("fa4") else "flashinfer"
+        backend = ("fa4" if a.profile.endswith("fa4") else
+                   "triton" if a.profile.endswith("triton") else "flashinfer")
         cmd[cmd.index("--attention-backend") + 1] = backend
         cmd += ["--disable-radix-cache"]
         return cmd, env
@@ -42,7 +43,8 @@ def parse_args(argv=None):
     parser.add_argument("--dataset", required=True)
     parser.add_argument("--oracle-jsonl", help="Optional independently saved ordinary-target references")
     parser.add_argument("--cell", default="p2048_c8")
-    parser.add_argument("--profile", choices=("target-fi", "target-fa4", "dspark-fi", "dspark-fa4"), required=True)
+    parser.add_argument("--profile", choices=("target-fi", "target-fa4", "target-triton",
+                                             "dspark-fi", "dspark-fa4", "dspark-triton"), required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--port", type=int, default=30117)
     parser.add_argument("--seed", type=int, default=20261007)
