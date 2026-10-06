@@ -151,6 +151,14 @@ class TestDSparkAB(unittest.TestCase):
         self.assertEqual(body["sampling_params"]["sampling_seed"], 7)
         self.assertNotIn("seed", body["sampling_params"])
 
+    def test_deterministic_control_cannot_be_used_for_paired(self):
+        args = ab.parse_args(["--model", "target", "--draft", "draft", "--output", "new",
+                              "--deterministic-control-only"])
+        command, _ = ab.ManagedServer(args, "full", Path("unused")).command()
+        self.assertIn("--enable-deterministic-inference", command)
+        with self.assertRaises(ValueError):
+            ab.ManagedServer(args, "paired", Path("unused")).command()
+
 
 if __name__ == "__main__":
     unittest.main()

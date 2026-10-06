@@ -102,6 +102,13 @@ Supply the same SPS table for all compared runs, if used. Output directory must
 not exist. Harness returns 0 only for a completed matrix, 2 for a safety stop.
 Interrupted/safety-stopped runs remain incomplete and cannot establish benefit.
 
+If the non-deterministic full-prefill control itself differs between serial and
+concurrent requests, STOP the cache A/B. Add `--deterministic-control-only`
+(without `--include-target-only-shadow`) in a new run to diagnose the safe full
+prefill profile. This runs the same 12 cells but ONLY full prefill; it is not a
+cache-performance experiment. Do not disable the token/acceptance gates to finish
+the matrix.
+
 Artifacts: `manifest.json`, exact `dataset.json`, per-mode `launch.json`,
 `server_info.json`, `server.log`, `gpu_samples.jsonl`, raw `requests.jsonl`,
 `shutdown.json`; top-level `cells.jsonl`, `summary.csv`, `report.md`, `status.json`.

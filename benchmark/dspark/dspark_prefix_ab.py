@@ -295,6 +295,10 @@ class ManagedServer:
             cmd += ["--speculative-dspark-sps-table-path", a.sps_table]
         if not a.enable_standard_graphs:
             cmd += ["--disable-cuda-graph"]
+        if a.deterministic_control_only:
+            if self.mode != "full":
+                raise ValueError("Deterministic FlashInfer control cannot measure prefix reuse")
+            cmd += ["--enable-deterministic-inference"]
         return cmd, env
 
     def start(self):
@@ -470,7 +474,9 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
             info = await api(session, base, "/server_info")
             dump(folder / "server_info.json", info)
             info_stats(info)
-            if info.get("enable_deterministic_inference"):
+            if bool(info.get("enable_deterministic_inference")) != args.deterministic_control_only:
+                raise SafetyFailure("Resolved deterministic flag differs from protocol")
+            if info.get("enable_deterministic_inference") and mode != "full":
                 raise SafetyFailure("FlashInfer deterministic mode disables radix caching")
             if not args.enable_standard_graphs and not info.get("disable_cuda_graph"):
                 raise SafetyFailure("Requested graph-off configuration was not applied")
@@ -596,6 +602,8 @@ def parse_args(argv=None):
     parser.add_argument("--output", required=True, help="New, non-existing directory; never overwrites a run")
     parser.add_argument("--preset", choices=("smoke", "standard"), default="standard")
     parser.add_argument("--include-target-only-shadow", action="store_true", help="Explicit unsafe, isolated target-only control")
+    parser.add_argument("--deterministic-control-only", action="store_true",
+                        help="Diagnose serial/concurrent correctness with full prefill only; NOT a cache A/B")
     parser.add_argument("--requests", type=int)
     parser.add_argument("--repeats", type=int)
     parser.add_argument("--output-tokens", type=int)
@@ -620,6 +628,8 @@ def parse_args(argv=None):
         parser.error("Invalid GPU interval or p95 guard parameters")
     if not (0 < args.mem_fraction < 1 and 0 < args.cache_budget_fraction <= 1):
         parser.error("Invalid memory/cache fraction")
+    if args.deterministic_control_only and (args.include_target_only_shadow or args.enable_standard_graphs):
+        parser.error("Deterministic control requires full prefill and all graphs off")
     return args
 
 
@@ -629,11 +639,12 @@ def main(argv=None) -> int:
     args.output = str(Path(args.output).resolve())
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=False)
-    modes = ["full", "paired"] + (["target_only_shadow"] if args.include_target_only_shadow else [])
+    modes = ["full"] if args.deterministic_control_only else ["full", "paired"] + (["target_only_shadow"] if args.include_target_only_shadow else [])
     manifest = {"protocol_version": 1, "args": vars(args), "modes": modes,
                 "fixed_lengths": LENGTHS, "fixed_concurrencies": CONCURRENCIES,
                 "started_at": time.time(), "python": sys.version,
-                "deterministic_inference": False, "sampling": "greedy, pytorch, fixed seed",
+                "deterministic_inference": args.deterministic_control_only, "sampling": "greedy, pytorch, fixed seed",
+                "control_only_not_cache_ab": args.deterministic_control_only,
                 "unsafe_mode_acknowledged": args.include_target_only_shadow,
                 "performance_claim": "unproven", "p95_scope": "per cell/repeat; stop on regression only with adequate n"}
     manifest["harness_source_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
