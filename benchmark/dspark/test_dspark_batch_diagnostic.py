@@ -56,6 +56,15 @@ class TestDiagnostic(unittest.TestCase):
         cmd, _ = diag.DiagnosticServer(self.args("dspark-fi"), "full", Path("/new")).command()
         self.assertNotIn("--forward-hooks", cmd)
 
+    def test_serial_reference_candidate_is_default_off_and_explicit(self):
+        args = self.args("dspark-fi")
+        _, env = diag.DiagnosticServer(args, "full", Path("/new")).command()
+        self.assertEqual(env["SGLANG_DSPARK_VERIFY_SERIAL_REFERENCE"], "0")
+        args.reference_verify_plans = True
+        cmd, env = diag.DiagnosticServer(args, "full", Path("/new")).command()
+        self.assertEqual(env["SGLANG_DSPARK_VERIFY_SERIAL_REFERENCE"], "1")
+        self.assertIn("--disable-cuda-graph", cmd)
+
     def test_trace_focus_comes_from_independent_oracle(self):
         with tempfile.TemporaryDirectory() as folder:
             dataset, oracle = Path(folder) / "dataset.json", Path(folder) / "requests.jsonl"

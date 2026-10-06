@@ -160,6 +160,7 @@ class PrefillMetadata:
     extend_no_prefix: bool
     multi_item_params: Optional[MultiItemScoringParams] = None
     swa_out_cache_loc: Optional[torch.Tensor] = None
+    dspark_reference_groups: Optional[list] = None
 
 
 # Reuse this workspace buffer across all flashinfer wrappers
@@ -325,6 +326,14 @@ class FlashInferAttnBackend(AttentionBackend):
         super().__init__()
         self.prefill_backend = "fa2"
         self.decode_backend = "fa2"
+        self.dspark_reference_verify = os.getenv("SGLANG_DSPARK_VERIFY_SERIAL_REFERENCE", "0") == "1"
+        if self.dspark_reference_verify and (
+            model_runner.server_args.speculative_algorithm != "DSPARK"
+            or not all(check_cuda_graph_backend(phase, Backend.DISABLED)
+                       for phase in (Phase.PREFILL, Phase.DECODE))
+        ):
+            raise ValueError("DSpark serial-reference verify candidate requires DSPARK and all graphs disabled")
+        self._dspark_reference_plans = None
 
         self.req_to_token_pool = model_runner.req_to_token_pool
         self.token_to_kv_pool = model_runner.token_to_kv_pool
@@ -973,6 +982,14 @@ class FlashInferAttnBackend(AttentionBackend):
                 False,
                 swa_out_cache_loc=swa_out_cache_loc,
             )
+            if self.dspark_reference_verify:
+                from sglang.srt.layers.attention.dspark_reference_attention import SerialReferencePlans
+
+                if self._dspark_reference_plans is None:
+                    self._dspark_reference_plans = SerialReferencePlans(self)
+                self.forward_metadata.dspark_reference_groups = self._dspark_reference_plans.plan(
+                    self.prefill_wrappers_verify[0], forward_batch
+                )
         else:
             prefix_lens = forward_batch.extend_prefix_lens
 
@@ -1345,7 +1362,14 @@ class FlashInferAttnBackend(AttentionBackend):
                 not layer.is_cross_attention
                 and layer.attn_type != AttentionType.ENCODER_ONLY
             )
-            o = prefill_wrapper_paged.forward(
+            reference_groups = self.forward_metadata.dspark_reference_groups
+            if reference_groups is not None:
+                from sglang.srt.layers.attention.dspark_reference_attention import forward_groups
+
+                attention_forward = partial(forward_groups, reference_groups)
+            else:
+                attention_forward = prefill_wrapper_paged.forward
+            o = attention_forward(
                 q.view(-1, layer.tp_q_head_num, layer.head_dim),
                 kv_cache,
                 causal=causal,

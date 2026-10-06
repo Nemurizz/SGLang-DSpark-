@@ -279,6 +279,7 @@ class ManagedServer:
                     "SGLANG_DSPARK_PREFIX_CACHE_BUDGET_FRACTION": str(a.cache_budget_fraction),
                     "SGLANG_DSPARK_RAGGED_VERIFY_GRAPH": "0", "SGLANG_RAGGED_VERIFY_MODE": "compact",
                     "SGLANG_DSPARK_COMPACT_SCAN_CUDA": "0", "SGLANG_DSPARK_DYNAMIC_DRAFT_LENGTH": "0",
+                    "SGLANG_DSPARK_VERIFY_SERIAL_REFERENCE": "1" if getattr(a, "reference_verify_plans", False) else "0",
                     "SGLANG_RADIX_FORCE_MISS": "0"})
         # JIT helpers (e.g. ninja) must use the same environment as the server.
         env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env.get("PATH", "")
@@ -608,6 +609,8 @@ def parse_args(argv=None):
     parser.add_argument("--include-target-only-shadow", action="store_true", help="Explicit unsafe, isolated target-only control")
     parser.add_argument("--deterministic-control-only", action="store_true",
                         help="Diagnose serial/concurrent correctness with full prefill only; NOT a cache A/B")
+    parser.add_argument("--reference-verify-plans", action="store_true",
+                        help="Default-off eager DSpark serial-reference attention correctness candidate")
     parser.add_argument("--requests", type=int)
     parser.add_argument("--repeats", type=int)
     parser.add_argument("--output-tokens", type=int)
@@ -634,6 +637,8 @@ def parse_args(argv=None):
         parser.error("Invalid memory/cache fraction")
     if args.deterministic_control_only and (args.include_target_only_shadow or args.enable_standard_graphs):
         parser.error("Deterministic control requires full prefill and all graphs off")
+    if args.reference_verify_plans and args.enable_standard_graphs:
+        parser.error("Serial-reference verify plans require all graphs off")
     return args
 
 

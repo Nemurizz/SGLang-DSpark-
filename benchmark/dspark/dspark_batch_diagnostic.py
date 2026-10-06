@@ -80,6 +80,8 @@ def parse_args(argv=None):
     parser.add_argument("--verify-trace-max-captures", type=int, default=8)
     parser.add_argument("--verify-trace-upstream", action="store_true",
                         help="Diagnostic only: layer 0 attention/past KV and layers 0/19/39 post output")
+    parser.add_argument("--reference-verify-plans", action="store_true",
+                        help="Default-off DSpark eager serial-reference attention correctness candidate")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--startup-timeout", type=float, default=600)
     parser.add_argument("--request-timeout", type=float, default=180)
@@ -94,6 +96,8 @@ def parse_args(argv=None):
         parser.error("Trace requires independent oracle, output index >= 1, variant >= 0 and positive capture limit")
     if args.verify_trace_upstream and (args.verify_trace_output_index is None or args.verify_trace_max_captures < 15):
         parser.error("Upstream trace requires focused trace and >= 15 captures for three five-stage passes")
+    if args.reference_verify_plans and args.profile != "dspark-fi":
+        parser.error("Serial-reference verify candidate requires the DSPARK FlashInfer profile")
     args.enable_standard_graphs = False
     args.deterministic_control_only = True
     return args
