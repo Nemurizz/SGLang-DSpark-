@@ -659,18 +659,22 @@ class DecodeCudaGraphRunner(BaseCudaGraphRunner):
 
     def can_run_graph(self, forward_batch: ForwardBatch):
         # DSpark target-verify batches carry a dynamically rebuilt req-to-token
-        # mapping. Replaying them through the decode graph currently reuses
-        # capture-time attention metadata for the first radix-cache hit after a
-        # request-slot recycle. The resulting target logits are deterministic
-        # but wrong (and make acceptance depend on cache state). Keep the draft
-        # graph enabled; run only DSpark target verify eagerly until the graph
-        # metadata path can refresh this mapping atomically.
+        # mapping. FlashInfer can replay them only when its ragged metadata
+        # refresh path is explicitly enabled; other DSpark shapes stay on the
+        # correctness-first eager path.
         if (
             forward_batch.forward_mode.is_target_verify()
             and forward_batch.spec_algorithm is not None
             and forward_batch.spec_algorithm.is_dspark()
         ):
-            return False
+            ragged_layout = resolve_ragged_verify_layout(forward_batch)
+            if not (
+                envs.SGLANG_DSPARK_RAGGED_VERIFY_GRAPH.get()
+                and ragged_layout is not None
+                and self.ragged_verify_mode
+                and self.attn_backend.supports_ragged_verify_graph
+            ):
+                return False
 
         # Disable for token embedding overrides (dynamic per-request)
         if forward_batch.replace_embeds is not None:
@@ -753,9 +757,32 @@ class DecodeCudaGraphRunner(BaseCudaGraphRunner):
             return False
 
         admission_tokens = ragged_layout.graph_num_tokens
+        capture_slots = self._ragged_capture_slots(admission_tokens)
         is_tokens_supported = admission_tokens <= self.capture_num_tokens[
             -1
-        ] and forward_batch.batch_size <= self._ragged_capture_slots(admission_tokens)
+        ] and forward_batch.batch_size <= capture_slots
+
+        # A packed q buffer is laid out by the live request rows, whereas a
+        # captured graph has a fixed row geometry for each token tier. Merely
+        # refreshing qo_indptr is unsafe when a multi-request live batch would
+        # be split into a different number of captured rows (e.g. 4x6 live vs
+        # 8x3 capture): the attention kernel would associate tokens with the
+        # wrong request/page table. Until the planner can repack those rows,
+        # admit only row-aligned multi-request replays; single-request replay
+        # remains valid because every captured row belongs to that request.
+        # FlashInfer's current graph replay still has a hidden per-request
+        # page-table dependency for multi-request target verify (the captured
+        # module can replay stale row/page metadata even when bs matches the
+        # slot count). Keep the opt-in path correctness-first: single-request
+        # ragged replay is enabled; multi-request batches use compact eager
+        # until the page-table ownership is fully repacked.
+        is_row_geometry_supported = forward_batch.batch_size <= 1
+        live_total = ragged_layout.total_verify_tokens
+        if live_total is None:
+            # Device-only planner layouts intentionally omit the CPU mirror;
+            # their device verify_lens still gives the exact live total.
+            live_total = int(ragged_layout.verify_lens.sum().item())
+        is_full_tier = int(live_total) == int(admission_tokens)
 
         is_dp_supported = (
             forward_batch.can_run_decode_cuda_graph if self.require_mlp_sync else True
@@ -773,6 +800,8 @@ class DecodeCudaGraphRunner(BaseCudaGraphRunner):
 
         return (
             is_tokens_supported
+            and is_row_geometry_supported
+            and is_full_tier
             and is_dp_supported
             and is_encoder_lens_supported
             and capture_hidden_mode_matches

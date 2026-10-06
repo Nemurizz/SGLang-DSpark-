@@ -94,7 +94,11 @@ def build_ragged_verify_window(
 ) -> RaggedVerifyWindow:
     prefix_lens = batch.seq_lens
     verify_lens = layout.verify_lens.to(device=device, dtype=torch.int32)
-    padded_total = layout.graph_num_tokens
+    padded_total = (
+        int(layout.total_verify_tokens)
+        if layout.total_verify_tokens is not None
+        else int(verify_lens.sum().item())
+    )
 
     req_id, within, valid = compact_row_index(
         verify_lens=verify_lens, padded_total=padded_total, device=device
@@ -177,7 +181,11 @@ def build_ragged_verify_window_triton(
 ) -> RaggedVerifyWindow:
     prefix_lens = batch.seq_lens
     verify_lens = layout.verify_lens.to(device=device, dtype=torch.int32)
-    padded_total = layout.graph_num_tokens
+    padded_total = (
+        int(layout.total_verify_tokens)
+        if layout.total_verify_tokens is not None
+        else int(verify_lens.sum().item())
+    )
 
     fused = fused_compact_scan(
         verify_lens=verify_lens,

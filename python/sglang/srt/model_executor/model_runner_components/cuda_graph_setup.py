@@ -442,13 +442,17 @@ def capture_decode_graph(*, model_runner: ModelRunner) -> GraphCapture:
         model_runner.spec_algorithm.is_dspark()
         and not model_runner.is_draft_worker
         and envs.SGLANG_RAGGED_VERIFY_MODE.get() == "compact"
-        and not getattr(
-            model_runner.attn_backend, "supports_ragged_verify_graph", False
+        and (
+            not envs.SGLANG_DSPARK_RAGGED_VERIFY_GRAPH.get()
+            or not getattr(
+                model_runner.attn_backend, "supports_ragged_verify_graph", False
+            )
         )
     ):
         logger.warning(
-            "Skipping DSpark target CUDA graph: attention backend %s does not "
-            "support compact ragged verify metadata; target verify stays eager.",
+            "Skipping DSpark target CUDA graph: FlashInfer ragged verify graph "
+            "is not enabled or attention backend %s does not support compact "
+            "ragged metadata; target verify stays eager.",
             type(model_runner.attn_backend).__name__,
         )
         return no_capture

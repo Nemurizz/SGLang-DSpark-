@@ -513,6 +513,10 @@ class Envs:
     SGLANG_DSPARK_FOLDED_PROPOSAL = EnvBool(True)
     SGLANG_DSPARK_STACKED_CTX_KV = EnvBool(True)
     SGLANG_DSPARK_EMBED_IN_GRAPH = EnvBool(True)
+    # Experimental FlashInfer ragged target-verify CUDA graph path.  Keep this
+    # opt-in until the live metadata refresh has passed determinism and
+    # acceptance regression tests on the deployment model.
+    SGLANG_DSPARK_RAGGED_VERIFY_GRAPH = EnvBool(False)
     SGLANG_DSPARK_OPT_MARKOV_W2_BF16 = EnvBool(True)
     SGLANG_DSPARK_OPT_MARKOV_W2_TP_SHARD = EnvBool(True)
     SGLANG_DSPARK_ENABLE_MULTI_STREAM = EnvBool(True)
