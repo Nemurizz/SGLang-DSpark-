@@ -767,16 +767,24 @@ class DecodeCudaGraphRunner(BaseCudaGraphRunner):
         # refreshing qo_indptr is unsafe when a multi-request live batch would
         # be split into a different number of captured rows (e.g. 4x6 live vs
         # 8x3 capture): the attention kernel would associate tokens with the
-        # wrong request/page table. Until the planner can repack those rows,
-        # admit only row-aligned multi-request replays; single-request replay
-        # remains valid because every captured row belongs to that request.
-        # FlashInfer's current graph replay still has a hidden per-request
-        # page-table dependency for multi-request target verify (the captured
-        # module can replay stale row/page metadata even when bs matches the
-        # slot count). Keep the opt-in path correctness-first: single-request
-        # ragged replay is enabled; multi-request batches use compact eager
-        # until the page-table ownership is fully repacked.
-        is_row_geometry_supported = forward_batch.batch_size <= 1
+        # wrong request/page table.
+        # Require the capture/runtime verify-lens pattern to match exactly;
+        # matching only the total token count is not sufficient. FlashInfer's
+        # graph replay owns row/page-table metadata, so a different pattern can
+        # associate a valid q row with the wrong request. If the host mirrors
+        # are unavailable, or any row differs, keep this batch on compact eager
+        # until the planner can repack page-table ownership safely.
+        capture_layout = self._captured_ragged_layouts.get(admission_tokens)
+        is_capture_geometry_supported = (
+            capture_layout is not None
+            and capture_layout.bs == ragged_layout.bs
+            and capture_layout.verify_lens_cpu is not None
+            and ragged_layout.verify_lens_cpu is not None
+            and capture_layout.verify_lens_cpu == ragged_layout.verify_lens_cpu
+        )
+        is_row_geometry_supported = (
+            forward_batch.batch_size <= 1 and is_capture_geometry_supported
+        )
         live_total = ragged_layout.total_verify_tokens
         if live_total is None:
             # Device-only planner layouts intentionally omit the CPU mirror;
