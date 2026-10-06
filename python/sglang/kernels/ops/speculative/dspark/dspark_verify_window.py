@@ -130,6 +130,7 @@ def build_ragged_verify_window(
         draft_tokens=draft_tokens,
         layout=layout,
         device=device,
+        padded_total=padded_total,
     )
 
     return RaggedVerifyWindow(
@@ -239,6 +240,7 @@ def build_ragged_verify_window_triton(
             device=device,
             req_id=req_id,
             within=within,
+            padded_total=padded_total,
         )
     )
     return RaggedVerifyWindow(
@@ -304,12 +306,14 @@ class CompactVerifyIds:
         draft_tokens: torch.Tensor,
         layout: RaggedVerifyLayout,
         device: str,
+        padded_total: int | None = None,
     ) -> torch.Tensor:
         return compact_verify_ids(
             draft_block_ids=draft_block_ids,
             draft_tokens=draft_tokens,
             layout=layout,
             device=device,
+            padded_total=padded_total,
         )
 
     @classmethod
@@ -320,12 +324,14 @@ class CompactVerifyIds:
         draft_tokens: torch.Tensor,
         layout: RaggedVerifyLayout,
         device: str,
+        padded_total: int | None = None,
     ) -> torch.Tensor:
         return compact_verify_ids_triton(
             draft_block_ids=draft_block_ids,
             draft_tokens=draft_tokens,
             layout=layout,
             device=device,
+            padded_total=padded_total,
         )
 
 
@@ -335,10 +341,17 @@ def compact_verify_ids(
     draft_tokens: torch.Tensor,
     layout: RaggedVerifyLayout,
     device: str,
+    padded_total: int | None = None,
 ) -> torch.Tensor:
+    if padded_total is None:
+        padded_total = (
+            int(layout.total_verify_tokens)
+            if layout.total_verify_tokens is not None
+            else int(layout.verify_lens.sum().item())
+        )
     req_id, within, valid = compact_row_index(
         verify_lens=layout.verify_lens,
-        padded_total=layout.graph_num_tokens,
+        padded_total=padded_total,
         device=device,
     )
     bs = layout.verify_lens.shape[0]
@@ -467,13 +480,20 @@ def compact_verify_ids_triton(
     device: str,
     req_id: torch.Tensor | None = None,
     within: torch.Tensor | None = None,
+    padded_total: int | None = None,
 ) -> torch.Tensor:
     if (req_id is None) != (within is None):
         raise ValueError("req_id and within must be passed together")
+    if padded_total is None:
+        padded_total = (
+            int(layout.total_verify_tokens)
+            if layout.total_verify_tokens is not None
+            else int(layout.verify_lens.sum().item())
+        )
     if req_id is None:
         req, within, _valid = compact_row_index_triton(
             verify_lens=layout.verify_lens,
-            padded_total=layout.graph_num_tokens,
+            padded_total=padded_total,
             device=device,
         )
     else:
@@ -482,7 +502,7 @@ def compact_verify_ids_triton(
     gamma = draft_tokens.shape[1]
     draft_block_ids = draft_block_ids.to(device=device, dtype=torch.int64).contiguous()
     draft_tokens = draft_tokens.to(device=device, dtype=torch.int64).contiguous()
-    n = layout.graph_num_tokens
+    n = int(padded_total)
     out = torch.empty(n, dtype=torch.int64, device=device)
     BLOCK = 256
     grid = (triton.cdiv(n, BLOCK),)
