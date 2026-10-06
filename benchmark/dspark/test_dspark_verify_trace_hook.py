@@ -127,6 +127,9 @@ class TestReadOnlyHook(unittest.TestCase):
 
     def test_upstream_stages_and_past_kv_are_read_only(self):
         import torch
+        class FfiArrayLike:
+            def __iter__(self):
+                return iter([1, 2])
         keys = torch.arange(20, dtype=torch.float32).reshape(10, 1, 2)
         values = keys + 100
         req_map = torch.zeros((6, 3), dtype=torch.long)
@@ -134,7 +137,7 @@ class TestReadOnlyHook(unittest.TestCase):
         backend = SimpleNamespace(
             token_to_kv_pool=SimpleNamespace(get_key_buffer=lambda _: keys, get_value_buffer=lambda _: values),
             req_to_token_pool=SimpleNamespace(req_to_token=req_map),
-            forward_metadata=SimpleNamespace(prefill_wrappers=[SimpleNamespace(_plan_info=[1, 2])]))
+            forward_metadata=SimpleNamespace(prefill_wrappers=[SimpleNamespace(_plan_info=FfiArrayLike())]))
         with tempfile.TemporaryDirectory() as folder, patch.dict("sys.modules", {
                 "sglang.srt.model_executor.cuda_graph_config": self.fake_graph_config(),
                 "sglang.srt.model_executor.forward_context": SimpleNamespace(get_attn_backend=lambda: backend)}):

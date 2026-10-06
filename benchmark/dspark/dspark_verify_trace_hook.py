@@ -221,7 +221,11 @@ def make_hook(config):
                                  current_kv_location=current_loc,
                                  backend_class=type(selected_backend).__name__,
                                  prefill_split_tile_size=getattr(selected_backend, "prefill_split_tile_size", None),
-                                 wrapper_plan_info=[getattr(wrapper, "_plan_info", None) for wrapper in wrappers])
+                                 # FlashInfer 0.6.17 exposes a TVM-FFI Array,
+                                 # not a JSON-native list. Do not change it.
+                                 wrapper_plan_info=[None if getattr(wrapper, "_plan_info", None) is None
+                                                    else [int(value) for value in wrapper._plan_info]
+                                                    for wrapper in wrappers])
             base = folder / f"pid{os.getpid()}-capture{count:03d}"
             with base.with_suffix(".pt").open("xb") as stream:
                 torch.save(tensors, stream)
@@ -229,6 +233,7 @@ def make_hook(config):
                 "timestamp_ns": time.time_ns(), "mode": str(mode), "pid": os.getpid(),
                 "stage": stage, "module_class": type(module).__name__,
                 "request_epoch": request_epoch, "prompt_sha256": focus_hash,
+                "prompt_length": focus_length,
                 "request_slot": slot, "pool_index": pool, "selected_row": row,
                 "position": positions[row], "anchor_token": ids[row],
                 "batch_size": len(pools), "query_lengths": lengths,
