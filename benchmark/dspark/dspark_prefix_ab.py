@@ -436,7 +436,7 @@ def aggregate(mode: str, cell: str, repeat: int, rows: list[dict], before: dict,
             "p95_claim": "descriptive_only"}
 
 
-def info_stats(info: dict) -> dict:
+def info_stats(info: dict, *, required: bool = True) -> dict:
     states = info.get("internal_states", [])
     if len(states) != 1:
         raise SafetyFailure("This protocol requires exactly one scheduler/DP rank")
@@ -444,7 +444,9 @@ def info_stats(info: dict) -> dict:
         raise SafetyFailure("Cumulative streaming output is required")
     stats = states[0].get("dspark_prefix_cache")
     if stats is None:
-        raise SafetyFailure("Server does not expose dspark_prefix_cache statistics")
+        if required:
+            raise SafetyFailure("Server does not expose dspark_prefix_cache statistics")
+        return {}  # Disabled radix implementations may have no sidecar: unavailable, not zero.
     return stats
 
 
@@ -473,7 +475,7 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
                     await asyncio.sleep(.5)
             info = await api(session, base, "/server_info")
             dump(folder / "server_info.json", info)
-            info_stats(info)
+            info_stats(info, required=mode != "full")
             if bool(info.get("enable_deterministic_inference")) != args.deterministic_control_only:
                 raise SafetyFailure("Resolved deterministic flag differs from protocol")
             if info.get("enable_deterministic_inference") and mode != "full":
@@ -508,7 +510,7 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
                     await api(session, base, "/flush_cache?timeout=10", "POST")
                     for variant in range(spec["concurrency"]):
                         await request(cell, spec, variant, "prime", repeat, variant)
-                    before = info_stats(await api(session, base, "/server_info"))
+                    before = info_stats(await api(session, base, "/server_info"), required=mode != "full")
                     gpu_start = gpu.begin(f"{cell}_r{repeat}_steady")
                     count = args.requests
                     queue = asyncio.Queue()
@@ -533,7 +535,7 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
                         await asyncio.gather(*tasks, return_exceptions=True)
                     elapsed = time.perf_counter() - started
                     server.check()
-                    after = info_stats(await api(session, base, "/server_info"))
+                    after = info_stats(await api(session, base, "/server_info"), required=mode != "full")
                     summary = aggregate(mode, cell, repeat, rows, before, after, gpu.summary(gpu_start), elapsed)
                     if summary["gpu"]["sample_count"] == 0:
                         raise SafetyFailure("No measured GPU samples; cannot report memory")

@@ -159,6 +159,12 @@ class TestDSparkAB(unittest.TestCase):
         with self.assertRaises(ValueError):
             ab.ManagedServer(args, "paired", Path("unused")).command()
 
+    def test_no_sidecar_allowed_only_for_full_control(self):
+        info = {"internal_states": [{"incremental_streaming_output": False}]}
+        self.assertEqual(ab.info_stats(info, required=False), {})
+        with self.assertRaises(ab.SafetyFailure):
+            ab.info_stats(info)
+
 
 if __name__ == "__main__":
     unittest.main()
