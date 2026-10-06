@@ -174,7 +174,8 @@ async def run(args):
     references = {}
     timeout = aiohttp.ClientTimeout(total=args.request_timeout)
     try:
-        async with aiohttp.ClientSession(timeout=timeout) as session:
+        async with aiohttp.ClientSession(timeout=timeout,
+                                        connector=aiohttp.TCPConnector(limit=16, force_close=True)) as session:
             server.start()
             deadline = time.monotonic() + args.startup_timeout
             while True:

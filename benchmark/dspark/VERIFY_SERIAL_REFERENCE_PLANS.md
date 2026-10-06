@@ -41,3 +41,12 @@ acceptance checks, then steady cache A/B. Any mismatch or adequate-sample p95
 regression stops the owned service and restores a61e0bb; no promotion/push until
 those gates pass. The known deterministic FlashInfer configuration still disables
 prefix reuse, so a deterministic-only pass cannot demonstrate paired-cache gain.
+
+Harness protocol v3 uses a fresh HTTP connection per request and no generation
+retries. The first complete-matrix attempt (h16) stopped after nine cells on a
+`ServerDisconnectedError` in the 8K C1 cell. The server log showed no preceding
+model/CUDA exception; the harness then terminated its owned service and restored
+a61. Connection reuse is a transport hypothesis, not a proven model diagnosis.
+Do not mix latency samples across connection policies or treat an interrupted
+cell as passed. Rerun against the SAME original frozen references after the
+transport change; do not regenerate references from the candidate.

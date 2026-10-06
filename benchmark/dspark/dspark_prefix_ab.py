@@ -485,7 +485,7 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
     base = f"http://127.0.0.1:{args.port}"
     timeout = aiohttp.ClientTimeout(total=args.request_timeout)
     async with aiohttp.ClientSession(timeout=timeout,
-                                    connector=aiohttp.TCPConnector(limit=16)) as session:
+                                    connector=aiohttp.TCPConnector(limit=16, force_close=True)) as session:
         try:
             gpu.start()
             server.start()
@@ -675,7 +675,8 @@ def main(argv=None) -> int:
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=False)
     modes = ["full"] if args.deterministic_control_only else ["full", "paired"] + (["target_only_shadow"] if args.include_target_only_shadow else [])
-    manifest = {"protocol_version": 2, "args": vars(args), "modes": modes,
+    manifest = {"protocol_version": 3, "args": vars(args), "modes": modes,
+                "http_connection_policy": "fresh connection per request, no generation retries",
                 "fixed_lengths": LENGTHS, "fixed_concurrencies": CONCURRENCIES,
                 "started_at": time.time(), "python": sys.version,
                 "deterministic_inference": args.deterministic_control_only, "sampling": "greedy, pytorch, fixed seed",
