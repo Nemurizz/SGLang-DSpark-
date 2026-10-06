@@ -113,3 +113,13 @@ Artifacts: `manifest.json`, exact `dataset.json`, per-mode `launch.json`,
 `server_info.json`, `server.log`, `gpu_samples.jsonl`, raw `requests.jsonl`,
 `shutdown.json`; top-level `cells.jsonl`, `summary.csv`, `report.md`, `status.json`.
 No existing files or result directories are deleted.
+
+## Batch-invariance isolation
+
+See `BATCH_DIAGNOSTICS.md` for the h5–h9 evidence and rejected candidates.
+`dspark_batch_diagnostic.py` isolates ordinary target versus DSpark and target
+attention backend, always with deterministic inference, cache off and graphs
+off. Optional `--logprob-topk 3` retains per-output top logprobs. Use an
+independent `--oracle-jsonl` for candidates: a within-profile serial/concurrent
+pass alone is not output preservation. No inference code is changed by the
+diagnostic runner. Services use the same environment's PATH for JIT tools.

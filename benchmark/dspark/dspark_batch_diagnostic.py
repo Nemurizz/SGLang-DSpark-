@@ -121,6 +121,8 @@ async def run(args):
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=args.repo,
                               capture_output=True, text=True, check=True).stdout.strip()
     ab.dump(root / "manifest.json", {"args": vars(args), "revision": revision,
+            "diagnostic_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            "shared_harness_source_sha256": hashlib.sha256(Path(ab.__file__).read_bytes()).hexdigest(),
             "source_dataset_sha256": hashlib.sha256(raw_dataset).hexdigest(),
             "oracle_sha256": hashlib.sha256(Path(args.oracle_jsonl).read_bytes()).hexdigest() if oracle else None,
             "purpose": "batch invariance isolation, no performance claim"})

@@ -309,7 +309,7 @@ class ManagedServer:
                 raise SafetyFailure("Refusing to replace an existing service on the benchmark port")
         cmd, env = self.command()
         dump(self.folder / "launch.json", {"command": cmd,
-             "environment": {k: v for k, v in env.items() if k.startswith("SGLANG_") or k == "PYTHONPATH"},
+             "environment": {k: v for k, v in env.items() if k.startswith("SGLANG_") or k in ("PYTHONPATH", "PATH")},
              "unsafe_target_only": self.mode == "target_only_shadow"})
         self.log_file = (self.folder / "server.log").open("w", encoding="utf-8")
         self.process = subprocess.Popen(cmd, env=env, cwd=self.args.repo,
