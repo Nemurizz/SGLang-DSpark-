@@ -280,6 +280,8 @@ class ManagedServer:
                     "SGLANG_DSPARK_RAGGED_VERIFY_GRAPH": "0", "SGLANG_RAGGED_VERIFY_MODE": "compact",
                     "SGLANG_DSPARK_COMPACT_SCAN_CUDA": "0", "SGLANG_DSPARK_DYNAMIC_DRAFT_LENGTH": "0",
                     "SGLANG_RADIX_FORCE_MISS": "0"})
+        # JIT helpers (e.g. ninja) must use the same environment as the server.
+        env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env.get("PATH", "")
         cmd = [sys.executable, "-m", "sglang.launch_server", "--model-path", a.model,
                "--tokenizer-path", a.model, "--trust-remote-code", "--host", "127.0.0.1",
                "--port", str(a.port), "--mem-fraction-static", str(a.mem_fraction),
