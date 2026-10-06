@@ -966,6 +966,11 @@ class FlashInferAttnBackend(AttentionBackend):
                 use_ragged=False,
                 encoder_lens=forward_batch.encoder_lens,
                 spec_info=forward_batch.spec_info,
+                # Match ordinary prefill's deterministic SplitKV partition.
+                # Without a fixed split, verify reduction order depends on
+                # batch geometry even when deterministic inference is enabled.
+                # None preserves the normal, non-deterministic planner policy.
+                fixed_split_size=self.prefill_split_tile_size,
             )
             self.forward_metadata = PrefillMetadata(
                 self.prefill_wrappers_verify,
