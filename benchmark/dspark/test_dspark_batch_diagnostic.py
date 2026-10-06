@@ -73,6 +73,14 @@ class TestDiagnostic(unittest.TestCase):
             self.assertEqual(spec["target_modules"], ["logits_processor"])
             self.assertIn(str(Path(diag.__file__).resolve().parent), env["PYTHONPATH"])
             self.assertIn("--disable-cuda-graph", cmd)
+            args.verify_trace_upstream = True
+            args.verify_trace_max_captures = 15
+            cmd, _ = diag.DiagnosticServer(args, "full", Path("/new")).command()
+            spec = json.loads(cmd[cmd.index("--forward-hooks") + 1])[0]
+            self.assertEqual(spec["config"]["kv_layer"], 0)
+            self.assertEqual(spec["target_modules"], ["logits_processor", "model.layers.0",
+                                                     "model.layers.19", "model.layers.39",
+                                                     "model.layers.0.self_attn.attn"])
 
     def test_independent_oracle_must_cover_every_variant_once(self):
         with tempfile.TemporaryDirectory() as folder:

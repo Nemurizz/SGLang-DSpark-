@@ -1,7 +1,8 @@
 """Opt-in eager boundary observer, loaded only through --forward-hooks.
 
-No inference monkeypatches. Copies one committed-anchor row, never returns a
-replacement output, and never measures performance. All graphs must be off.
+No inference monkeypatches. Copies one committed-anchor row per selected stage
+and optionally bounded past KV, never replaces output or measures performance.
+All graphs must be off.
 """
 from __future__ import annotations
 
@@ -63,6 +64,26 @@ def anchor_rows(*, lengths, pools, positions, ids, pool_prompts, focus_hash,
     return selected
 
 
+def trace_stage(module):
+    """The registry uses positional-only post-forward hooks, not kwargs."""
+    if hasattr(module, "self_attn") and hasattr(module.self_attn, "attn"):
+        return f"layer{module.self_attn.attn.layer_id}.post", "layer"
+    if hasattr(module, "layer_id") and hasattr(module, "tp_q_head_num"):
+        return f"layer{module.layer_id}.attention", "attention"
+    return "logits", "logits"
+
+
+def validate_past_locations(locations, *, position, buffer_rows, current_locations):
+    # Check on CPU BEFORE launching index_select; this observer must not turn
+    # invalid metadata into an illegal GPU access or read future draft slots.
+    if len(locations) != position or len(set(locations)) != len(locations):
+        raise ValueError("Trace past-KV mapping has wrong length or duplicate locations")
+    if any(loc < 0 or loc >= buffer_rows for loc in locations):
+        raise ValueError("Trace past-KV location outside physical buffer")
+    if set(locations).intersection(current_locations):
+        raise ValueError("Trace past-KV mapping overlaps current verify writes")
+
+
 def make_hook(config):
     import torch
     from sglang.srt.model_executor.cuda_graph_config import Backend, Phase, check_cuda_graph_backend
@@ -76,8 +97,12 @@ def make_hook(config):
     focus_position = int(config["position"])
     anchor_token = int(config["anchor_token"])
     limit = int(config.get("max_captures", 8))
+    kv_layer = config.get("kv_layer")
+    max_kv_prefix = int(config.get("max_kv_prefix", 4096))
     if focus_length < 1 or focus_position < focus_length or limit < 1:
         raise ValueError("Invalid trace focus or capture limit")
+    if kv_layer is not None and (int(kv_layer) < 0 or focus_position > max_kv_prefix):
+        raise ValueError("Past-KV trace exceeds explicit layer/prefix bound")
     pool_prompts, captured_epochs = {}, set()
     epoch = count = 0
 
@@ -90,12 +115,16 @@ def make_hook(config):
         nonlocal epoch, count
         if count >= limit or len(inputs) < 4:
             return None
-        ids_tensor, hidden, _, fb = inputs[:4]
+        stage, kind = trace_stage(module)
+        fb = inputs[2] if kind == "layer" else inputs[3]
         if not hasattr(fb, "req_pool_indices") or fb.req_pool_indices is None:
             return None  # Not a real request ForwardBatch (e.g. warmup metadata).
+        ids_tensor = inputs[0] if kind == "logits" else fb.input_ids
         mode = fb.forward_mode
         pools = cpu_list(fb.req_pool_indices)
         if mode.is_extend() and not mode.is_target_verify():
+            if kind != "logits":
+                return None  # Update identity once, after the whole prefill.
             lengths = cpu_list(fb.extend_seq_lens_cpu)
             prefixes = cpu_list(fb.extend_prefix_lens_cpu)
             ids = cpu_list(ids_tensor)
@@ -134,18 +163,71 @@ def make_hook(config):
                                focus_position=focus_position, anchor_token=anchor_token)
         for slot, row, pool in selected:
             request_epoch = pool_prompts[pool][1]
-            if request_epoch in captured_epochs:
+            capture_key = (request_epoch, stage)
+            if capture_key in captured_epochs:
                 continue
-            logits = output.next_token_logits
-            if logits is None or hidden.shape[0] != len(ids) or logits.shape[0] != len(ids):
-                raise ValueError("Trace cannot assume hidden/logit row identity for this forward")
-            tensors = {"final_hidden": hidden[row].detach().cpu().clone(),
-                       "raw_logits": logits[row].detach().cpu().clone()}
+
+            def copy_row(value):
+                if not isinstance(value, torch.Tensor) or value.shape[0] != len(ids):
+                    raise ValueError("Trace cannot assume row identity for this tensor")
+                return value[row].detach().cpu().clone()
+
+            extra = {}
+            if kind == "logits":
+                hidden, logits = inputs[1], output.next_token_logits
+                tensors = {"final_hidden": copy_row(hidden), "raw_logits": copy_row(logits)}
+                extra.update(hidden_dtype=str(hidden.dtype), logits_dtype=str(logits.dtype),
+                             hidden_shape=list(hidden.shape), logits_shape=list(logits.shape),
+                             raw_argmax=int(tensors["raw_logits"].argmax()),
+                             raw_top3=[(int(i), float(v)) for v, i in zip(*torch.topk(tensors["raw_logits"], 3))])
+            elif kind == "layer":
+                # Input tensors can alias fused residual/norm buffers by the
+                # time a POST hook runs. Only claim to observe returned output.
+                hidden, residual = output
+                tensors = {"post_hidden": copy_row(hidden)}
+                if residual is not None:
+                    tensors["post_residual"] = copy_row(residual)
+            else:
+                tensors = {name: copy_row(value) for name, value in
+                           zip(("query", "current_key", "current_value", "attention_output"),
+                               (*inputs[:3], output))}
+                if kv_layer is not None and module.layer_id == int(kv_layer):
+                    from sglang.srt.model_executor.forward_context import get_attn_backend
+                    backend = get_attn_backend()
+                    kv_pool = backend.token_to_kv_pool
+                    keys = kv_pool.get_key_buffer(module.layer_id)
+                    values = kv_pool.get_value_buffer(module.layer_id)
+                    if (keys.ndim != 3 or values.ndim != 3 or keys.shape[0] != values.shape[0]
+                            or getattr(kv_pool, "use_hnd", False)
+                            or getattr(kv_pool, "store_dtype", keys.dtype) != keys.dtype):
+                        raise ValueError("Trace only supports explicit unquantized NHD KV rows")
+                    locations = cpu_list(backend.req_to_token_pool.req_to_token[pool, :focus_position])
+                    current_locations = cpu_list(fb.out_cache_loc)
+                    validate_past_locations(locations, position=focus_position,
+                                            buffer_rows=keys.shape[0], current_locations=current_locations)
+                    index = torch.tensor(locations, dtype=torch.long, device=keys.device)
+                    tensors["past_key"] = keys.index_select(0, index).detach().cpu().clone()
+                    tensors["past_value"] = values.index_select(0, index).detach().cpu().clone()
+                    current_loc = current_locations[row]
+                    if current_loc < 0 or current_loc >= keys.shape[0]:
+                        raise ValueError("Trace current KV location outside physical buffer")
+                    tensors["written_key"] = keys[current_loc].detach().cpu().clone()
+                    tensors["written_value"] = values[current_loc].detach().cpu().clone()
+                    selected_backend = (backend._select_backend(mode)
+                                        if hasattr(backend, "_select_backend") else backend)
+                    wrappers = getattr(getattr(selected_backend, "forward_metadata", None),
+                                       "prefill_wrappers", [])
+                    extra.update(past_kv_locations=locations, past_kv_position_end_exclusive=focus_position,
+                                 current_kv_location=current_loc,
+                                 backend_class=type(selected_backend).__name__,
+                                 prefill_split_tile_size=getattr(selected_backend, "prefill_split_tile_size", None),
+                                 wrapper_plan_info=[getattr(wrapper, "_plan_info", None) for wrapper in wrappers])
             base = folder / f"pid{os.getpid()}-capture{count:03d}"
             with base.with_suffix(".pt").open("xb") as stream:
                 torch.save(tensors, stream)
             metadata = {
                 "timestamp_ns": time.time_ns(), "mode": str(mode), "pid": os.getpid(),
+                "stage": stage, "module_class": type(module).__name__,
                 "request_epoch": request_epoch, "prompt_sha256": focus_hash,
                 "request_slot": slot, "pool_index": pool, "selected_row": row,
                 "position": positions[row], "anchor_token": ids[row],
@@ -160,16 +242,15 @@ def make_hook(config):
                            if name.endswith("_cpu") or name.endswith("_host") else getattr(layout, name, None)
                            for name in ("verify_lens_cpu", "total_verify_tokens", "graph_num_tokens",
                                         "qo_indptr_host", "kv_indptr_host", "kv_lens_host")},
-                "hidden_dtype": str(hidden.dtype), "logits_dtype": str(logits.dtype),
-                "hidden_shape": list(hidden.shape), "logits_shape": list(logits.shape),
-                "raw_argmax": int(tensors["raw_logits"].argmax()),
-                "raw_top3": [(int(i), float(v)) for v, i in zip(*torch.topk(tensors["raw_logits"], 3))],
+                "captured_tensors": {name: {"shape": list(value.shape), "dtype": str(value.dtype)}
+                                     for name, value in tensors.items()},
+                **extra,
                 "tensor_sha256": hashlib.sha256(base.with_suffix(".pt").read_bytes()).hexdigest(),
                 "scope": "read-only eager boundary observation; not performance evidence",
             }
             with base.with_suffix(".json").open("x", encoding="utf-8") as stream:
                 json.dump(metadata, stream, indent=2)
-            captured_epochs.add(request_epoch)
+            captured_epochs.add(capture_key)
             count += 1
         return None
 

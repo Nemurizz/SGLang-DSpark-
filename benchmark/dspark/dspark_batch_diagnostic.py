@@ -45,8 +45,13 @@ class DiagnosticServer(ab.ManagedServer):
                       "prompt_sha256": prompt_hash(prompt), "prompt_length": len(prompt),
                       "position": len(prompt) + index - 1, "anchor_token": ref_ids[index - 1],
                       "max_captures": a.verify_trace_max_captures}
+            modules = ["logits_processor"]
+            if getattr(a, "verify_trace_upstream", False):
+                modules += ["model.layers.0", "model.layers.19", "model.layers.39",
+                            "model.layers.0.self_attn.attn"]
+                config.update(kv_layer=0, max_kv_prefix=4096)
             cmd += ["--forward-hooks", json.dumps([{
-                "name": "verify-boundary-read-only", "target_modules": ["logits_processor"],
+                "name": "verify-boundary-read-only", "target_modules": modules,
                 "hook_factory": "dspark_verify_trace_hook:make_hook", "config": config}])]
             env["PYTHONPATH"] += os.pathsep + str(Path(__file__).resolve().parent)
         return cmd, env
@@ -73,6 +78,8 @@ def parse_args(argv=None):
                         help="Opt-in read-only eager final-hidden/raw-logit trace; zero-based index >= 1")
     parser.add_argument("--verify-trace-variant", type=int, default=3)
     parser.add_argument("--verify-trace-max-captures", type=int, default=8)
+    parser.add_argument("--verify-trace-upstream", action="store_true",
+                        help="Diagnostic only: layer 0 attention/past KV and layers 0/19/39 post output")
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--startup-timeout", type=float, default=600)
     parser.add_argument("--request-timeout", type=float, default=180)
@@ -85,6 +92,8 @@ def parse_args(argv=None):
             args.verify_trace_output_index < 1 or args.verify_trace_variant < 0
             or args.verify_trace_max_captures < 1 or not args.oracle_jsonl):
         parser.error("Trace requires independent oracle, output index >= 1, variant >= 0 and positive capture limit")
+    if args.verify_trace_upstream and (args.verify_trace_output_index is None or args.verify_trace_max_captures < 15):
+        parser.error("Upstream trace requires focused trace and >= 15 captures for three five-stage passes")
     args.enable_standard_graphs = False
     args.deterministic_control_only = True
     return args
