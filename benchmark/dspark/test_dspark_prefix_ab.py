@@ -4,6 +4,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 spec = importlib.util.spec_from_file_location("dspark_prefix_ab", Path(__file__).with_name("dspark_prefix_ab.py"))
@@ -28,6 +29,24 @@ class FakeTokenizer:
 
 
 class TestDSparkAB(unittest.TestCase):
+    def test_frozen_oracle_requires_exact_prompts_unique_complete_coverage(self):
+        dataset = {"p128_c1": {"concurrency": 1, "prompts": [[1, 2]]}}
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / "refs.jsonl"
+            row = {"cell": "p128_c1", "variant": 0, "phase": "reference", "output_ids": [3]}
+            source.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                ab.load_frozen_references(source, dataset)
+            (root / "dataset.json").write_text(json.dumps(dataset), encoding="utf-8")
+            self.assertEqual(ab.load_frozen_references(source, dataset)["p128_c1", 0]["output_ids"], [3])
+            source.write_text((json.dumps(row) + "\n") * 2, encoding="utf-8")
+            with self.assertRaises(ValueError):
+                ab.load_frozen_references(source, dataset)
+            source.write_text("", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                ab.load_frozen_references(source, dataset)
+
     def test_percentiles(self):
         self.assertEqual(ab.percentile([0, 10], .95), 9.5)
         self.assertIsNone(ab.percentile([], .95))

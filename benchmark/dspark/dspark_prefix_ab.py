@@ -453,6 +453,29 @@ def info_stats(info: dict, *, required: bool = True) -> dict:
     return stats
 
 
+def load_frozen_references(path, dataset):
+    """Never let a new candidate silently replace the original serial oracle."""
+    if not path:
+        return {}
+    source = Path(path)
+    adjacent = source.parent / "dataset.json"
+    if not adjacent.exists() or json.loads(adjacent.read_text(encoding="utf-8")) != dataset:
+        raise ValueError("Frozen oracle must have an adjacent identical full dataset.json")
+    expected = {(cell, variant) for cell, spec in dataset.items() for variant in range(spec["concurrency"])}
+    references = {}
+    for line in source.read_text(encoding="utf-8").splitlines():
+        row = json.loads(line)
+        if row.get("phase") != "reference":
+            continue
+        key = row["cell"], row["variant"]
+        if key in references:
+            raise ValueError("Duplicate frozen oracle reference")
+        references[key] = row
+    if set(references) != expected:
+        raise ValueError("Frozen oracle must cover every variant of every selected cell exactly once")
+    return references
+
+
 async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: list[dict]):
     import aiohttp
     folder = Path(args.output) / mode
@@ -499,6 +522,8 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
                     raise SafetyFailure("Full-prefill control unexpectedly reused cached tokens")
                 reference_key = (cell, variant)
                 if mode == "full" and phase == "reference":
+                    if reference_key in references:
+                        check_reference(references[reference_key], row)
                     references[reference_key] = row
                 else:
                     check_reference(references[reference_key], row)
@@ -604,6 +629,7 @@ def parse_args(argv=None):
     parser.add_argument("--model", required=True)
     parser.add_argument("--draft", required=True)
     parser.add_argument("--sps-table")
+    parser.add_argument("--oracle-jsonl", help="Complete frozen original references with adjacent identical dataset.json")
     parser.add_argument("--output", required=True, help="New, non-existing directory; never overwrites a run")
     parser.add_argument("--preset", choices=("smoke", "standard"), default="standard")
     parser.add_argument("--include-target-only-shadow", action="store_true", help="Explicit unsafe, isolated target-only control")
@@ -649,11 +675,14 @@ def main(argv=None) -> int:
     root = Path(args.output)
     root.mkdir(parents=True, exist_ok=False)
     modes = ["full"] if args.deterministic_control_only else ["full", "paired"] + (["target_only_shadow"] if args.include_target_only_shadow else [])
-    manifest = {"protocol_version": 1, "args": vars(args), "modes": modes,
+    manifest = {"protocol_version": 2, "args": vars(args), "modes": modes,
                 "fixed_lengths": LENGTHS, "fixed_concurrencies": CONCURRENCIES,
                 "started_at": time.time(), "python": sys.version,
                 "deterministic_inference": args.deterministic_control_only, "sampling": "greedy, pytorch, fixed seed",
                 "control_only_not_cache_ab": args.deterministic_control_only,
+                "reference_verify_candidate_enabled": args.reference_verify_plans,
+                "frozen_oracle_sha256": hashlib.sha256(Path(args.oracle_jsonl).read_bytes()).hexdigest()
+                    if args.oracle_jsonl else None,
                 "unsafe_mode_acknowledged": args.include_target_only_shadow,
                 "performance_claim": "unproven", "p95_scope": "per cell/repeat; stop on regression only with adequate n"}
     manifest["harness_source_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
@@ -669,13 +698,15 @@ def main(argv=None) -> int:
     dump(root / "manifest.json", manifest)
     summaries: list[dict] = []
     references: dict = {}
-    status = {"status": "running", "completed_cells": 0, "inference_code_modified": False}
+    status = {"status": "running", "completed_cells": 0,
+              "inference_code_modified": args.reference_verify_plans}
     dump(root / "status.json", status)
     try:
         from transformers import AutoTokenizer
         tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True, local_files_only=True)
         dataset = make_dataset(tokenizer, args.seed)
         dump(root / "dataset.json", dataset)
+        references.update(load_frozen_references(args.oracle_jsonl, dataset))
         for mode in modes:
             asyncio.run(run_mode(args, mode, dataset, references, summaries))
         status["status"] = "completed_smoke" if args.preset == "smoke" else "completed_no_gain_claim"
