@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
@@ -31,6 +32,23 @@ class DiagnosticServer(ab.ManagedServer):
                    "triton" if a.profile.endswith("triton") else "flashinfer")
         cmd[cmd.index("--attention-backend") + 1] = backend
         cmd += ["--disable-radix-cache"]
+        if getattr(a, "verify_trace_output_index", None) is not None:
+            from dspark_verify_trace_hook import prompt_hash
+            spec = json.loads(Path(a.dataset).read_text(encoding="utf-8"))[a.cell]
+            refs = load_oracle(a.oracle_jsonl, a.cell, spec["concurrency"])
+            prompt = spec["prompts"][a.verify_trace_variant]
+            index = a.verify_trace_output_index
+            ref_ids = refs[a.verify_trace_variant]["output_ids"]
+            if index >= len(ref_ids):
+                raise ValueError("Trace output index exceeds independent reference")
+            config = {"folder": str(self.folder / "verify_trace"),
+                      "prompt_sha256": prompt_hash(prompt), "prompt_length": len(prompt),
+                      "position": len(prompt) + index - 1, "anchor_token": ref_ids[index - 1],
+                      "max_captures": a.verify_trace_max_captures}
+            cmd += ["--forward-hooks", json.dumps([{
+                "name": "verify-boundary-read-only", "target_modules": ["logits_processor"],
+                "hook_factory": "dspark_verify_trace_hook:make_hook", "config": config}])]
+            env["PYTHONPATH"] += os.pathsep + str(Path(__file__).resolve().parent)
         return cmd, env
 
 
@@ -51,6 +69,10 @@ def parse_args(argv=None):
     parser.add_argument("--output-tokens", type=int, default=32)
     parser.add_argument("--logprob-topk", type=int, default=0,
                         help="Optional diagnostics only; changes returned observability, not gates")
+    parser.add_argument("--verify-trace-output-index", type=int,
+                        help="Opt-in read-only eager final-hidden/raw-logit trace; zero-based index >= 1")
+    parser.add_argument("--verify-trace-variant", type=int, default=3)
+    parser.add_argument("--verify-trace-max-captures", type=int, default=8)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--startup-timeout", type=float, default=600)
     parser.add_argument("--request-timeout", type=float, default=180)
@@ -59,6 +81,10 @@ def parse_args(argv=None):
     args = parser.parse_args(argv)
     if args.repeats < 1 or args.output_tokens < 1 or args.logprob_topk < 0:
         parser.error("repeats/output-tokens must be positive; logprob-topk cannot be negative")
+    if args.verify_trace_output_index is not None and (
+            args.verify_trace_output_index < 1 or args.verify_trace_variant < 0
+            or args.verify_trace_max_captures < 1 or not args.oracle_jsonl):
+        parser.error("Trace requires independent oracle, output index >= 1, variant >= 0 and positive capture limit")
     args.enable_standard_graphs = False
     args.deterministic_control_only = True
     return args
@@ -125,6 +151,8 @@ async def run(args):
             "shared_harness_source_sha256": hashlib.sha256(Path(ab.__file__).read_bytes()).hexdigest(),
             "source_dataset_sha256": hashlib.sha256(raw_dataset).hexdigest(),
             "oracle_sha256": hashlib.sha256(Path(args.oracle_jsonl).read_bytes()).hexdigest() if oracle else None,
+            "trace_hook_sha256": hashlib.sha256(Path(__file__).with_name("dspark_verify_trace_hook.py").read_bytes()).hexdigest()
+                if args.verify_trace_output_index is not None else None,
             "purpose": "batch invariance isolation, no performance claim"})
     server = DiagnosticServer(args, "full", root)
     base = f"http://127.0.0.1:{args.port}"
@@ -194,6 +222,11 @@ async def run(args):
         print(f"SAFETY STOP: {exc}", flush=True)
     finally:
         server.stop()
+        if args.verify_trace_output_index is not None:
+            status["trace_captures"] = len(list((root / "verify_trace").glob("*.json")))
+            if not status["trace_captures"] and status["status"] != "safety_stopped":
+                status.update(status="safety_stopped", error="No focused anchor trace captured",
+                              error_type="TraceUnavailable")
         ab.dump(root / "status.json", status)
     print(json.dumps(status), flush=True)
     return 0 if status["status"] == "correctness_passed_for_this_case_only" else 2

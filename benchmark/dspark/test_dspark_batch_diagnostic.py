@@ -52,6 +52,28 @@ class TestDiagnostic(unittest.TestCase):
         self.assertTrue(enriched["return_logprob"])
         self.assertEqual(enriched["top_logprobs_num"], 3)
 
+    def test_trace_off_does_not_load_hook(self):
+        cmd, _ = diag.DiagnosticServer(self.args("dspark-fi"), "full", Path("/new")).command()
+        self.assertNotIn("--forward-hooks", cmd)
+
+    def test_trace_focus_comes_from_independent_oracle(self):
+        with tempfile.TemporaryDirectory() as folder:
+            dataset, oracle = Path(folder) / "dataset.json", Path(folder) / "requests.jsonl"
+            dataset.write_text(json.dumps({"p2048_c8": {"concurrency": 1, "prompts": [[2, 3]]}}), encoding="utf-8")
+            oracle.write_text(json.dumps({"cell": "p2048_c8", "phase": "reference", "variant": 0,
+                                          "output_ids": [7, 8, 9]}) + "\n", encoding="utf-8")
+            args = diag.parse_args(["--repo", "/repo", "--model", "/model", "--draft", "/draft",
+                                   "--dataset", str(dataset), "--oracle-jsonl", str(oracle),
+                                   "--output", "/new", "--profile", "dspark-fi",
+                                   "--verify-trace-output-index", "2", "--verify-trace-variant", "0"])
+            cmd, env = diag.DiagnosticServer(args, "full", Path("/new")).command()
+            spec = json.loads(cmd[cmd.index("--forward-hooks") + 1])[0]
+            self.assertEqual(spec["config"]["position"], 3)
+            self.assertEqual(spec["config"]["anchor_token"], 8)
+            self.assertEqual(spec["target_modules"], ["logits_processor"])
+            self.assertIn(str(Path(diag.__file__).resolve().parent), env["PYTHONPATH"])
+            self.assertIn("--disable-cuda-graph", cmd)
+
     def test_independent_oracle_must_cover_every_variant_once(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "oracle.jsonl"
