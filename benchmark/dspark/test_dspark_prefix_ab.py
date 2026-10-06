@@ -5,6 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 spec = importlib.util.spec_from_file_location("dspark_prefix_ab", Path(__file__).with_name("dspark_prefix_ab.py"))
@@ -29,6 +30,10 @@ class FakeTokenizer:
 
 
 class TestDSparkAB(unittest.TestCase):
+    def test_connector_never_reuses_a_stale_keepalive_socket(self):
+        fake = SimpleNamespace(TCPConnector=lambda **kwargs: kwargs)
+        self.assertEqual(ab.http_connector(fake), {"limit": 16, "force_close": True})
+
     def test_frozen_oracle_requires_exact_prompts_unique_complete_coverage(self):
         dataset = {"p128_c1": {"concurrency": 1, "prompts": [[1, 2]]}}
         with tempfile.TemporaryDirectory() as folder:

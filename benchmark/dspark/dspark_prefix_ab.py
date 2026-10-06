@@ -476,6 +476,10 @@ def load_frozen_references(path, dataset):
     return references
 
 
+def http_connector(aiohttp):
+    return aiohttp.TCPConnector(limit=16, force_close=True)
+
+
 async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: list[dict]):
     import aiohttp
     folder = Path(args.output) / mode
@@ -485,7 +489,7 @@ async def run_mode(args, mode: str, dataset: dict, references: dict, summaries: 
     base = f"http://127.0.0.1:{args.port}"
     timeout = aiohttp.ClientTimeout(total=args.request_timeout)
     async with aiohttp.ClientSession(timeout=timeout,
-                                    connector=aiohttp.TCPConnector(limit=16, force_close=True)) as session:
+                                    connector=http_connector(aiohttp)) as session:
         try:
             gpu.start()
             server.start()
