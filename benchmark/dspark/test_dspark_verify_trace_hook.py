@@ -7,10 +7,19 @@ import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from dspark_verify_trace_hook import anchor_rows, make_hook, prompt_hash, request_rows
+from dspark_verify_trace_hook import anchor_rows, make_hook, prompt_hash, request_rows, verify_query_lengths
 
 
 class TestTraceRows(unittest.TestCase):
+    def test_verify_metadata_does_not_assume_extend_lengths_exist(self):
+        kwargs = dict(layout_lengths=[2, 1], declared_lengths=None,
+                      fixed_tokens_per_request=8, pool_count=2, total_rows=4)
+        self.assertEqual(verify_query_lengths(**kwargs), ([2, 1], "live_ragged_layout"))
+        kwargs.update(layout_lengths=None, total_rows=16)
+        self.assertEqual(verify_query_lengths(**kwargs)[0], [8, 8])
+        kwargs["total_rows"] = 32
+        with self.assertRaises(ValueError):
+            verify_query_lengths(**kwargs)  # Never use a padded/stale bucket as live length.
     def test_hash_is_content_based(self):
         self.assertEqual(prompt_hash([1, 2]), prompt_hash([1, 2]))
         self.assertNotEqual(prompt_hash([1, 2]), prompt_hash([2, 1]))
@@ -62,12 +71,12 @@ class TestReadOnlyHook(unittest.TestCase):
             mode.is_extend = lambda: False
             mode.is_target_verify = lambda: True
             mode.is_decode = lambda: False
-            fb.extend_seq_lens_cpu = [1]
+            fb.extend_seq_lens_cpu = None
             fb.positions = torch.tensor([2])
             fb.seq_lens = torch.tensor([3])
             fb.seq_lens_cpu = torch.tensor([3])
             fb.out_cache_loc = torch.tensor([100])
-            fb.spec_info = None
+            fb.spec_info = SimpleNamespace(draft_token_num=1, ragged_verify_layout=None)
             hidden = torch.tensor([[1., 2.]])
             logits = torch.tensor([[0., 3., 2., 1.]])
             before_hidden, before_logits = hidden.clone(), logits.clone()

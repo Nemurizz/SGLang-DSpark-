@@ -28,6 +28,25 @@ def request_rows(lengths, total_rows):
     return starts
 
 
+def verify_query_lengths(*, layout_lengths, declared_lengths, fixed_tokens_per_request,
+                         pool_count, total_rows):
+    if layout_lengths is not None:
+        lengths, source = list(layout_lengths), "live_ragged_layout"
+    elif declared_lengths is not None:
+        lengths, source = list(declared_lengths), "declared_extend_lengths"
+    elif fixed_tokens_per_request and fixed_tokens_per_request > 0:
+        lengths = [int(fixed_tokens_per_request)] * pool_count
+        source = "fixed_verify_input_checked_against_runtime"
+        if sum(lengths) != total_rows:
+            raise ValueError("Fixed verify input does not match actual runtime rows")
+    else:
+        raise ValueError("No authoritative verify query lengths available")
+    if len(lengths) != pool_count:
+        raise ValueError("Verify query lengths do not match request count")
+    request_rows(lengths, total_rows)
+    return lengths, source
+
+
 def anchor_rows(*, lengths, pools, positions, ids, pool_prompts, focus_hash,
                 focus_position, anchor_token):
     if len(pools) != len(lengths) or len(positions) != len(ids):
@@ -93,8 +112,23 @@ def make_hook(config):
             return None
         if not any(pool_prompts.get(pool, (None,))[0] == focus_hash for pool in pools):
             return None
-        lengths = cpu_list(fb.extend_seq_lens_cpu) if mode.is_target_verify() else [1] * len(pools)
         ids, positions = cpu_list(ids_tensor), cpu_list(fb.positions)
+        spec = getattr(fb, "spec_info", None)
+        layout = getattr(spec, "ragged_verify_layout", None)
+        if mode.is_target_verify():
+            layout_lengths = None
+            if layout is not None:
+                layout_lengths = cpu_list(layout.verify_lens_cpu)
+                if layout_lengths is None:
+                    layout_lengths = cpu_list(layout.verify_lens)
+                if sum(layout_lengths) != layout.total_verify_tokens or layout.graph_num_tokens != len(ids):
+                    raise ValueError("Trace layout/live/padded runtime geometry mismatch")
+            lengths, length_source = verify_query_lengths(
+                layout_lengths=layout_lengths, declared_lengths=cpu_list(fb.extend_seq_lens_cpu),
+                fixed_tokens_per_request=getattr(spec, "draft_token_num", None),
+                pool_count=len(pools), total_rows=len(ids))
+        else:
+            lengths, length_source = [1] * len(pools), "decode_one_row_per_request"
         selected = anchor_rows(lengths=lengths, pools=pools, positions=positions, ids=ids,
                                pool_prompts=pool_prompts, focus_hash=focus_hash,
                                focus_position=focus_position, anchor_token=anchor_token)
@@ -110,20 +144,22 @@ def make_hook(config):
             base = folder / f"pid{os.getpid()}-capture{count:03d}"
             with base.with_suffix(".pt").open("xb") as stream:
                 torch.save(tensors, stream)
-            layout = getattr(getattr(fb, "spec_info", None), "ragged_verify_layout", None)
             metadata = {
                 "timestamp_ns": time.time_ns(), "mode": str(mode), "pid": os.getpid(),
                 "request_epoch": request_epoch, "prompt_sha256": focus_hash,
                 "request_slot": slot, "pool_index": pool, "selected_row": row,
                 "position": positions[row], "anchor_token": ids[row],
                 "batch_size": len(pools), "query_lengths": lengths,
+                "query_length_source": length_source,
                 "live_query_total_from_lengths": sum(lengths), "tensor_row_count": len(ids),
                 "request_pool_indices": pools, "input_ids": ids, "positions": positions,
                 "seq_lens": cpu_list(fb.seq_lens), "seq_lens_cpu": cpu_list(fb.seq_lens_cpu),
                 "out_cache_loc": cpu_list(fb.out_cache_loc),
+                "live_seq_lens_cpu_before_verify": cpu_list(getattr(spec, "live_seq_lens_cpu", None)),
                 "layout": {name: cpu_list(getattr(layout, name, None))
-                           if name == "verify_lens_cpu" else getattr(layout, name, None)
-                           for name in ("verify_lens_cpu", "total_verify_tokens", "graph_num_tokens")},
+                           if name.endswith("_cpu") or name.endswith("_host") else getattr(layout, name, None)
+                           for name in ("verify_lens_cpu", "total_verify_tokens", "graph_num_tokens",
+                                        "qo_indptr_host", "kv_indptr_host", "kv_lens_host")},
                 "hidden_dtype": str(hidden.dtype), "logits_dtype": str(logits.dtype),
                 "hidden_shape": list(hidden.shape), "logits_shape": list(logits.shape),
                 "raw_argmax": int(tensors["raw_logits"].argmax()),
