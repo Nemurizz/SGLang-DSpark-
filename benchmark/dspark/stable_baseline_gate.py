@@ -42,7 +42,7 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def profile_command(cmd, env, *, ordinary, profile_id, runtime_folder, hook_folder):
+def profile_command(cmd, env, *, ordinary, profile_id, runtime_folder, hook_folder, fixed_tile=False):
     cmd, env = list(cmd), dict(env)
     for flag in ("--attention-backend", "--decode-attention-backend", "--speculative-draft-attention-backend"):
         cmd[cmd.index(flag) + 1] = "fa4"
@@ -68,6 +68,15 @@ def profile_command(cmd, env, *, ordinary, profile_id, runtime_folder, hook_fold
                 "SGLANG_DSPARK_PREFIX_CACHE_FINGERPRINT": profile_id,
                 "TORCH_ALLOW_TF32_CUBLAS_OVERRIDE": "0"})
     env["PYTHONPATH"] += ":" + str(hook_folder)
+    if fixed_tile:
+        if fixed_tile != [64, 64]:
+            raise ValueError('Only the separately qualified [64,64] policy is supported')
+        index = cmd.index('--forward-hooks') + 1
+        hooks = json.loads(cmd[index])
+        hooks[0]['hook_factory'] = 'fixed_fa4_policy_hook:make_hook'
+        hooks[0]['config']['fixed_fa4_tile'] = fixed_tile
+        cmd[index] = json.dumps(hooks)
+        env['SGLANG_DSPARK_STABLE_FA4_FIXED_TILE'] = '1'
     return cmd, env
 
 
@@ -104,7 +113,8 @@ async def run_arm(args, root, dataset, references, target_refs, profile_id, *, o
         def command(self):
             cmd, env = super().command()
             return profile_command(cmd, env, ordinary=ordinary, profile_id=profile_id,
-                runtime_folder=folder / "runtime", hook_folder=Path(__file__).resolve().parent)
+                runtime_folder=folder / "runtime", hook_folder=Path(__file__).resolve().parent,
+                fixed_tile=args.fixed_fa4_tile)
 
     server = StableServer(args, mode, folder)
     base = f"http://127.0.0.1:{args.port}"
@@ -136,7 +146,7 @@ async def run_arm(args, root, dataset, references, target_refs, profile_id, *, o
             if not runtime_records:
                 raise ab.SafetyFailure("Missing worker runtime attestation")
             for path in runtime_records:
-                validate_runtime(json.loads(path.read_text()))
+                validate_runtime(json.loads(path.read_text()), fixed_tile=args.fixed_fa4_tile or None)
 
             async def request(cell, v, phase, repeat):
                 row = await ab.generate(session, base, dataset[cell]["prompts"][v], args.output_tokens, args.seed)
@@ -224,10 +234,12 @@ async def main():
     parser.add_argument("--cells", default="p128_c1,p128_c4,p128_c8")
     parser.add_argument("--output-tokens", type=int, default=32)
     parser.add_argument("--with-paired", action="store_true")
+    parser.add_argument('--fixed-fa4-tile', action='store_true', help='Independent v2 numerical host policy, not default FA4')
     cli = parser.parse_args()
     previous = json.loads((cli.template / "manifest.json").read_text())
     args = SimpleNamespace(**previous["args"])
     args.deterministic_control_only = args.reference_verify_plans = args.enable_standard_graphs = False
+    args.fixed_fa4_tile = [64, 64] if cli.fixed_fa4_tile else False
     args.output_tokens, args.output = cli.output_tokens, str(cli.output)
     if args.output_tokens < 32:
         raise ValueError("Correctness smoke requires at least 32 output tokens")
@@ -247,7 +259,17 @@ async def main():
     sources = {name: sha(repo / name) for name in SOURCE_PATHS}
     versions = {name: importlib.metadata.version(name) for name in ("torch", "flashinfer-python", "aiohttp", "transformers")}
     numerical = {"profile": PROFILE, "source_sha256": sources, "packages": versions}
-    profile_id = PROFILE["name"] + "-" + hashlib.sha256(json.dumps(numerical, sort_keys=True).encode()).hexdigest()[:24]
+    if cli.fixed_fa4_tile:
+        numerical['profile'] = {**PROFILE, 'name': 'dspark-stable-fa4-fixed64-v2', 'fixed_fa4_tile': args.fixed_fa4_tile}
+        numerical['fixed_policy_sha256'] = sha(Path(__file__).with_name('fixed_fa4_policy_hook.py'))
+    model_metadata = {}
+    for model in (args.model, args.draft):
+        directory = Path(model)
+        model_metadata[model] = {str(path.name): sha(path) for path in directory.glob('*.json')}
+    numerical['model_metadata_sha256'] = model_metadata
+    numerical['sps_sha256'] = sha(args.sps_table)
+    numerical['gpu_identity'] = subprocess.check_output(['nvidia-smi', '--query-gpu=name,uuid,driver_version', '--format=csv,noheader'], text=True).strip()
+    profile_id = numerical['profile']['name'] + "-" + hashlib.sha256(json.dumps(numerical, sort_keys=True).encode()).hexdigest()[:24]
     cli.output.mkdir(parents=True, exist_ok=False)
     ab.dump(cli.output / "dataset.json", dataset)
     ab.dump(cli.output / "manifest.json", {"args": vars(args), "head": head, "profile_id": profile_id,
@@ -260,9 +282,13 @@ async def main():
     status = {"status": "running", "profile_id": profile_id, "paired_started": False, "performance_claim": "unproven"}
     try:
         await run_arm(args, cli.output, dataset, references, target_refs, profile_id, ordinary=True, paired=False, repeats=3)
+        if {name: sha(repo / name) for name in SOURCE_PATHS} != sources:
+            raise ab.SafetyFailure('Inference sources changed between arms')
         await run_arm(args, cli.output, dataset, references, target_refs, profile_id, ordinary=False, paired=False, repeats=3)
         status["full_correctness_passed"] = True
         if cli.with_paired:
+            if {name: sha(repo / name) for name in SOURCE_PATHS} != sources:
+                raise ab.SafetyFailure('Inference sources changed before paired arm')
             status["paired_started"] = True
             await run_arm(args, cli.output, dataset, references, target_refs, profile_id, ordinary=False, paired=True, repeats=3)
             status["paired_correctness_passed"] = True
@@ -270,12 +296,15 @@ async def main():
         # Never publish a complete reusable matrix oracle from a focused subset.
         if cells == list(all_data):
             for row in references.values():
-                ab.append_jsonl(cli.output / "baseline_references.jsonl", row)
+                ab.append_jsonl(cli.output / "baseline_references.jsonl", {**row, 'origin_phase': row['phase'], 'phase': 'reference'})
             status["baseline_reference_sha256"] = sha(cli.output / "baseline_references.jsonl")
     except Exception as exc:
         status.update(status="safety_stopped", error_type=type(exc).__name__, error=str(exc))
     finally:
         status.update(finished_at=time.time(), old_references_unchanged=all(sha(path) == frozen_before[str(path)] for path in frozen_paths))
+        status['inference_sources_unchanged'] = {name: sha(repo / name) for name in SOURCE_PATHS} == sources
+        if not status['old_references_unchanged'] or not status['inference_sources_unchanged']:
+            status.update(status='safety_stopped', error='Read-only input/source integrity check failed')
         ab.dump(cli.output / "status.json", status)
     print(json.dumps(status), flush=True)
     return 0 if status["status"] == "passed_for_requested_cells_only" else 2

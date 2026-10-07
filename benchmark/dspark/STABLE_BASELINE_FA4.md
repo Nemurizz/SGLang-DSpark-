@@ -46,3 +46,32 @@ claim any paired-cache benefit. Same numerical profile in both arms, independent
 frozen controls, real cache hits, correct draft recovery, sufficient repeated
 samples and TTFT/TPOT/p95/acceptance/memory gates are all required. Baseline
 configuration cost is not paired-cache benefit.
+
+## v1 rejected; explicitly isolated v2 candidate
+
+h26: ordinary target `128 x 1/4/8`, three serial/concurrent rounds passed.
+The FIRST DSpark cold B1 request differed at output index 2 (34334 vs16555).
+Services stopped and checkout rolled back to a61; no paired run or oracle was
+published. Tag `dspark-stable-fa4-target-gate-failed-20261007` preserves v1.
+
+h27 read-only committed-anchor traces: QKV inputs/outputs, Q/K/V, past KV and
+KV writes bitwise identical at position128/token576. First observed difference
+is layer0 attention (113/5120 BF16 elements, max0.0001220703125). Two repeats
+per arm are bitwise stable. Saved-Q/K/V replay reproduces BOTH observed outputs
+exactly. Automatic host tile is decode64x64 vs verify64x128. Existing fixed
+64x64 AND128x64 APIs yield bitwise-equal anchor outputs for Q1/Q8 at this saved
+boundary. That is numerical causality evidence, not a full-model correctness
+pass, not proof for other shapes, and not performance evidence.
+
+`--fixed-fa4-tile` selects an independent v2 digest and explicit opt-in factory.
+The factory mutates ONLY the process-local SM120 host selector, before any FA4
+compile, to existing64x64 kernels. It is NOT a read-only observer. It is not
+loaded by ordinary/default service startup. No production or untracked source
+file is edited; worker exit removes the process-local policy. Graphs, local
+attention, bias and non-Qwen3 geometry fail closed. Fixed tile applies equally
+to target prefill/decode/verify AND draft in that worker. Runtime attestation
+requires applied selector calls. All original correctness gates still apply.
+
+No new GEMM, attention kernel, graph or quantization experiment is implemented.
+New profile/source/package/model-metadata/SPS/hardware digests isolate refs and
+paired sidecar fingerprints. v2 must be independently qualified before use.

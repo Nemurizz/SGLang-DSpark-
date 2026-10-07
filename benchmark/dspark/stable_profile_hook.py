@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 
-def validate_runtime(data):
+def validate_runtime(data, fixed_tile=None):
     expected = {"torch_batch_invariant": True, "fa4_batch_invariant": True,
                 "backend_class": "FlashAttentionBackend", "fa_impl_ver": 4,
                 "num_splits": 1, "decode_num_splits": 1, "page_size": 1,
@@ -11,6 +11,9 @@ def validate_runtime(data):
                 "graphs_disabled": True, "gemm_backend": "torch"}
     if any(data.get(key) != value for key, value in expected.items()):
         raise ValueError("Stable FA4 runtime attestation failed: " + repr(data))
+    if fixed_tile is not None and (data.get('fixed_fa4_tile') != list(fixed_tile)
+                                  or data.get('fixed_tile_select_calls', 0) <= 0):
+        raise ValueError('Missing applied fixed-tile numerical policy')
 
 
 def make_hook(config):
@@ -49,7 +52,14 @@ def make_hook(config):
                                        for phase in (Phase.PREFILL, Phase.DECODE)),
                 "gemm_backend": get_bf16_gemm_backend().value,
                 "scope": "runtime configuration attestation only; no tensor copies or timing"}
-        validate_runtime(data)
+        fixed_tile = config.get('fixed_fa4_tile')
+        if fixed_tile is not None:
+            from sglang.kernels.ops.attention.fa4_sm120.runtime import Sm120ForwardHost
+            marker = getattr(Sm120ForwardHost, '_dspark_fixed_tile_policy', {})
+            if marker.get('profile_id') != config['profile_id']:
+                raise ValueError('Worker fixed-tile profile identity mismatch')
+            data.update(fixed_fa4_tile=marker.get('tile'), fixed_tile_select_calls=marker.get('select_calls'))
+        validate_runtime(data, fixed_tile=fixed_tile)
         with (folder / f"runtime-{len(recorded):02d}.json").open("x") as stream:
             json.dump(data, stream, indent=2)
         recorded.add(mode)

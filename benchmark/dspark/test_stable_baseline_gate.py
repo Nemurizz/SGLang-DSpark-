@@ -1,4 +1,5 @@
 import unittest
+import json
 from types import SimpleNamespace
 
 import dspark_prefix_ab as ab
@@ -37,6 +38,17 @@ class TestStableGate(unittest.TestCase):
         self.assertNotIn("DSPARK", result)
         self.assertIn("--disable-radix-cache", result)
 
+    def test_fixed_tile_is_separate_explicit_opt_in(self):
+        result, env = profile_command(*self.command(), ordinary=False, profile_id='v2',
+            runtime_folder='/runtime', hook_folder='/hooks', fixed_tile=[64,64])
+        hook = json.loads(result[result.index('--forward-hooks')+1])[0]
+        self.assertEqual(hook['hook_factory'], 'fixed_fa4_policy_hook:make_hook')
+        self.assertEqual(hook['config']['fixed_fa4_tile'], [64,64])
+        self.assertEqual(env['SGLANG_DSPARK_STABLE_FA4_FIXED_TILE'], '1')
+        with self.assertRaises(ValueError):
+            profile_command(*self.command(), ordinary=False, profile_id='v2',
+                runtime_folder='/runtime', hook_folder='/hooks', fixed_tile=[64,128])
+
     def valid_info(self):
         return dict(enable_deterministic_inference=True, disable_cuda_graph=True, disable_radix_cache=False,
             attention_backend="fa4", prefill_attention_backend="fa4", decode_attention_backend="fa4",
@@ -71,6 +83,9 @@ class TestStableGate(unittest.TestCase):
             fa_impl_ver=4, num_splits=1, decode_num_splits=1, page_size=1, kv_dtype="torch.bfloat16",
             deterministic=True, graphs_disabled=True, gemm_backend="torch")
         validate_runtime(data)
+        with self.assertRaises(ValueError):
+            validate_runtime(data, fixed_tile=[64,64])
+        validate_runtime({**data, 'fixed_fa4_tile':[64,64], 'fixed_tile_select_calls':1}, fixed_tile=[64,64])
         for name, value in (("torch_batch_invariant", False), ("fa4_batch_invariant", False),
                             ("num_splits", 0), ("decode_num_splits", 0), ("kv_dtype", "torch.float16")):
             with self.subTest(name=name), self.assertRaises(ValueError):
