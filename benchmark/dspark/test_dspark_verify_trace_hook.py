@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from dspark_verify_trace_hook import (anchor_rows, make_hook, prompt_hash, request_rows,
-                                    trace_stage, validate_past_locations, verify_query_lengths)
+                                    select_projection_rows, trace_stage, validate_past_locations, verify_query_lengths)
 
 
 class TestTraceRows(unittest.TestCase):
@@ -67,6 +67,59 @@ class TestTraceRows(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec("torch"), "Torch CPU required for hook-copy checks")
 class TestReadOnlyHook(unittest.TestCase):
+    def test_projection_selection_requires_complete_authoritative_rows(self):
+        import torch
+        pending = {name: torch.arange(12).reshape(3, 4) for name in
+                   ("norm_input", "norm_output", "qkv_input", "qkv_output")}
+        rows = select_projection_rows(pending, total_rows=3, row=1)
+        self.assertTrue(torch.equal(rows["qkv_input"], pending["qkv_input"][1]))
+        rows["qkv_input"].zero_()
+        self.assertEqual(pending["qkv_input"][1, 0].item(), 4)
+        for kwargs in (dict(total_rows=2, row=1), dict(total_rows=3, row=3),
+                       dict(total_rows=3, row=-1)):
+            with self.assertRaises(ValueError):
+                select_projection_rows(pending, **kwargs)
+        with self.assertRaises(ValueError):
+            select_projection_rows({"qkv_input": pending["qkv_input"]}, total_rows=3, row=1)
+
+    def test_projection_pre_rotation_copies_are_immutable(self):
+        import torch
+        RMSNorm = type("RMSNorm", (), {})
+        QKVParallelLinear = type("QKVParallelLinear", (), {})
+        with tempfile.TemporaryDirectory() as folder, patch.dict("sys.modules", {
+                "sglang.srt.model_executor.cuda_graph_config": self.fake_graph_config()}):
+            hook = make_hook({"folder": folder, "prompt_sha256": prompt_hash([1, 2]),
+                "prompt_length": 2, "position": 2, "anchor_token": 3,
+                "observe_layer0_projection": True, "max_projection_rows": 2})
+            mode = SimpleNamespace(is_extend=lambda: True, is_target_verify=lambda: False)
+            fb = SimpleNamespace(forward_mode=mode, req_pool_indices=torch.tensor([5]),
+                                 extend_seq_lens_cpu=[2], extend_prefix_lens_cpu=[0])
+            hook(None, (torch.tensor([1, 2]), None, None, fb), None)
+            mode.is_extend = lambda: False
+            mode.is_target_verify = lambda: True
+            mode.is_decode = lambda: False
+            fb.extend_seq_lens_cpu = None
+            fb.input_ids = torch.tensor([3])
+            fb.positions = torch.tensor([2])
+            fb.seq_lens = fb.seq_lens_cpu = torch.tensor([3])
+            fb.out_cache_loc = torch.tensor([6])
+            fb.spec_info = SimpleNamespace(draft_token_num=1, ragged_verify_layout=None)
+            x, normalized, projected = [torch.tensor([[float(i), 2.]]) for i in range(3)]
+            before = projected.clone()
+            self.assertIsNone(hook(RMSNorm(), (x, None), normalized))
+            self.assertIsNone(hook(QKVParallelLinear(), (normalized,), (projected, None)))
+            projected.zero_()  # Simulate later in-place Q/K processing.
+            attn = SimpleNamespace(layer_id=0, tp_q_head_num=1)
+            hook(attn, (x, x, x, fb), x)
+            files = list(Path(folder).glob("*.pt"))
+            self.assertEqual(len(files), 1)
+            tensors = torch.load(files[0], weights_only=True)
+            self.assertTrue(torch.equal(tensors["qkv_output"], before[0]))
+            self.assertTrue(torch.equal(tensors["norm_input"], x[0]))
+            self.assertTrue(torch.equal(tensors["norm_output"], normalized[0]))
+            with self.assertRaises(ValueError):
+                hook(RMSNorm(), (x, x), normalized)
+
     def fake_graph_config(self, allowed=True):
         return SimpleNamespace(Backend=SimpleNamespace(DISABLED="off"),
                                Phase=SimpleNamespace(PREFILL="prefill", DECODE="decode"),

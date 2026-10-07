@@ -84,6 +84,20 @@ def validate_past_locations(locations, *, position, buffer_rows, current_locatio
         raise ValueError("Trace past-KV mapping overlaps current verify writes")
 
 
+def select_projection_rows(pending, *, total_rows, row):
+    """Select only after the following attention call establishes row identity.
+
+    Projection/norm post hooks have no ForwardBatch argument. A bounded eager
+    snapshot is provisional until the actual layer-0 attention call supplies it.
+    """
+    required = {"norm_input", "norm_output", "qkv_input", "qkv_output"}
+    if set(pending) != required or not 0 <= row < total_rows:
+        raise ValueError("Incomplete projection trace or invalid selected row")
+    if any(value.ndim != 2 or value.shape[0] != total_rows for value in pending.values()):
+        raise ValueError("Projection trace row count differs from authoritative attention rows")
+    return {name: value[row].clone() for name, value in pending.items()}
+
+
 def make_hook(config):
     import torch
     from sglang.srt.model_executor.cuda_graph_config import Backend, Phase, check_cuda_graph_backend
@@ -105,6 +119,11 @@ def make_hook(config):
         raise ValueError("Past-KV trace exceeds explicit layer/prefix bound")
     pool_prompts, captured_epochs = {}, set()
     epoch = count = 0
+    projection = bool(config.get("observe_layer0_projection", False))
+    projection_row_limit = int(config.get("max_projection_rows", 1024))
+    if projection_row_limit < 1:
+        raise ValueError("Projection trace requires a positive row bound")
+    pending_projection = {}
 
     def cpu_list(value):
         if value is None:
@@ -113,7 +132,29 @@ def make_hook(config):
 
     def hook(module, inputs, output):
         nonlocal epoch, count
-        if count >= limit or len(inputs) < 4:
+        if count >= limit:
+            return None
+        if projection and type(module).__name__ in ("RMSNorm", "QKVParallelLinear"):
+            # Only explicitly named layer-0 input_layernorm and qkv_proj are
+            # registered. No inference monkeypatch; clone before later in-place
+            # Q/K norm/rotary operations. Never label these as committed rows yet.
+            if not inputs or not isinstance(inputs[0], torch.Tensor):
+                raise ValueError("Projection observer needs a tensor positional input")
+            value = output[0] if isinstance(output, tuple) else output
+            if not isinstance(value, torch.Tensor) or inputs[0].ndim != 2 or value.ndim != 2:
+                raise ValueError("Only explicit 2D layer-0 projection/norm traces are supported")
+            name = "norm" if type(module).__name__ == "RMSNorm" else "qkv"
+            if name == "norm":
+                pending_projection.clear()
+                if len(inputs) > 1 and inputs[1] is not None:
+                    raise ValueError("Layer-0 input norm unexpectedly has a residual")
+            if inputs[0].shape[0] > projection_row_limit:
+                pending_projection.clear()
+                return None
+            pending_projection[name + "_input"] = inputs[0].detach().cpu().clone()
+            pending_projection[name + "_output"] = value.detach().cpu().clone()
+            return None
+        if len(inputs) < 4:
             return None
         stage, kind = trace_stage(module)
         fb = inputs[2] if kind == "layer" else inputs[3]
@@ -191,6 +232,9 @@ def make_hook(config):
                 tensors = {name: copy_row(value) for name, value in
                            zip(("query", "current_key", "current_value", "attention_output"),
                                (*inputs[:3], output))}
+                if projection and module.layer_id == 0:
+                    tensors.update(select_projection_rows(pending_projection, total_rows=len(ids), row=row))
+                    extra["projection_identity_source"] = "following layer0 attention authoritative ForwardBatch"
                 if kv_layer is not None and module.layer_id == int(kv_layer):
                     from sglang.srt.model_executor.forward_context import get_attn_backend
                     backend = get_attn_backend()
