@@ -1,6 +1,7 @@
 import unittest
 
-from fixed_fa4_policy_hook import locked_options
+from fixed_fa4_policy_hook import locked_options, validate_empty_compile_cache
+from types import SimpleNamespace
 
 
 class TestFixedPolicy(unittest.TestCase):
@@ -21,6 +22,14 @@ class TestFixedPolicy(unittest.TestCase):
                             ('is_causal',False), ('pack_gqa',False), ('tile_mn',(64,128))):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 locked_options({**self.options(),name:value})
+
+    def test_jit_wrapper_truthiness_is_not_entry_count(self):
+        wrapper = SimpleNamespace(cache={})
+        self.assertTrue(bool(wrapper))
+        validate_empty_compile_cache(wrapper)
+        for cache in (object(), {}, SimpleNamespace(cache=[]), SimpleNamespace(cache={'key': object()})):
+            with self.assertRaises(ValueError):
+                validate_empty_compile_cache(cache)
 
 
 if __name__ == '__main__':

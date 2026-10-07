@@ -11,6 +11,14 @@ import os
 TILE = (64, 64)
 
 
+def validate_empty_compile_cache(cache):
+    # Current FA4 JITCache has no __bool__/__len__; its wrapper is ALWAYS truthy.
+    # Fail closed on an unknown API or any loaded/compiled process-local entry.
+    entries = getattr(cache, 'cache', None)
+    if not isinstance(entries, dict) or entries:
+        raise ValueError('Policy must be installed BEFORE first FA4 compile/load')
+
+
 def locked_options(options):
     if (options.get('head_dim'), options.get('head_dim_v'), options.get('num_head_kv'),
         options.get('qhead_per_kvhead')) != (128, 128, 8, 5):
@@ -41,8 +49,7 @@ def make_hook(config):
         raise ValueError('Fixed FA4 policy requires deterministic inference and all graphs OFF')
     marker = getattr(Sm120ForwardHost, '_dspark_fixed_tile_policy', None)
     if marker is None:
-        if _flash_attn_fwd.compile_cache:
-            raise ValueError('Policy must be installed BEFORE first FA4 compile')
+        validate_empty_compile_cache(_flash_attn_fwd.compile_cache)
         original = Sm120ForwardHost.select_config
         marker = {'tile': list(TILE), 'profile_id': config['profile_id'], 'select_calls': 0}
 
