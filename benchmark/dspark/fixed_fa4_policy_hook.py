@@ -27,8 +27,10 @@ def locked_options(options):
         raise ValueError('Bias/local attention is not qualified')
     if options.get('tile_mn') not in (None, TILE):
         raise ValueError('Conflicting explicit FA4 tile')
-    if not options.get('is_causal') or not options.get('pack_gqa'):
-        raise ValueError('Only causal packed-GQA attention is qualified')
+    # Qwen3 target is causal; the existing DSpark/DFlash block draft is
+    # explicitly non-causal. Preserve that semantic flag; NEVER force causal.
+    if type(options.get('is_causal')) is not bool or not options.get('pack_gqa'):
+        raise ValueError('An explicit causal/non-causal flag and packed GQA are required')
     return {**options, 'tile_mn': TILE}
 
 

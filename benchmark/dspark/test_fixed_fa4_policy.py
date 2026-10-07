@@ -19,9 +19,15 @@ class TestFixedPolicy(unittest.TestCase):
     def test_unqualified_configs_fail_closed(self):
         for name, value in (('head_dim',64), ('head_dim_v',64), ('num_head_kv',4),
                             ('qhead_per_kvhead',8), ('has_bias',True), ('is_local',True),
-                            ('is_causal',False), ('pack_gqa',False), ('tile_mn',(64,128))):
+                            ('is_causal',None), ('pack_gqa',False), ('tile_mn',(64,128))):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 locked_options({**self.options(),name:value})
+
+    def test_existing_noncausal_block_draft_semantics_are_preserved(self):
+        options = {**self.options(), 'is_causal': False}
+        changed = locked_options(options)
+        self.assertIs(changed['is_causal'], False)
+        self.assertEqual(changed['tile_mn'], (64,64))
 
     def test_jit_wrapper_truthiness_is_not_entry_count(self):
         wrapper = SimpleNamespace(cache={})

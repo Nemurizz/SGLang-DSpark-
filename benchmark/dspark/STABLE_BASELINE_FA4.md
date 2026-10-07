@@ -75,3 +75,12 @@ requires applied selector calls. All original correctness gates still apply.
 No new GEMM, attention kernel, graph or quantization experiment is implemented.
 New profile/source/package/model-metadata/SPS/hardware digests isolate refs and
 paired sidecar fingerprints. v2 must be independently qualified before use.
+
+h28 startup was intentionally stopped by a JIT-cache pre-install guard. The
+wrapper object's truth value was not its entry count; the integration fix now
+checks the actual in-memory dictionary and still rejects all existing entries.
+h29 ordinary target104 requests passed the128x1/4/8 gate; DSpark warmup then
+stopped before any saved test request: the policy incorrectly rejected the
+existing NON-CAUSAL block draft. The next integration fix preserves that causal
+flag exactly; it does not make the draft causal or bypass a runtime failure.
+All geometry/dtype/split/graph checks remain; qualification starts from scratch.
