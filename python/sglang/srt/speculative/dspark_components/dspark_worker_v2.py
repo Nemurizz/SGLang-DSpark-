@@ -104,6 +104,36 @@ class DSparkWorkerV2(BaseSpecWorker):
         self.page_size = get_schedule().page_size
         self.device = target_worker.device
 
+        if envs.SGLANG_DSPARK_BF16_FULL_REDUCTION.get():
+            from sglang.srt.layers.quantization.unquant import get_bf16_gemm_backend
+            from sglang.srt.model_executor.cuda_graph_config import (
+                Backend,
+                Phase,
+                check_cuda_graph_backend,
+            )
+            from sglang.srt.model_executor.dspark_numerics import (
+                configure_bf16_full_reduction,
+            )
+
+            configure_bf16_full_reduction(
+                enabled=True,
+                is_dspark=self.model_runner.spec_algorithm.is_dspark(),
+                device=self.model_runner.device,
+                dtype=self.model_runner.model_config.dtype,
+                quantization=self.model_runner.model_config.quantization,
+                tp_size=server_args.tp_size,
+                graphs_disabled=all(
+                    check_cuda_graph_backend(phase, Backend.DISABLED)
+                    for phase in (Phase.PREFILL, Phase.DECODE)
+                ),
+                deterministic=get_exec().deterministic.enable_deterministic_inference,
+                backend=get_bf16_gemm_backend().value,
+                gpu_id=gpu_id,
+            )
+            logger.warning(
+                "DSpark BF16 full reduction correctness probe ON; original B1 preservation and batch invariance UNPROVEN"
+            )
+
         self._draft_is_moe = draft_is_deepseek_v4()
         self._draft_dp_context_enabled = (
             get_parallel().config.enable_dp_attention and not self._draft_is_moe
