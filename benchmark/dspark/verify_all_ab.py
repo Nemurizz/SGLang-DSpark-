@@ -98,6 +98,37 @@ class PolicyServer(QualifiedServer):
         return cmd, env
 
 
+def validated_startup_resume(root, current_template, refs):
+    """Resume only a pre-measurement attestation bug, never failed performance.
+
+    Controls stay immutable, all records are rechecked, and no control window is
+    repeated. A correctness/p95/warmup/noise stop is NOT resumable here.
+    """
+    previous = json.loads((root / 'manifest.json').read_text())
+    status = json.loads((root / 'status.json').read_text())
+    if (status.get('error') != 'Fixed policy did not initialize exactly one planner' or
+            not status.get('hardware_migration_correctness_passed') or
+            not status.get('full_full_noise_admitted') or
+            previous['protocol'] != PROTOCOL or
+            previous['execution_integrity_template'] != current_template or
+            (root / '02_fixed' / 'requests.jsonl').exists() or
+            (root / '03_fixed').exists()):
+        raise ab.SafetyFailure('Cannot resume a measured/failed correctness or performance candidate')
+    summaries = [json.loads(line) for line in (root / 'summaries.jsonl').read_text().splitlines()]
+    if [(r['arm'], r['window']) for r in summaries] != [(0, 0), (0, 1), (1, 0)]:
+        raise ab.SafetyFailure('Resume requires the exact original completed control windows')
+    for name in ('00_adaptive', '01_adaptive'):
+        rows = [json.loads(line) for line in (root / name / 'requests.jsonl').read_text().splitlines()]
+        for row in rows:
+            ab.check_reference(refs[(row['cell'], row['variant'])], row)
+            if row['cached_tokens'] != 0 or row['meta_info'].get('num_retractions') != 0:
+                raise ab.SafetyFailure('Inherited control geometry/retractions changed')
+        if sum(r['phase'] == 'steady' for r in rows) != (128 if name == '00_adaptive' else 64):
+            raise ab.SafetyFailure('Incomplete inherited control')
+    digests = {str(p): sha(p) for p in root.rglob('*') if p.is_file()}
+    return summaries, digests
+
+
 async def arm(args, template, refs, dataset, root, ordinal, variant, windows,
               correctness=False):
     import aiohttp
@@ -203,6 +234,7 @@ async def run(cli):
     integrity(template, args)
     dataset = json.loads((cli.template / 'dataset.json').read_text())
     refs = ab.load_frozen_references(Path(args.oracle_jsonl), dataset)
+    inherited = validated_startup_resume(cli.resume_startup_repair, template, refs) if cli.resume_startup_repair else None
     tools = {p.name: sha(p) for p in Path(__file__).parent.glob('*.py')}
     budget_origin = (json.loads(cli.budget_origin.read_text())['created_at']
                      if cli.budget_origin else time.time())
@@ -216,7 +248,9 @@ async def run(cli):
         'execution_integrity_template': template, 'extra_sources_pinned_now': extra,
         'tool_sha256': tools, 'created_at': time.time(), 'performance_claim': 'unproven',
         'wall_budget_origin': budget_origin, 'wall_deadline': budget_origin + 7200,
-        'prior_aborted_record': str(cli.budget_origin) if cli.budget_origin else None}
+        'prior_aborted_record': str(cli.budget_origin) if cli.budget_origin else None,
+        'inherited_controls_from_startup_repair': str(cli.resume_startup_repair) if inherited else None,
+        'inherited_read_only_sha256': inherited[1] if inherited else {}}
     manifest['experiment_id'] = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
     cli.output.mkdir(parents=True, exist_ok=False)
     ab.dump(cli.output / 'manifest.json', manifest)
@@ -224,15 +258,24 @@ async def run(cli):
               'experiment_id': manifest['experiment_id']}
 
     async def execute():
-        full = await arm(args, template, refs, dataset, cli.output, 0, 'adaptive', 2, True)
+        if inherited:
+            full = inherited[0][:2]
+            for name in ('00_adaptive', '01_adaptive'):
+                (cli.output / name).symlink_to((cli.resume_startup_repair / name).resolve(), target_is_directory=True)
+            for row in inherited[0]:
+                ab.append_jsonl(cli.output / 'summaries.jsonl', row)
+        else:
+            full = await arm(args, template, refs, dataset, cli.output, 0, 'adaptive', 2, True)
         status['hardware_migration_correctness_passed'] = True
         control = noise_gate(*full)
         ab.dump(cli.output / 'control_noise.json', control)
         if not control['admitted']:
             raise ab.SafetyFailure('Full/full noise admission failed; candidate not started')
         status['full_full_noise_admitted'] = True
-        arms, comparisons = {}, []
+        arms, comparisons = ({1: inherited[0][2]} if inherited else {}), []
         for ordinal, variant in enumerate(PROTOCOL['candidate_order'], 1):
+            if inherited and ordinal == 1:
+                continue
             arms[ordinal] = (await arm(args, template, refs, dataset, cli.output,
                 ordinal, variant, 1, correctness=True))[0]
             if ordinal in (2, 4):
@@ -263,6 +306,8 @@ async def run(cli):
     finally:
         try:
             integrity(template, args)
+            if inherited and any(sha(path) != digest for path, digest in inherited[1].items()):
+                raise ab.SafetyFailure('Inherited control/startup evidence changed')
             status['sources_and_frozen_references_unchanged'] = True
         except Exception as exc:
             status.update(status='safety_stopped', sources_and_frozen_references_unchanged=False,
@@ -279,4 +324,6 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--budget-origin', type=Path,
                         help='Original pre-result manifest; repairs cannot reset wall budget')
+    parser.add_argument('--resume-startup-repair', type=Path,
+                        help='Only unmeasured planner-attestation failure; immutable controls reused')
     raise SystemExit(asyncio.run(run(parser.parse_args())))

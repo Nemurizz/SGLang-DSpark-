@@ -8,8 +8,11 @@ Confidence head, confidence relay, sampler, KV write/readiness, acceptance and
 commit code remain intact. No live positions/KV locations/prefixes are cached.
 No kernel, graph, quantization, or paired-cache changes are combined here.
 
-The opt-in `verify_all_policy_hook` is installed before planner initialization
-using the existing forward-hook factory. It changes process-local configuration;
+The opt-in `verify_all_policy_hook` binds the already-constructed planner in the
+startup forward-hook factory, BEFORE request processing/callback registration.
+This version defers graph/hook setup until after worker construction. The exact
+type/one-instance lookup is startup-only; no objects/tensors are scanned per step.
+It changes process-local configuration;
 it is not a read-only observer. No existing tracked/untracked inference file is
 overwritten. Service exit rolls it back. Factory fails closed unless compact,
 TP1/PP1/DP1 without DP attention, gamma7, width8, page1, deterministic inference,
@@ -61,3 +64,23 @@ logs and every request are retained. Review caught asymmetric conditioning
 (initial version ran correctness only on control0 and first candidate). h45
 uses identical correctness conditioning on every arm. Same thresholds and
 original two-hour deadline. This is not a failed-control admission retry.
+
+Startup repair: h45 completed control0 windows and A1, then stopped because the
+constructor interception was installed AFTER the planner already existed. No
+candidate correctness/timing rows were produced. Runtime attestation caught this;
+it is not a token/acceptance/p95 failure. The repair binds the unique existing
+planner only while its uniform layout cache is empty. `--resume-startup-repair`
+accepts ONLY this exact unmeasured failure, rechecks all immutable controls and
+sources, keeps the original deadline, and resumes B1/B2/A2 without repeating
+control acquisition. It cannot resume a measured correctness/performance failure.
+
+```bash
+/root/conda-envs/sglang/bin/python verify_all_ab.py \
+  --template /root/autodl-tmp/results/dspark-cache-balanced-ab-20261007-h34 \
+  --output /root/autodl-fs/dspark-verify-all-ab-20261008-h46 \
+  --budget-origin /root/autodl-fs/dspark-verify-all-ab-20261008-h44/manifest.json \
+  --resume-startup-repair /root/autodl-fs/dspark-verify-all-ab-20261008-h45
+```
+
+Source of lifecycle confirmation:
+[upstream hook setup](https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/model_executor/model_runner_components/cuda_graph_setup.py).

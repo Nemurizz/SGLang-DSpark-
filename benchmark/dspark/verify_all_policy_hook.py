@@ -6,6 +6,7 @@ skip the confidence head/relay, or alter acceptance/KV commit. Graphs/DP/TP>1 an
 dynamic caps are deliberately unsupported. Rollback is simply process exit.
 """
 import functools
+import gc
 import json
 import os
 from pathlib import Path
@@ -51,6 +52,37 @@ def apply_to_planner(planner):
         raise ValueError('Unused host-budget callback remained registered')
 
 
+def record_planner(planner, marker, config, environment):
+    if marker['planner_instances']:
+        raise ValueError('Exactly one process-local planner is supported')
+    validate_options(planner.server_args, environment)
+    apply_to_planner(planner)
+    marker['planner_instances'] += 1
+    folder = Path(config['policy_folder'])
+    folder.mkdir(parents=True, exist_ok=True)
+    data = {**marker, 'gamma': planner.gamma, 'verify_width': planner.verify_num_draft_tokens,
+        'uniform_layout_cache_only': True, 'host_budget_enabled': False,
+        'confidence_head_preserved': planner.carries_confidence,
+        'confidence_relay_preserved': True, 'graphs': 'OFF', 'tp': 1, 'dp': False,
+        'sps_table_omitted_explicitly': True, 'source_files_unchanged': True}
+    with (folder / f'planner-{marker["planner_instances"]}.json').open('x') as stream:
+        json.dump(data, stream, indent=2)
+
+
+def bind_existing(planner_class, marker, config, environment, objects):
+    """Startup only: late hook factories run after the worker was constructed.
+
+    Exact type check, exactly one planner, no tensors inspected or copied. The
+    factory is never used in per-step timing and cannot bind a live layout.
+    """
+    if marker['planner_instances']:
+        return
+    planners = [obj for obj in objects if type(obj) is planner_class]
+    if len(planners) != 1:
+        raise ValueError('Expected exactly one already-constructed startup planner')
+    record_planner(planners[0], marker, config, environment)
+
+
 def install(planner_class, config, environment):
     if environment.get('SGLANG_DSPARK_FIXED_VERIFY_ALL_EXPERIMENT') != '1':
         raise ValueError('Fixed verify-all experiment is OFF by default')
@@ -66,17 +98,7 @@ def install(planner_class, config, environment):
     def initialize(self, **options):
         validate_options(options['server_args'], environment)
         original(self, **options)
-        apply_to_planner(self)
-        marker['planner_instances'] += 1
-        folder = Path(config['policy_folder'])
-        folder.mkdir(parents=True, exist_ok=True)
-        data = {**marker, 'gamma': self.gamma, 'verify_width': self.verify_num_draft_tokens,
-            'uniform_layout_cache_only': True, 'host_budget_enabled': False,
-            'confidence_head_preserved': self.carries_confidence,
-            'confidence_relay_preserved': True, 'graphs': 'OFF', 'tp': 1, 'dp': False,
-            'sps_table_omitted_explicitly': True, 'source_files_unchanged': True}
-        with (folder / f'planner-{marker["planner_instances"]}.json').open('x') as stream:
-            json.dump(data, stream, indent=2)
+        record_planner(self, marker, config, environment)
 
     planner_class.__init__ = initialize
     planner_class._dspark_fixed_verify_policy = marker
@@ -89,5 +111,8 @@ def make_hook(config):
 
     if config.get('verify_policy') != POLICY:
         raise ValueError('Explicit verification policy identity required')
-    install(DSparkVerifyPlanner, config, dict(os.environ))
+    environment = dict(os.environ)
+    marker = install(DSparkVerifyPlanner, config, environment)
+    if not marker['planner_instances']:
+        bind_existing(DSparkVerifyPlanner, marker, config, environment, gc.get_objects())
     return fixed_policy_hook(config)

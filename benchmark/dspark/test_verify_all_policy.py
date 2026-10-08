@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from types import SimpleNamespace as NS
 
-from verify_all_policy_hook import POLICY, apply_to_planner, install, validate_options
+from verify_all_policy_hook import POLICY, apply_to_planner, bind_existing, install, validate_options
 
 
 def options():
@@ -21,6 +21,7 @@ def env():
 def planner_class():
     class Planner:
         def __init__(self, **kwargs):
+            self.server_args = kwargs.get('server_args', options())
             self._is_verify_all = self.is_compact_mode = self.carries_confidence = True
             self._dp_tier_gather_enabled = False
             self.gamma, self.verify_num_draft_tokens = 7, 8
@@ -84,6 +85,27 @@ class Tests(unittest.TestCase):
             self.assertEqual(marker['planner_instances'], 1)
             with self.assertRaises(ValueError):
                 install(cls, {**config, 'profile_id': 'different'}, env())
+
+    def test_late_factory_binds_existing_planner_once(self):
+        with tempfile.TemporaryDirectory() as folder:
+            cls = planner_class()
+            p = cls(server_args=options())
+            config = {'profile_id': 'frozen', 'policy_folder': folder}
+            marker = install(cls, config, env())
+            bind_existing(cls, marker, config, env(), [object(), p])
+            bind_existing(cls, marker, config, env(), [p])
+            self.assertEqual(marker['planner_instances'], 1)
+            self.assertIsNone(p.confidence_budget_prepare())
+
+    def test_late_factory_missing_or_multiple_planners_fail_closed(self):
+        for number in (0, 2):
+            with self.subTest(number=number), tempfile.TemporaryDirectory() as folder:
+                cls = planner_class()
+                planners = [cls(server_args=options()) for _ in range(number)]
+                config = {'profile_id': 'frozen', 'policy_folder': folder}
+                marker = install(cls, config, env())
+                with self.assertRaises(ValueError):
+                    bind_existing(cls, marker, config, env(), planners)
 
 
 if __name__ == '__main__':
