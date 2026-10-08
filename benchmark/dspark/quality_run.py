@@ -71,7 +71,11 @@ class QualityServer(ab.ManagedServer):
     def command(self):
         cmd, env = super().command()
         if self.args.quant:
-            cmd, env = quant_command(cmd, env, self.args,
+            if getattr(self.args, 'recipe', 'nvfp4') == 'w8a8_fp8_native':
+                from fp8_recipe import command as recipe_command
+            else:
+                recipe_command = quant_command
+            cmd, env = recipe_command(cmd, env, self.args,
                 ordinary=self.args.ordinary, folder=self.folder)
         else:
             cmd, env = profile_command(cmd, env, ordinary=self.args.ordinary,
@@ -82,13 +86,19 @@ class QualityServer(ab.ManagedServer):
         return cmd, env
 
 
-def validate(folder, quant, ordinary, backend='flashinfer_cutlass'):
+def validate(folder, quant, ordinary, backend='flashinfer_cutlass', recipe='nvfp4'):
     info = json.loads((folder / 'server_info.json').read_text())
     if quant:
-        validate_info(info, ordinary, backend)
+        if recipe == 'w8a8_fp8_native':
+            from fp8_recipe import validate_info as info_validator
+            from fp8_profile_hook import validate_model as storage_validator
+            info_validator(info, ordinary)
+        else:
+            validate_info(info, ordinary, backend)
+            storage_validator = lambda data: validate_model(data, backend)
         actual = json.loads((folder / 'runtime/target-backbone.json').read_text())
         actual.update(json.loads((folder / 'runtime/target-head.json').read_text()))
-        validate_model(actual, backend)
+        storage_validator(actual)
         if not ordinary:
             validate_model(json.loads((folder / 'runtime/draft-weights.json').read_text()))
     else:
@@ -118,12 +128,13 @@ async def execute(cli):
     args.tokenizer = args.model
     args.quant = cli.arm.startswith('quant')
     args.fp4_backend = cli.fp4_backend
+    args.recipe = cli.recipe
     args.ordinary = cli.arm.endswith('ar')
     args.startup_timeout, args.request_timeout = 900, 240
     args.enable_standard_graphs = False
     args.deterministic_control_only = False
     args.reference_verify_plans = False
-    if args.quant:
+    if args.quant and args.recipe == 'nvfp4':
         args.model = str(cli.checkpoint / 'model')
     dataset = json.loads(cli.dataset.read_text())
     rows = dataset['rows']
@@ -140,6 +151,8 @@ async def execute(cli):
             raise ValueError('Cannot compare different arithmetic contracts')
         if args.quant and reference_manifest['args'].get('fp4_backend', 'flashinfer_cutlass') != args.fp4_backend:
             raise ValueError('Cannot mix backend token references')
+        if args.quant and reference_manifest['args'].get('recipe', 'nvfp4') != args.recipe:
+            raise ValueError('Cannot mix quantization recipes')
         refs = {r['id']: r for r in map(json.loads, cli.references.read_text().splitlines())
                 if r['phase'] == 'serial_reference'}
         if set(refs) != {r['id'] for r in rows}:
@@ -147,16 +160,24 @@ async def execute(cli):
     if not args.ordinary and cli.sentinels and not refs:
         raise ValueError('DSpark sentinel gate requires its independent AR references')
     before = baseline_identity(args.repo)
+    recipe_sources = {str(Path(args.repo) / name): sha(Path(args.repo) / name) for name in (
+        'python/sglang/srt/layers/quantization/w8a8_fp8.py',
+        'python/sglang/srt/layers/quantization/fp8_utils.py',
+        'python/sglang/kernels/ops/quantization/fp8_kernel.py')}
     cli.output.mkdir(parents=True)
     hashes = {name: sha(Path(__file__).with_name(name)) for name in (
         'quality_run.py', 'quality_data.py', 'code_jail.py', 'quant_feasibility_gate.py',
         'nvfp4_profile_hook.py', 'fixed_fa4_policy_hook.py', 'stable_profile_hook.py',
         'stable_baseline_gate.py', 'dspark_prefix_ab.py')}
+    if args.recipe == 'w8a8_fp8_native':
+        hashes.update({name: sha(Path(__file__).with_name(name))
+                       for name in ('fp8_recipe.py', 'fp8_profile_hook.py')})
     ab.dump(cli.output / 'manifest.json', {'arm': cli.arm, 'quant': args.quant, 'ordinary': args.ordinary,
         'args': vars(args), 'dataset_sha256': sha(cli.dataset), 'tools_sha256': hashes,
         'sentinels_only': cli.sentinels, 'concurrency': cli.concurrency,
         'within_contract_oracle_sha256': sha(cli.references) if cli.references else None,
         'old_bf16_oracle_sha256': sha(args.oracle_jsonl), 'baseline_before': before,
+        'recipe_serving_source_sha256': recipe_sources,
         'performance_benefit': 'NOT measured by quality run', 'created_at': time.time()})
     status = {'status': 'running', 'completed_requests': 0, 'scored_requests': 0, 'arm': cli.arm}
     ab.dump(cli.output / 'status.json', status)
@@ -216,7 +237,7 @@ async def execute(cli):
                 for row in rows:
                     response = await checked(row, 'serial_reference', refs.get(row['id']))
                     sentinel_refs[row['id']] = response
-                validate(cli.output, args.quant, args.ordinary, args.fp4_backend)
+                validate(cli.output, args.quant, args.ordinary, args.fp4_backend, args.recipe)
                 for concurrency in (1, 4, 8):
                     for repeat in range(2):
                         for start in range(0, len(rows), concurrency):
@@ -225,7 +246,7 @@ async def execute(cli):
             else:
                 for start in range(0, len(rows), cli.concurrency):
                     await asyncio.gather(*(checked(row, 'quality') for row in rows[start:start + cli.concurrency]))
-                    validate(cli.output, args.quant, args.ordinary, args.fp4_backend)
+                    validate(cli.output, args.quant, args.ordinary, args.fp4_backend, args.recipe)
                 scores = [json.loads(line) for line in (cli.output / 'scores.jsonl').read_text().splitlines()]
                 ab.dump(cli.output / 'summary.json', {task: {'n': len(items),
                     'correct': sum(r['grade']['correct'] for r in items),
@@ -239,7 +260,7 @@ async def execute(cli):
         server.stop()
         sampler.stop()
         status.update(baseline_after=baseline_identity(args.repo), finished_at=time.time())
-        if status['baseline_after'] != before:
+        if status['baseline_after'] != before or any(sha(path) != digest for path,digest in recipe_sources.items()):
             status.update(status='safety_stopped', error='Serving checkout mutated')
         ab.dump(cli.output / 'status.json', status)
     print(json.dumps(status), flush=True)
@@ -250,6 +271,7 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--arm', required=True, choices=['bf16-ar', 'bf16-dspark', 'quant-ar', 'quant-dspark'])
     p.add_argument('--fp4-backend', default='flashinfer_cutlass', choices=['flashinfer_cutlass', 'flashinfer_cudnn'])
+    p.add_argument('--recipe', default='nvfp4', choices=['nvfp4', 'w8a8_fp8_native'])
     p.add_argument('--template', required=True, type=Path)
     p.add_argument('--checkpoint', required=True, type=Path)
     p.add_argument('--dataset', required=True, type=Path)

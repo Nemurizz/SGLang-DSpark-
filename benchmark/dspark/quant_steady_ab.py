@@ -52,7 +52,7 @@ PROTOCOL = {'cell': 'p2048_c1', 'output_tokens': 128, 'concurrency': 1,
     'warmup_min': 24, 'warmup_max': 64, 'warmup_group': 8,
     'warmup_mean_spread_limit': .005, 'warmup_p95_over_p50_limit': 1.02,
     'control_mean_spread_limit': .005, 'control_p95_spread_limit': .01,
-    'order': ['bf16', 'nvfp4', 'nvfp4', 'bf16'], 'steady_requests_per_window': 64,
+    'order': ['bf16', 'candidate', 'candidate', 'bf16'], 'steady_requests_per_window': 64,
     'minimum_e2e_gain_in_both_orders': .01, 'p95_regression_tolerance': 0,
     'no_retries_or_discarded_steady_observations': True,
     'graphs_cache_adaptive_draft_kv_quantization': 'OFF',
@@ -123,7 +123,7 @@ async def arm(args, folder, prompt, windows, oracle, ordinary=False):
                 return row
 
             first = await checked('prime_excluded', 0, oracle)
-            validate(folder, args.quant, args.ordinary, args.fp4_backend)
+            validate(folder, args.quant, args.ordinary, args.fp4_backend, args.recipe)
             info = json.loads((folder / 'server_info.json').read_text())
             if info.get('max_total_tokens') != PROTOCOL['equal_kv_capacity_max_total_tokens']:
                 raise ab.SafetyFailure('Equal KV-capacity launch flag was not resolved')
@@ -156,7 +156,7 @@ async def arm(args, folder, prompt, windows, oracle, ordinary=False):
                 after = ab.info_stats(await ab.api(session, base, '/server_info'), required=False)
                 item = ab.aggregate('full', 'p2048_c1', window, rows, before, after,
                     sampler.summary(sample_start), time.perf_counter() - began)
-                item.update(recipe='nvfp4' if args.quant else 'bf16', timing_profiler=False)
+                item.update(recipe=args.recipe if args.quant else 'bf16', timing_profiler=False)
                 summaries.append(item)
                 ab.append_jsonl(folder / 'summaries.jsonl', item)
                 print('WINDOW ' + folder.name + ' ' + json.dumps(item), flush=True)
@@ -179,13 +179,18 @@ async def run(cli):
     args.ordinary = False
     args.quant = False
     args.fp4_backend = cli.fp4_backend
-    if quality.get('candidate_backend', 'flashinfer_cutlass') != args.fp4_backend:
+    args.recipe = cli.recipe
+    if quality.get('candidate_recipe', 'nvfp4') != args.recipe:
+        raise ValueError('Quality evidence belongs to another quantization recipe')
+    expected_backend = 'sgl_kernel_cutlass_fp8' if args.recipe == 'w8a8_fp8_native' else args.fp4_backend
+    if quality.get('candidate_backend', 'flashinfer_cutlass') != expected_backend:
         raise ValueError('Quality evidence belongs to another backend')
     args.startup_timeout, args.request_timeout = 900, 45
     args.enable_standard_graphs = False
     args.deterministic_control_only = False
     args.reference_verify_plans = False
     old_model = args.model
+    candidate_model = str(cli.checkpoint / 'model') if args.recipe == 'nvfp4' else old_model
     before = baseline_identity(args.repo)
     old_dataset = Path(args.oracle_jsonl).parent / 'dataset.json'
     prompt = json.loads(old_dataset.read_text())['p2048_c1']['prompts'][0]
@@ -203,7 +208,7 @@ async def run(cli):
         if subprocess.check_output(['nvidia-smi','--query-compute-apps=pid','--format=csv,noheader,nounits'], text=True).strip():
             raise ab.SafetyFailure('GPU occupied')
         args.quant, args.ordinary = True, True
-        args.model = str(cli.checkpoint / 'model')
+        args.model = candidate_model
         quant_ar = await arm(args, cli.output / 'quant_ar_oracle', prompt, 0, None, True)
         ab.dump(cli.output / 'quant_ar_oracle.json', quant_ar)
         args.quant, args.ordinary, args.model = False, False, old_model
@@ -215,8 +220,8 @@ async def run(cli):
         status['control_admitted'] = True
         results, quant_oracle = {}, quant_ar
         for ordinal, recipe in enumerate(PROTOCOL['order'], 1):
-            args.quant = recipe == 'nvfp4'
-            args.model = str(cli.checkpoint / 'model') if args.quant else old_model
+            args.quant = recipe == 'candidate'
+            args.model = candidate_model if args.quant else old_model
             summaries, oracle = await arm(args, cli.output / f'{ordinal:02d}_{recipe}', prompt, 1,
                 quant_oracle if args.quant else baseline_oracle)
             if args.quant:
@@ -258,4 +263,5 @@ if __name__ == '__main__':
     p.add_argument('--checkpoint', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--fp4-backend', default='flashinfer_cutlass', choices=['flashinfer_cutlass', 'flashinfer_cudnn'])
+    p.add_argument('--recipe', default='nvfp4', choices=['nvfp4', 'w8a8_fp8_native'])
     raise SystemExit(asyncio.run(run(p.parse_args())))

@@ -19,12 +19,14 @@ CHECKPOINT = Path('/root/autodl-tmp/models/Qwen3-14B-NVFP4-20261008-h63')
 DATA_SHA = 'c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a649488f'
 
 
-def run(root, previous):
+def run(root, previous, recipe='nvfp4'):
     if (root / 'suite_status.json').exists():
         raise ValueError('Fresh execution evidence required')
     smoke = json.loads((root / 'backend_smoke.json').read_text())
-    if smoke['status'] != 'passed_backend_smoke_only' or smoke['backend'] != 'cudnn' or len(smoke['cases']) != 16:
-        raise ValueError('Missing cuDNN backend preflight')
+    valid_backend = smoke.get('backend') == 'cudnn' if recipe == 'nvfp4' else smoke.get('recipe') == 'w8a8_fp8_native'
+    if smoke['status'] != 'passed_backend_smoke_only' or not valid_backend or len(smoke['cases']) != 16:
+        raise ValueError('Missing independently qualified backend preflight')
+    backend = 'flashinfer_cudnn' if recipe == 'nvfp4' else 'flashinfer_cutlass'
     preflight = json.loads((previous / 'grader_preflight.json').read_text())
     if not preflight['passed'] or len(preflight['canonical_mbpp']) != 64:
         raise ValueError('Missing preserved grader preflight')
@@ -45,13 +47,14 @@ def run(root, previous):
                       'manifest_sha256': sha(folder / 'manifest.json'), 'status_sha256': sha(folder / 'status.json')}
     common = [sys.executable, '-u', str(Path(__file__).with_name('quality_run.py')),
         '--template', str(TEMPLATE), '--checkpoint', str(CHECKPOINT), '--dataset', str(dataset),
-        '--jail', str(previous / 'jail-v3'), '--fp4-backend', 'flashinfer_cudnn']
+        '--jail', str(previous / 'jail-v3'), '--fp4-backend', backend, '--recipe', recipe]
     plan = [('quant-ar-sentinels', 'quant-ar', True, None),
             ('quant-dspark-sentinels', 'quant-dspark', True, 'quant-ar-sentinels'),
             ('bf16-quality', 'bf16-dspark', False, None),
             ('quant-quality', 'quant-dspark', False, None)]
     state = {'status': 'running', 'plan': plan, 'completed': [], 'reused_bf16_gates': reused,
-             'dataset_sha256': DATA_SHA, 'started_at': time.time(), 'backend': 'flashinfer_cudnn'}
+             'dataset_sha256': DATA_SHA, 'started_at': time.time(), 'recipe': recipe,
+             'backend': 'flashinfer_cudnn' if recipe == 'nvfp4' else 'sgl_kernel_cutlass_fp8'}
     path = root / 'suite_status.json'
     def save():
         path.write_text(json.dumps(state, indent=2))
@@ -84,7 +87,7 @@ def run(root, previous):
     cmd = [sys.executable, '-u', str(Path(__file__).with_name('quant_steady_ab.py')),
            '--quality', str(root / 'quality_comparison.json'), '--template', str(TEMPLATE),
            '--checkpoint', str(CHECKPOINT), '--output', str(root / 'steady_ab'),
-           '--fp4-backend', 'flashinfer_cudnn']
+           '--fp4-backend', backend, '--recipe', recipe]
     with (root / 'steady_ab.log').open('x') as out:
         code = subprocess.run(cmd, stdout=out, stderr=subprocess.STDOUT).returncode
     state.update(status='qualified_fixed_subsets_and_one_cell' if code == 0 else 'benefit_not_proven',
