@@ -30,6 +30,15 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def launch_args_from_template(template):
+    """Extract launch scalars, never inherit a prior experiment certificate."""
+    candidates = [item['args'] for item in (template, template.get('execution_integrity_template', {}))
+                  if isinstance(item, dict) and isinstance(item.get('args'), dict)]
+    if not candidates or any(item != candidates[0] for item in candidates[1:]):
+        raise ValueError('Missing or ambiguous launch arguments in template')
+    return SimpleNamespace(**candidates[0])
+
+
 def baseline_identity(repo):
     def git(*args):
         return subprocess.check_output(['git', '-C', str(repo), *args])
@@ -197,7 +206,7 @@ async def main():
     template = json.loads(cli.template.read_text())
     # Reuse launch scalars only; old quant-unaware integrity/profile checks are
     # intentionally NOT treated as certificates for this new math contract.
-    args = SimpleNamespace(**template['args'])
+    args = launch_args_from_template(template)
     args.tokenizer = args.model
     args.model = str(cli.checkpoint_root / 'model')
     args.ordinary = cli.phase == 'target'
@@ -255,6 +264,7 @@ async def main():
         'stable_profile_hook.py', 'stable_baseline_gate.py', 'dspark_prefix_ab.py',
         'prepare_nvfp4.py', 'audit_nvfp4_parent.py')}
     ab.dump(cli.output / 'manifest.json', {'args': vars(args), 'baseline': before,
+             'launch_template_sha256': digest(cli.template),
              'checkpoint_manifest': model, 'old_reference_sha256': frozen,
              'parent_audit_sha256': digest(cli.parent_audit),
              'tools_sha256': tool_hashes,

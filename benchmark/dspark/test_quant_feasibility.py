@@ -3,12 +3,22 @@ from pathlib import Path
 import unittest
 from types import SimpleNamespace
 
-from quant_feasibility_gate import quant_command, validate_info
+from quant_feasibility_gate import quant_command, validate_info, launch_args_from_template
 from nvfp4_profile_hook import validate_model
 from prepare_nvfp4 import OFFICIAL_LFS, REVISION
 
 
 class QuantGateTests(unittest.TestCase):
+    def test_launch_template_scoped_nested_arguments_only(self):
+        args = {'repo': '/baseline', 'model': '/bf16'}
+        self.assertEqual(vars(launch_args_from_template({'args': args})), args)
+        self.assertEqual(vars(launch_args_from_template({
+            'execution_integrity_template': {'args': args}, 'policy': 'not inherited'})), args)
+        for bad in ({}, {'args': []}, {'args': args,
+                    'execution_integrity_template': {'args': {**args, 'model': '/different'}}}):
+            with self.assertRaises(ValueError):
+                launch_args_from_template(bad)
+
     def command(self, ordinary):
         cmd = ['python', '-m', 'sglang.launch_server', '--attention-backend', 'flashinfer',
                '--decode-attention-backend', 'fa4', '--tokenizer-path', '/quant',
