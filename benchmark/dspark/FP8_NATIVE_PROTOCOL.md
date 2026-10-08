@@ -36,3 +36,10 @@ Research: [SGLang quantization documentation](https://github.com/sgl-project/sgl
 and actual installed `w8a8_fp8.py`/`fp8_utils.py` dispatch (the latter supports
 Triton tuning by default, explicitly disabled here). No other-model benchmark
 or BF16-vs-FP8 token difference is counted as success/failure of execution.
+
+Initial standalone smoke failed before its first native quantization call:
+Ninja 1.13 was installed in the serving environment but not in the standalone
+shell PATH. Match ManagedServer's existing executable-parent PATH convention;
+no dependency change. Preserve h66 failed setup evidence and run into a fresh
+`dspark-quant-fp8-quality-20261009-h66-v2` directory. No numerical/safety failure
+or scored item is retried.

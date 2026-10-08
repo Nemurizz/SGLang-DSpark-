@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import sys
 
 
 def run(output):
@@ -10,6 +11,7 @@ def run(output):
         raise ValueError('Fresh smoke output required')
     os.environ['USE_TRITON_W8A8_FP8_KERNEL'] = '0'
     os.environ['SGLANG_ENABLE_FP8_GEMM_CONFIG_TUNE'] = '0'
+    os.environ['PATH'] = str(Path(sys.executable).parent) + os.pathsep + os.environ.get('PATH', '')
     import torch
     from sglang.kernels.ops.quantization.fp8_kernel import per_token_group_quant_fp8
     from sglang.srt.layers.quantization.fp8_utils import apply_fp8_linear, cutlass_fp8_supported
