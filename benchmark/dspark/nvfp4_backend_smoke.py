@@ -1,4 +1,4 @@
-"""SM120 native CUTLASS availability/numerical smoke, NOT a speed benchmark.
+"""SM120 explicitly selected native backend smoke, NOT a speed benchmark.
 
 Exercise Qwen3-14B linear dimensions and duplicated rows across M. This is not
 a model correctness/quality/batch-invariance certificate.
@@ -12,6 +12,7 @@ from pathlib import Path
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--output', required=True, type=Path)
+    p.add_argument('--backend', choices=['cutlass', 'cudnn'], default='cutlass')
     a = p.parse_args()
     import torch
     from flashinfer import nvfp4_quantize, mm_fp4, SfLayout
@@ -22,7 +23,7 @@ def main():
     report = {'scope': __doc__, 'torch': torch.__version__,
               'flashinfer': importlib.metadata.version('flashinfer-python'),
               'gpu': torch.cuda.get_device_name(), 'capability': [12, 0],
-              'backend': 'cutlass', 'cases': [], 'status': 'running'}
+              'backend': a.backend, 'cases': [], 'status': 'running'}
     a.output.parent.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(20261008)
     try:
@@ -40,7 +41,7 @@ def main():
                 xq, sfx = nvfp4_quantize(x, xs, sfLayout=SfLayout.layout_128x4,
                                        do_shuffle=False, backend='cuda')
                 out = mm_fp4(xq, wq.T, sfx, sfw.T, 1.0 / (xs * ws),
-                             torch.bfloat16, backend='cutlass')
+                             torch.bfloat16, backend=a.backend)
                 torch.cuda.synchronize()
                 if out.shape != (m, n) or not torch.isfinite(out).all().item():
                     raise ValueError('Invalid native NVFP4 output')

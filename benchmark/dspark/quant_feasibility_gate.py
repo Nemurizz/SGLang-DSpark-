@@ -64,7 +64,10 @@ def quant_command(cmd, env, args, *, ordinary, folder):
         runtime_folder=folder / 'runtime', hook_folder=Path(__file__).resolve().parent,
         fixed_tile=[64, 64])
     cmd[cmd.index('--tokenizer-path') + 1] = args.tokenizer
-    cmd += ['--quantization', 'modelopt_fp4', '--fp4-gemm-backend', 'flashinfer_cutlass']
+    backend = getattr(args, 'fp4_backend', 'flashinfer_cutlass')
+    if backend not in ('flashinfer_cutlass', 'flashinfer_cudnn'):
+        raise ValueError('Backend requires independent qualification')
+    cmd += ['--quantization', 'modelopt_fp4', '--fp4-gemm-backend', backend]
     if '--disable-radix-cache' not in cmd:
         cmd.append('--disable-radix-cache')
     if not ordinary:
@@ -97,13 +100,15 @@ class QuantServer(ab.ManagedServer):
                              ordinary=self.args.ordinary, folder=self.folder)
 
 
-def validate_info(info, ordinary):
+def validate_info(info, ordinary, backend='flashinfer_cutlass'):
+    if backend not in ('flashinfer_cutlass', 'flashinfer_cudnn'):
+        raise ValueError('Unqualified backend')
     expected = dict(enable_deterministic_inference=True, disable_cuda_graph=True,
                     disable_radix_cache=True, dtype='bfloat16', kv_cache_dtype='bfloat16',
                     attention_backend='fa4', prefill_attention_backend='fa4',
                     decode_attention_backend='fa4', bf16_gemm_backend='torch',
                     tp_size=1, page_size=1, quantization='modelopt_fp4',
-                    fp4_gemm_runner_backend='flashinfer_cutlass')
+                    fp4_gemm_runner_backend=backend)
     if not ordinary:
         expected.update(speculative_algorithm='DSPARK',
                         speculative_draft_model_quantization=None,

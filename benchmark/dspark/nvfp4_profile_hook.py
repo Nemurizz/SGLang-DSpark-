@@ -39,13 +39,15 @@ def validate_target_linear(data):
         raise ValueError('Expected FP8 block scales for native NVFP4')
 
 
-def validate_model(data):
+def validate_model(data, backend='flashinfer_cutlass'):
+    if backend not in ('flashinfer_cutlass', 'flashinfer_cudnn'):
+        raise ValueError('Unqualified backend')
     if data['kind'] == 'target':
         if data['quantized_linear_count'] != 160:
             raise ValueError('Expected all 160 fused target transformer linears to use NVFP4')
         if set(data['quantized_methods']) != {'ModelOptFp4LinearMethod'}:
             raise ValueError('Unexpected target quantization implementation')
-        if data['fp4_backend'] != 'flashinfer_cutlass':
+        if data['fp4_backend'] != backend:
             raise ValueError('Wrong FP4 backend')
         if len(data.get('linears', [])) != 160:
             raise ValueError('Missing actual per-linear storage/scale attestation')

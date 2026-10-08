@@ -44,6 +44,7 @@ def report(root, output):
     if set(scores['bf16-quality']) != set(scores['quant-quality']):
         raise ValueError('Different scored IDs')
     result = {'scope': 'Fixed heldout subsets, custom generative ARC and scalar MATH. NOT leaderboard/full-distribution noninferiority.',
+        'candidate_backend': manifests['quant-quality']['args'].get('fp4_backend', 'flashinfer_cutlass'),
         'dataset_sha256': manifests['bf16-quality']['dataset_sha256'], 'tasks': {},
         'performance_benefit': 'unproven', 'quality_tolerance_percentage_points': 1,
         'quality_authorization': 'Human reply: each task at most 1 percentage point loss, 2026-10-09; prompts/items/grader unchanged',

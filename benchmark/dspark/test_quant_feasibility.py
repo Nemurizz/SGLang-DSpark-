@@ -51,6 +51,15 @@ class QuantGateTests(unittest.TestCase):
         self.assertFalse(any(s.startswith('--speculative-') for s in cmd))
         self.assertEqual(cmd.count('--disable-radix-cache'), 1)
 
+    def test_cudnn_requires_its_own_explicit_backend_contract(self):
+        info = self.valid_info()
+        info['fp4_gemm_runner_backend'] = 'flashinfer_cudnn'
+        validate_info(info, False, 'flashinfer_cudnn')
+        with self.assertRaises(RuntimeError):
+            validate_info(info, False)
+        with self.assertRaises(ValueError):
+            validate_info(info, False, 'auto')
+
     def valid_info(self):
         return dict(enable_deterministic_inference=True, disable_cuda_graph=True,
                     disable_radix_cache=True, dtype='bfloat16', kv_cache_dtype='bfloat16',

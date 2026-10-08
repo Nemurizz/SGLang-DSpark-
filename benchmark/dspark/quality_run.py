@@ -82,13 +82,13 @@ class QualityServer(ab.ManagedServer):
         return cmd, env
 
 
-def validate(folder, quant, ordinary):
+def validate(folder, quant, ordinary, backend='flashinfer_cutlass'):
     info = json.loads((folder / 'server_info.json').read_text())
     if quant:
-        validate_info(info, ordinary)
+        validate_info(info, ordinary, backend)
         actual = json.loads((folder / 'runtime/target-backbone.json').read_text())
         actual.update(json.loads((folder / 'runtime/target-head.json').read_text()))
-        validate_model(actual)
+        validate_model(actual, backend)
         if not ordinary:
             validate_model(json.loads((folder / 'runtime/draft-weights.json').read_text()))
     else:
@@ -117,6 +117,7 @@ async def execute(cli):
     args = launch_args_from_template(json.loads(cli.template.read_text()))
     args.tokenizer = args.model
     args.quant = cli.arm.startswith('quant')
+    args.fp4_backend = cli.fp4_backend
     args.ordinary = cli.arm.endswith('ar')
     args.startup_timeout, args.request_timeout = 900, 240
     args.enable_standard_graphs = False
@@ -137,6 +138,8 @@ async def execute(cli):
             raise ValueError('AR references must be complete and same dataset')
         if reference_manifest['quant'] != args.quant or not reference_manifest['ordinary']:
             raise ValueError('Cannot compare different arithmetic contracts')
+        if args.quant and reference_manifest['args'].get('fp4_backend', 'flashinfer_cutlass') != args.fp4_backend:
+            raise ValueError('Cannot mix backend token references')
         refs = {r['id']: r for r in map(json.loads, cli.references.read_text().splitlines())
                 if r['phase'] == 'serial_reference'}
         if set(refs) != {r['id'] for r in rows}:
@@ -213,7 +216,7 @@ async def execute(cli):
                 for row in rows:
                     response = await checked(row, 'serial_reference', refs.get(row['id']))
                     sentinel_refs[row['id']] = response
-                validate(cli.output, args.quant, args.ordinary)
+                validate(cli.output, args.quant, args.ordinary, args.fp4_backend)
                 for concurrency in (1, 4, 8):
                     for repeat in range(2):
                         for start in range(0, len(rows), concurrency):
@@ -222,7 +225,7 @@ async def execute(cli):
             else:
                 for start in range(0, len(rows), cli.concurrency):
                     await asyncio.gather(*(checked(row, 'quality') for row in rows[start:start + cli.concurrency]))
-                    validate(cli.output, args.quant, args.ordinary)
+                    validate(cli.output, args.quant, args.ordinary, args.fp4_backend)
                 scores = [json.loads(line) for line in (cli.output / 'scores.jsonl').read_text().splitlines()]
                 ab.dump(cli.output / 'summary.json', {task: {'n': len(items),
                     'correct': sum(r['grade']['correct'] for r in items),
@@ -246,6 +249,7 @@ async def execute(cli):
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--arm', required=True, choices=['bf16-ar', 'bf16-dspark', 'quant-ar', 'quant-dspark'])
+    p.add_argument('--fp4-backend', default='flashinfer_cutlass', choices=['flashinfer_cutlass', 'flashinfer_cudnn'])
     p.add_argument('--template', required=True, type=Path)
     p.add_argument('--checkpoint', required=True, type=Path)
     p.add_argument('--dataset', required=True, type=Path)

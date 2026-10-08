@@ -123,7 +123,7 @@ async def arm(args, folder, prompt, windows, oracle, ordinary=False):
                 return row
 
             first = await checked('prime_excluded', 0, oracle)
-            validate(folder, args.quant, args.ordinary)
+            validate(folder, args.quant, args.ordinary, args.fp4_backend)
             info = json.loads((folder / 'server_info.json').read_text())
             if info.get('max_total_tokens') != PROTOCOL['equal_kv_capacity_max_total_tokens']:
                 raise ab.SafetyFailure('Equal KV-capacity launch flag was not resolved')
@@ -178,6 +178,9 @@ async def run(cli):
     args.tokenizer = args.model
     args.ordinary = False
     args.quant = False
+    args.fp4_backend = cli.fp4_backend
+    if quality.get('candidate_backend', 'flashinfer_cutlass') != args.fp4_backend:
+        raise ValueError('Quality evidence belongs to another backend')
     args.startup_timeout, args.request_timeout = 900, 45
     args.enable_standard_graphs = False
     args.deterministic_control_only = False
@@ -254,4 +257,5 @@ if __name__ == '__main__':
     p.add_argument('--template', type=Path, required=True)
     p.add_argument('--checkpoint', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--fp4-backend', default='flashinfer_cutlass', choices=['flashinfer_cutlass', 'flashinfer_cudnn'])
     raise SystemExit(asyncio.run(run(p.parse_args())))
