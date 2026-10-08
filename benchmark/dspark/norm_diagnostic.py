@@ -4,6 +4,8 @@ import asyncio
 import json
 import os
 from pathlib import Path
+import signal
+import subprocess
 from types import SimpleNamespace
 import time
 
@@ -56,6 +58,9 @@ async def run(cli):
     ab.dump(cli.output / 'manifest.json', {'scope': 'profiled kernel attribution ONLY',
         'candidate': cli.candidate, 'created_at': time.time(), 'source': str(cli.inherit),
         'source_sha': sha(cli.inherit / 'manifest.json'), 'execution_integrity_template': template,
+        'tool_sha256': {p.name: sha(p) for p in Path(__file__).parent.glob('*.py')},
+        'experiment_worktree_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+            cwd=Path(__file__).parent, text=True).strip(),
         'nsys': cli.nsys, 'requests': 2, 'settle': 24, 'performance': 'UNPROVEN'})
     folder = cli.output / '00_full'
     folder.mkdir()
@@ -84,6 +89,8 @@ async def run(cli):
             ab.dump(folder / 'trace_stop', {'time': time.time()})
             await checked('drain_excluded', 0)
         status['status'] = 'diagnostic_complete_NOT_performance_proof'
+    except asyncio.CancelledError:
+        status.update(status='safety_stopped', error_type='CancelledError', error='Wall budget/supervisor stop')
     except Exception as error:
         status.update(status='safety_stopped', error_type=type(error).__name__, error=str(error))
     finally:
@@ -102,4 +109,8 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--nsys', required=True)
     parser.add_argument('--candidate', action='store_true')
-    raise SystemExit(asyncio.run(run(parser.parse_args())))
+    async def bounded(cli):
+        task = asyncio.current_task()
+        asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, task.cancel)
+        return await asyncio.wait_for(run(cli), timeout=1200)
+    raise SystemExit(asyncio.run(bounded(parser.parse_args())))
