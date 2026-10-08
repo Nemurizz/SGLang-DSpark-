@@ -284,6 +284,13 @@ async def run(cli):
                 item['order'] = 'AB' if ordinal == 2 else 'BA'
                 comparisons.append(item)
                 ab.append_jsonl(cli.output / 'comparisons.jsonl', item)
+                if not item['e2e_gain_at_least_one_percent']:
+                    # BOTH orders must reach >=1%; one failed order is already
+                    # terminal. Avoid paying for a futile reverse-order window.
+                    status.update(status='below_benefit_threshold_stopped',
+                        stop_reason='An order failed the prespecified >=1% E2E requirement',
+                        unmeasured_remaining_orders=True)
+                    return
         drift = noise_gate(arms[1], arms[4])
         ab.dump(cli.output / 'counterbalanced_control_drift.json', drift)
         if not drift['admitted']:
@@ -315,7 +322,9 @@ async def run(cli):
         status.update(finished_at=time.time(), process_local_policy_rollback='owned service stopped; baseline source untouched')
         ab.dump(cli.output / 'status.json', status)
     print(json.dumps(status), flush=True)
-    return 2 if status['status'] == 'safety_stopped' else 0
+    if status['status'] == 'safety_stopped':
+        return 2
+    return 3 if status['status'] == 'below_benefit_threshold_stopped' else 0
 
 
 if __name__ == '__main__':

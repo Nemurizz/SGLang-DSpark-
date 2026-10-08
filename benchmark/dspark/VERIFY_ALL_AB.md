@@ -92,3 +92,12 @@ validated resolved PREFILL/DECODE DISABLED backends. An existing graph runner or
 already-created layout remains rejected. No geometry guard is weakened. h47 is
 the last startup attempt; another startup failure ends this candidate. h45
 controls remain the sole immutable controls; h46 failure logs are retained.
+
+Final outcome h47: B1/A1 mean E2E ratio0.99485078 (0.514922% time reduction),
+TPOT ratio0.99415329. All token/acceptance and three p95 guards passed, but the
+prespecified >=1% requirement in EACH order failed. Supervisor stopped B2 before
+any steady timing; its39 correctness requests were retained. BA/A2 timing was
+not completed. No repeatability/deployment gain claim. The production baseline
+source remains untouched; the candidate stays default-off. Original records and
+all startup failures are retained. A later tooling change makes this same failed
+threshold terminal automatically; it does not change the executed acceptance bar.
