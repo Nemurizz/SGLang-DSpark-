@@ -34,7 +34,7 @@ out; original TLS bytes were then staged by SSH. SHA256:
 | ARC-Challenge test parquet | 62f03257e737aed263f55c6abf87c7bb0028a44a6bdd2a26eb1279eb42c1d1e9 |
 
 Generated dataset SHA256:
-`c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a6499488f`.
+`c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a649488f`.
 
 ## Grader safety / execution prerequisites
 
