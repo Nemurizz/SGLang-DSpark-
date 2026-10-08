@@ -38,6 +38,7 @@ class QuantGateTests(unittest.TestCase):
     def test_quantized_ar_oracle_has_no_draft_arguments(self):
         cmd, _ = self.command(True)
         self.assertFalse(any(s.startswith('--speculative-') for s in cmd))
+        self.assertEqual(cmd.count('--disable-radix-cache'), 1)
 
     def valid_info(self):
         return dict(enable_deterministic_inference=True, disable_cuda_graph=True,

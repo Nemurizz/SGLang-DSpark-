@@ -55,7 +55,9 @@ def quant_command(cmd, env, args, *, ordinary, folder):
         runtime_folder=folder / 'runtime', hook_folder=Path(__file__).resolve().parent,
         fixed_tile=[64, 64])
     cmd[cmd.index('--tokenizer-path') + 1] = args.tokenizer
-    cmd += ['--fp4-gemm-backend', 'flashinfer_cutlass', '--disable-radix-cache']
+    cmd += ['--fp4-gemm-backend', 'flashinfer_cutlass']
+    if '--disable-radix-cache' not in cmd:
+        cmd.append('--disable-radix-cache')
     if not ordinary:
         cmd += ['--speculative-draft-model-quantization', 'unquant',
                 '--speculative-draft-kv-cache-dtype', 'bfloat16']
@@ -247,9 +249,15 @@ async def main():
               'arms_completed': [], 'started_at': time.time(),
               'performance_benefit': 'unproven', 'quality': 'not_evaluated',
               'baseline_identity_before': before}
+    tools_folder = Path(__file__).resolve().parent
+    tool_hashes = {name: digest(tools_folder / name) for name in (
+        'quant_feasibility_gate.py', 'nvfp4_profile_hook.py', 'fixed_fa4_policy_hook.py',
+        'stable_profile_hook.py', 'stable_baseline_gate.py', 'dspark_prefix_ab.py',
+        'prepare_nvfp4.py', 'audit_nvfp4_parent.py')}
     ab.dump(cli.output / 'manifest.json', {'args': vars(args), 'baseline': before,
              'checkpoint_manifest': model, 'old_reference_sha256': frozen,
              'parent_audit_sha256': digest(cli.parent_audit),
+             'tools_sha256': tool_hashes,
              'workload': 'p512_c8 fixed inputs, 128 output; serial/c4/c8 two repeats',
              'quality_gate': 'NOT covered by synthetic execution workload',
              'stop_on_any_token_or_within_dspark_acceptance_mismatch': True})
