@@ -48,6 +48,7 @@ async def drain_listener(port):
     raise ab.SafetyFailure('Owned listener did not finish draining')
 
 PROTOCOL = {'cell': 'p2048_c1', 'output_tokens': 128, 'concurrency': 1,
+    'equal_kv_capacity_max_total_tokens': 16384,
     'warmup_min': 24, 'warmup_max': 64, 'warmup_group': 8,
     'warmup_mean_spread_limit': .005, 'warmup_p95_over_p50_limit': 1.02,
     'control_mean_spread_limit': .005, 'control_p95_spread_limit': .01,
@@ -68,10 +69,16 @@ def noise(left, right):
     return result
 
 
+class EqualCapacityServer(QualityServer):
+    def command(self):
+        cmd, env = super().command()
+        return cmd + ['--max-total-tokens', str(PROTOCOL['equal_kv_capacity_max_total_tokens'])], env
+
+
 async def arm(args, folder, prompt, windows, oracle, ordinary=False):
     import aiohttp
     folder.mkdir()
-    server = QualityServer(args, 'full', folder)
+    server = EqualCapacityServer(args, 'full', folder)
     telemetry = DeviceTelemetry(folder)
     sampler = ab.GPUSampler(folder / 'gpu.jsonl', 200)
     summaries = []
@@ -117,6 +124,9 @@ async def arm(args, folder, prompt, windows, oracle, ordinary=False):
 
             first = await checked('prime_excluded', 0, oracle)
             validate(folder, args.quant, args.ordinary)
+            info = json.loads((folder / 'server_info.json').read_text())
+            if info.get('max_total_tokens') != PROTOCOL['equal_kv_capacity_max_total_tokens']:
+                raise ab.SafetyFailure('Equal KV-capacity launch flag was not resolved')
             if ordinary:
                 await checked('reference_repeat', 1, first)
                 return first
