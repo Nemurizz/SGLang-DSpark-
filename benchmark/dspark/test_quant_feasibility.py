@@ -31,6 +31,7 @@ class QuantGateTests(unittest.TestCase):
     def test_dspark_recipe_separates_weight_draft_kv_graph_cache(self):
         cmd, env = self.command(False)
         for flag, value in (('--fp4-gemm-backend', 'flashinfer_cutlass'),
+                            ('--quantization', 'modelopt_fp4'),
                             ('--speculative-draft-model-quantization', 'unquant'),
                             ('--speculative-draft-kv-cache-dtype', 'bfloat16'),
                             ('--kv-cache-dtype', 'bfloat16'),
@@ -38,7 +39,7 @@ class QuantGateTests(unittest.TestCase):
             self.assertEqual(cmd[cmd.index(flag) + 1], value)
         self.assertIn('--disable-cuda-graph', cmd)
         self.assertIn('--disable-radix-cache', cmd)
-        self.assertNotIn('--quantization', cmd)
+        self.assertEqual(cmd.count('--quantization'), 1)
         self.assertTrue(all(env[key] == '0' for key in (
             'SGLANG_DSPARK_PREFIX_CACHE', 'SGLANG_DSPARK_RAGGED_VERIFY_GRAPH',
             'SGLANG_DSPARK_DYNAMIC_DRAFT_LENGTH', 'SGLANG_DSPARK_COMPACT_SCAN_CUDA')))

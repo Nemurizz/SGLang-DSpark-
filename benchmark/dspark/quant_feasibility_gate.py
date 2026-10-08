@@ -23,7 +23,7 @@ from prepare_nvfp4 import REVISION
 BASELINE = '0577109f4e659b8ef2ef3f979f1fd7f079b25821'
 MAIN = '0c1f1eb64af939379ce47045c56aa8d2508c54df'
 UNTRACKED = '9077a67cf4e576a78b7750734c1e956defe85114739b9bb6eed68bc828708b7e'
-PROFILE = 'dspark-qwen3-14b-nvfp4-target-bf16-draft-fa4fixed64-v1'
+PROFILE = 'dspark-qwen3-14b-nvfp4-target-bf16-draft-fa4fixed64-v2'
 
 
 def digest(path):
@@ -64,13 +64,15 @@ def quant_command(cmd, env, args, *, ordinary, folder):
         runtime_folder=folder / 'runtime', hook_folder=Path(__file__).resolve().parent,
         fixed_tile=[64, 64])
     cmd[cmd.index('--tokenizer-path') + 1] = args.tokenizer
-    cmd += ['--fp4-gemm-backend', 'flashinfer_cutlass']
+    cmd += ['--quantization', 'modelopt_fp4', '--fp4-gemm-backend', 'flashinfer_cutlass']
     if '--disable-radix-cache' not in cmd:
         cmd.append('--disable-radix-cache')
     if not ordinary:
         cmd += ['--speculative-draft-model-quantization', 'unquant',
                 '--speculative-draft-kv-cache-dtype', 'bfloat16']
-    # No explicit --quantization: detect the pinned offline checkpoint format.
+    # Auto-detection loaded ModelOpt FP4 correctly but leaves /server_info's
+    # quantization=None on this installed source. Pin the same offline format
+    # explicitly; do not relax either server-info or actual-weight attestations.
     hooks = json.loads(cmd[cmd.index('--forward-hooks') + 1])
     hooks[0]['hook_factory'] = 'nvfp4_profile_hook:make_hook'
     hooks.append({'name': 'quant-model-storage-attestation', 'target_modules': ['model'],
