@@ -22,7 +22,7 @@ def run(path):
     starts = {tid:[r[0] for r in rows] for tid,rows in ranges.items()}
     values = defaultdict(list)
     for a,b,tid,sid in db.execute('select start,end,globalTid,nameId from CUPTI_ACTIVITY_KIND_RUNTIME'):
-        name = strings[sid]
+        name = strings[sid].split('_v')[0]
         if name not in ('cudaMemcpyAsync', 'cudaStreamSynchronize', 'cudaGraphLaunch') or tid not in starts:
             continue
         i = bisect.bisect_right(starts[tid],a)-1

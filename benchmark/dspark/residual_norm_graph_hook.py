@@ -24,8 +24,14 @@ def make_hook(config):
         raise ValueError('Original batch-invariant operators required')
     if getattr(RMSNorm, '_dspark_norm_experiment', False):
         raise ValueError('Do not stack with the rejected norm-fusion experiment')
-    if getattr(RMSNorm, '_dspark_original_norm_graph', False):
-        raise ValueError('Catalog already installed')
+    identity = (active, diagnostic, str(config['graph_policy_folder']))
+    installed = getattr(RMSNorm, '_dspark_original_norm_graph', None)
+    if installed is not None:
+        if installed['identity'] != identity:
+            raise ValueError('Conflicting graph catalog installation')
+        # Target and draft share this process/class and register the factory
+        # separately. Reuse one catalog and one runtime attestation callback.
+        return installed['hook']
     original = RMSNorm.forward_native
     catalog = Catalog(original)
 
@@ -44,7 +50,6 @@ def make_hook(config):
                 torch.cuda.nvtx.range_pop()
 
     RMSNorm.forward_native = forward
-    RMSNorm._dspark_original_norm_graph = True
     folder = Path(config['graph_policy_folder'])
     folder.mkdir(parents=True, exist_ok=True)
     (folder / 'graph_policy.json').write_text(json.dumps({
@@ -64,4 +69,5 @@ def make_hook(config):
             with (folder / 'catalog_final.json').open('x') as handle:
                 json.dump(catalog.summary(), handle, indent=2)
         return result
+    RMSNorm._dspark_original_norm_graph = {'identity': identity, 'hook': combined}
     return combined

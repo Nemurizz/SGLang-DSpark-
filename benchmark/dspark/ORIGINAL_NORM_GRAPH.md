@@ -51,3 +51,12 @@ Measured scope is p2048 c1 output128 only, not deployment or full matrix.
   plans. Their Ling TP4 measurements are not evidence for our Qwen TP1 gains.
 
 Performance: **UNPROVEN** until all prescribed gates pass.
+
+## h51 initialization repair
+
+First service never reached a request: target and draft register the same hook
+factory in one process, and the first implementation incorrectly rejected the
+second registration. Service stopped, no GPU process remained, serving source
+unchanged. Factory is now idempotent for identical opt-in/config identity;
+conflicting identities still fail closed. This is an initialization bug repair,
+not a retry of a failed timing/correctness comparison. h51 logs retained.
