@@ -59,9 +59,22 @@ def make_hook(config):
     DecodeCudaGraphRunner._ragged_capture_slots = capture_slots
     original_guard = DecodeCudaGraphRunner._can_run_ragged_verify_graph
     counters = {'admitted': 0, 'fallback': 0, 'admitted_by_bs': {}}
+    if config.get('graph_diagnostic',False):
+        counters['host_geometry_decisions'] = {}
     @functools.wraps(original_guard)
     def guard(self, fb, layout):
         allowed = original_guard(self, fb, layout)
+        if config.get('graph_diagnostic',False):
+            cap = self._captured_ragged_layouts.get(layout.graph_num_tokens)
+            facts = {'allowed':bool(allowed), 'fb_bs':fb.batch_size, 'layout_bs':layout.bs,
+                'cpu_lens':layout.verify_lens_cpu, 'tokens':layout.graph_num_tokens,
+                'total':layout.total_verify_tokens,
+                'capture_bs':None if cap is None else cap.bs,
+                'capture_lens':None if cap is None else cap.verify_lens_cpu,
+                'hidden':int(fb.capture_hidden_mode), 'capture_hidden':int(self.capture_hidden_mode)}
+            key = json.dumps(facts,sort_keys=True)
+            table = counters['host_geometry_decisions']
+            table[key] = table.get(key,0)+1
         if allowed:
             if fb.batch_size != 1 or layout.graph_num_tokens != 8 or layout.verify_lens_cpu != [8]:
                 raise ValueError('Original exact guard admitted an unexpected geometry')
