@@ -134,8 +134,10 @@ architecture matched, and BF16 embedding/LM-head tensor bytes matched the preser
 original checkpoint. Installed
 FlashInfer `fp4_gemm_template_sm120.h` declares FP32 `ElementAccumulator` and
 `ElementCompute`; BF16 output still introduces rounding. No model quality,
-DSpark correctness or end-to-end gain has yet
-been proved. See the subsequent result record for download and serving gates.
+general DSpark correctness or end-to-end gain has yet been proved.
+`NVFP4_TARGET_BOUNDED_RESULT.md` records the completed bounded AR/DSpark gates:
+112 requests passed on fixed512/output128/c1/c4/c8. This does not cover quality
+or stabilized performance.
 
 The first target launch (target-gate-01) stopped before any completed test request:
 offline auto-detection loaded `modelopt_fp4`, but `/server_info` retained
