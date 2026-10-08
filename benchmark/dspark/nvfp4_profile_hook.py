@@ -29,6 +29,16 @@ def make_hook(config):
     return hook
 
 
+def validate_target_linear(data):
+    if data['weight_dtype'] != 'torch.uint8' or data['output_dtype'] != 'torch.bfloat16':
+        raise ValueError('Expected native packed FP4 weights and BF16 linear output')
+    for name in ('alpha', 'input_scale_inv'):
+        if data['scales'][name] != {'dtype': 'torch.float32', 'numel': 1}:
+            raise ValueError('Global FP4 scale must be a float32 scalar: ' + name)
+    if data['scales']['weight_scale_interleaved']['dtype'] != 'torch.float8_e4m3fn':
+        raise ValueError('Expected FP8 block scales for native NVFP4')
+
+
 def validate_model(data):
     if data['kind'] == 'target':
         if data['quantized_linear_count'] != 160:
@@ -37,6 +47,10 @@ def validate_model(data):
             raise ValueError('Unexpected target quantization implementation')
         if data['fp4_backend'] != 'flashinfer_cutlass':
             raise ValueError('Wrong FP4 backend')
+        if len(data.get('linears', [])) != 160:
+            raise ValueError('Missing actual per-linear storage/scale attestation')
+        for linear in data['linears']:
+            validate_target_linear(linear)
     elif data['kind'] == 'draft':
         if data['quantized_linear_count'] or data.get('unquantized_linear_count') != 20:
             raise ValueError('All 20 fused linears of the five-layer draft must remain unquantized')
@@ -71,7 +85,10 @@ def make_model_hook(config):
                 linears.append({'name': name, 'method': type(method).__name__,
                                 'weight_dtype': str(layer.weight.dtype),
                                 'packed_weight_shape': list(layer.weight.shape),
-                                'output_dtype': str(layer.params_dtype)})
+                                'output_dtype': str(layer.params_dtype),
+                                'scales': {key: {'dtype': str(getattr(layer, key).dtype),
+                                                 'numel': getattr(layer, key).numel()}
+                                           for key in ('alpha', 'input_scale_inv', 'weight_scale_interleaved')}})
         embed = getattr(getattr(module, 'model', None), 'embed_tokens', None)
         if embed is None:
             embed = getattr(module, 'embed_tokens', None)

@@ -4,7 +4,7 @@ import unittest
 from types import SimpleNamespace
 
 from quant_feasibility_gate import quant_command, validate_info, launch_args_from_template
-from nvfp4_profile_hook import validate_model
+from nvfp4_profile_hook import validate_model, validate_target_linear
 from prepare_nvfp4 import OFFICIAL_LFS, REVISION
 
 
@@ -69,10 +69,18 @@ class QuantGateTests(unittest.TestCase):
                 validate_info({**self.valid_info(), key: wrong}, False)
 
     def test_runtime_actual_weights_fail_closed(self):
+        linear = dict(weight_dtype='torch.uint8', output_dtype='torch.bfloat16',
+                      scales=dict(alpha=dict(dtype='torch.float32', numel=1),
+                                  input_scale_inv=dict(dtype='torch.float32', numel=1),
+                                  weight_scale_interleaved=dict(dtype='torch.float8_e4m3fn', numel=128)))
+        validate_target_linear(linear)
+        with self.assertRaises(ValueError):
+            validate_target_linear({**linear, 'scales': {**linear['scales'],
+                                   'input_scale_inv': dict(dtype='torch.bfloat16', numel=1)}})
         target = dict(kind='target', quantized_linear_count=160,
                       quantized_methods=['ModelOptFp4LinearMethod'],
                       fp4_backend='flashinfer_cutlass', embedding_dtype='torch.bfloat16',
-                      lm_head_dtype='torch.bfloat16')
+                      lm_head_dtype='torch.bfloat16', linears=[linear]*160)
         validate_model(target)
         for key, wrong in [('quantized_linear_count', 0), ('lm_head_dtype', 'torch.uint8'),
                            ('fp4_backend', 'marlin')]:
