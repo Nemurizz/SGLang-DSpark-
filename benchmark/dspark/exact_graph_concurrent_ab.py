@@ -209,9 +209,11 @@ async def run(cli):
         controls=await arm(args,template,refs,dataset,cli.output,0,'baseline',2)
         noise={cell:noise_gate(controls[(cell,0)],controls[(cell,1)]) for cell in PROTOCOL['cells']}
         ab.dump(cli.output/'control_noise.json',noise)
-        if not all(item['admitted'] for item in noise.values()):
+        status['baseline_baseline_noise_admitted']=all(item['admitted'] for item in noise.values())
+        descriptive=PROTOCOL.get('exploratory_descriptive_only',False)
+        status['qualification_mode']='DESCRIPTIVE ONLY; never a stable benefit claim' if descriptive else 'strict'
+        if not status['baseline_baseline_noise_admitted'] and not descriptive:
             raise ab.SafetyFailure('Concurrent baseline/baseline noise admission failed; no candidate timing')
-        status['baseline_baseline_noise_admitted']=True
         arms={}
         for ordinal,variant in enumerate(PROTOCOL['order'],1):
             arms[ordinal]=await arm(args,template,refs,dataset,cli.output,ordinal,variant,1)
@@ -235,10 +237,11 @@ async def run(cli):
                 raise ab.SafetyFailure('p95 regression; stop remaining orders, restore safe OFF baseline: '+json.dumps(failures))
         drift={cell:noise_gate(arms[1][(cell,0)],arms[4][(cell,0)]) for cell in PROTOCOL['cells']}
         ab.dump(cli.output/'counterbalanced_control_drift.json',drift)
-        if not all(d['admitted'] for d in drift.values()):
+        if not all(d['admitted'] for d in drift.values()) and not descriptive:
             raise ab.SafetyFailure('Concurrent counterbalanced control drift not admitted')
         status.update(status='counterbalanced_concurrency_completed',
-            performance_claim='See both-order per-cell gains; no c1 extrapolation; no p95 regression')
+            performance_claim=('UNPROVEN: descriptive ratios only; no qualification regardless of observed gain'
+                if descriptive else 'See both-order per-cell gains; no c1 extrapolation; no p95 regression'))
 
     task=asyncio.current_task()
     asyncio.get_running_loop().add_signal_handler(signal.SIGTERM,task.cancel)

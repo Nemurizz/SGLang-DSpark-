@@ -36,3 +36,23 @@ unchanged, and high/multirow geometry remains eager. Buffer/capture policy,
 numerics/GEMM/reductions/FA4 fixed64/SPS/quantization are NOT changed. Original
 graph-OFF service checkout and main stay untouched. Measurement is unprofiled.
 No throughput/saturation/SLO/c32 claim may be inferred from capped c4/c8/c16.
+
+## h60 stop and h61 one-time descriptive probing
+
+h60 saved 167 frozen-correct requests, including two c16 bursts using explicit
+slot%8 references. Continuous c4 fixed warmup mean TPOTs were 17.71060994,
+17.53681484, 17.68512579 ms (0.991030% spread): qualification FAILED, and no
+candidate timing ran. Both h59 and h60 were independently audited and archived
+BEFORE changing any benchmark script. Their source copies remain in the archive.
+
+The human request is to MEASURE concurrency, not necessarily to qualify a new
+gain. Repeated qualification attempts are not useful at roughly 1% observed
+baseline variability. h61 is ONE descriptive continuous c4/c8/c16 A/B. It has
+an explicit `exploratory_descriptive_only` protocol flag and NEVER qualifies a
+stable benefit, regardless of observed ratios. The same three fixed warmup
+blocks and two baseline windows remain; FAILED warmup/noise flags stay FAILED,
+not silently admitted. No request/tail filtering, retry, clock locking or new
+inference policy. Candidate p95 tolerance stays zero; stop remaining orders on
+any p95 regression, token/five-acceptance difference or illegal access. No more
+protocol attempts will follow this run. Output includes caveated raw measured
+TTFT/TPOT/E2E/p95/throughput and memory; no >=1% claim for high concurrency.

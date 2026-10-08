@@ -119,7 +119,10 @@ async def arm(args,template,refs,dataset,root,ordinal,variant,windows):
                 spread=max(means)/min(means)-1
                 ab.dump(folder/(cell+'-warmup.json'),{'means':means,'spread':spread,'admitted':spread<=.005,
                     'no_adaptive_retry':True,'unit':'balanced continuous block mean TPOT'})
-                if spread>.005:raise ab.SafetyFailure('Fixed continuous warmup unstable '+cell)
+                if spread>.005:
+                    if not PROTOCOL.get('exploratory_descriptive_only',False):
+                        raise ab.SafetyFailure('Fixed continuous warmup unstable '+cell)
+                    print('NOT_QUALIFIED warmup '+cell+' spread='+str(spread),flush=True)
             if candidate:
                 ab.dump(folder/'graph_policy'/'snapshot_warmup',{'excluded':True})
                 await checked('p2048_c1',0,'presteady_attestation_excluded',0)
