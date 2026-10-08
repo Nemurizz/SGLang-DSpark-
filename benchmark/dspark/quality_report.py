@@ -60,12 +60,12 @@ def report(root, output):
                   and not scores['quant-quality'][key]['grade']['correct']]
         gains = [key for key in ids if scores['quant-quality'][key]['grade']['correct']
                  and not scores['bf16-quality'][key]['grade']['correct']]
-        item = {'n': len(ids), 'bf16_correct': sum(left), 'nvfp4_correct': sum(right),
-            'bf16_score': sum(left)/len(ids), 'nvfp4_score': sum(right)/len(ids),
+        item = {'n': len(ids), 'bf16_correct': sum(left), 'candidate_correct': sum(right),
+            'bf16_score': sum(left)/len(ids), 'candidate_score': sum(right)/len(ids),
             'score_delta': sum(deltas)/len(ids), 'paired_bootstrap_95_interval': paired_interval(deltas),
             'within_human_quality_budget': permitted(sum(left), sum(right), len(ids)),
             'bf16_wilson_95_interval': wilson(sum(left), len(ids)),
-            'nvfp4_wilson_95_interval': wilson(sum(right), len(ids)),
+            'candidate_wilson_95_interval': wilson(sum(right), len(ids)),
             'lost_correct_ids': losses, 'gained_correct_ids': gains,
             'truncated': {arm: sum(scores[arm][key]['grade']['truncated'] for key in ids) for arm in scores}}
         result['tasks'][task] = item
