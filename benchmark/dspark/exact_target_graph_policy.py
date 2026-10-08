@@ -50,6 +50,13 @@ def make_hook(config):
 
     # Capture only the full-width 1x8 target geometry. Never relax admission.
     DecodeCudaGraphRunner._build_ragged_verify_token_buckets = lambda self: [8]
+    def capture_slots(self, num_tokens):
+        if not self.ragged_verify_mode or self.model_runner.is_draft_worker or num_tokens <= 0:
+            raise ValueError('Only target ragged 1x8 capture is in scope')
+        # Out-of-catalog runtime tiers still flow to the original guard's False,
+        # not a raised exception. Capture itself is limited by the [8] catalog.
+        return 1
+    DecodeCudaGraphRunner._ragged_capture_slots = capture_slots
     original_guard = DecodeCudaGraphRunner._can_run_ragged_verify_graph
     counters = {'admitted': 0, 'fallback': 0, 'admitted_by_bs': {}}
     @functools.wraps(original_guard)

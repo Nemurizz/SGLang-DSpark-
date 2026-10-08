@@ -25,3 +25,22 @@ Primary background:
 https://www.lmsys.org/blog/2026-08-21-ling3-flash-spec-decode-blackwell/
 https://github.com/sgl-project/sglang/pull/37300
 Neither source justifies relaxing geometry or predicts our E2E benefit.
+
+## h54 diagnostic audit / integration repair
+
+h54 preserved 68 requests and passed serial/c4/c8 frozen tokens and acceptance,
+but ZERO graph admissions and ZERO fallbacks: it never created a target graph.
+The inherited launch environment had SGLANG_DSPARK_RAGGED_VERIFY_GRAPH=0.
+The startup warning combined disabled opt-in and backend capability; source
+inspection confirms FlashAttentionBackend declares supports_ragged_verify_graph=True.
+Also regular forward hooks are registered AFTER graph capture, and the default
+slot policy with max_bs=8 captures eight rows, not one row with eight tokens.
+This is NO-EFFECT evidence, not graph correctness or performance evidence.
+
+Repair the isolated launch harness: explicit ragged opt-in, process-local policy
+installation immediately before original target capture, catalog [8], capture
+slots exactly one while preserving buffer max_bs=8. Spawned workers use a dedicated
+launcher. Backend capability and the ORIGINAL admission guard are never overridden.
+Assert actual capture layout and draft OFF before requests; require positive
+admissions only at bs1 before completing diagnostics or entering timing.
+No unprofiled A/B has failed or been retried for this candidate.

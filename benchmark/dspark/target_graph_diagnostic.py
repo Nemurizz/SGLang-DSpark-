@@ -27,10 +27,12 @@ class TargetGraphServer(QualifiedServer):
         env['SGLANG_DSPARK_TPOT_TRACE'] = '1' if self.diagnostic else '0'
         env['PYTHONPATH'] = str(Path(__file__).parent) + ':' + env.get('PYTHONPATH', '')
         if self.candidate:
+            cmd[cmd.index('sglang.launch_server')] = 'exact_target_launcher'
             cmd = [x for x in cmd if x != '--disable-cuda-graph']
             cmd += ['--cuda-graph-backend-decode','full', '--cuda-graph-bs-decode','1','4','8',
                     '--cuda-graph-max-bs-decode','8','--cuda-graph-backend-prefill','disabled']
             env['SGLANG_DSPARK_FOLDED_PROPOSAL'] = '0'
+            env['SGLANG_DSPARK_RAGGED_VERIFY_GRAPH'] = '1'
         if self.diagnostic or self.candidate:
             i = cmd.index('--forward-hooks') + 1
             hooks = json.loads(cmd[i])
@@ -85,6 +87,10 @@ async def start(server, session):
         raise ab.SafetyFailure('Missing experimental graph attestation')
     for path in records:
         validate_runtime(json.loads(path.read_text()),fixed_tile=[64,64])
+    capture = json.loads((server.folder/'graph_policy'/'capture_actual.json').read_text())
+    draft = json.loads((server.folder/'graph_policy'/'draft_actual.json').read_text())
+    if capture['verify_lens_cpu'] != [8] or capture['bs'] != 1 or capture['tokens'] != [8] or draft['decode_graph_allowed']:
+        raise ab.SafetyFailure('Actual capture/draft graph scope differs from prescribed 1x8')
     await ab.api(session,base,'/flush_cache?timeout=10','POST')
     print('READY '+server.folder.name,flush=True)
     return base
@@ -146,6 +152,10 @@ async def run(cli):
                 ab.dump(folder/'graph_policy'/'snapshot_graph',{'excluded':True})
             await checked('drain_excluded', 0)
         status['status'] = 'diagnostic_complete_NOT_performance_proof'
+        if cli.candidate:
+            final = json.loads((folder/'graph_policy'/'graph_final.json').read_text())
+            if not final['admitted'] or set(final['admitted_by_bs']) != {'1'}:
+                raise ab.SafetyFailure('No actual 1x8 graph admission; no-effect diagnostics are not graph validation')
     except asyncio.CancelledError:
         status.update(status='safety_stopped', error_type='CancelledError', error='Wall budget/supervisor stop')
     except Exception as error:

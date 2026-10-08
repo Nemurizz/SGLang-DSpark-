@@ -47,5 +47,25 @@ class Guard(unittest.TestCase):
         self.assertIn('self._decode_graph_allowed = False',text)
         self.assertNotIn('RMSNorm.forward_native =',text)
 
+    def test_capture_slots_do_not_reject_eager_fallback(self):
+        path=Path(__file__).with_name('exact_target_graph_policy.py')
+        tree=ast.parse(path.read_text())
+        node=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='capture_slots')
+        env={}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[node],type_ignores=[])),str(path),'exec'),env)
+        runner=NS(ragged_verify_mode=True,model_runner=NS(is_draft_worker=False))
+        for tokens in [1,7,8,9,32,64]:self.assertEqual(env['capture_slots'](runner,tokens),1)
+
+    def test_actual_capture_required_and_early_bootstrap(self):
+        folder=Path(__file__).parent
+        launcher=(folder/'exact_target_launcher.py').read_text()
+        self.assertLess(launcher.index('make_hook(configs[0])'),launcher.index('result = original(model_runner'))
+        self.assertIn('layout.verify_lens_cpu != [8]',launcher)
+        self.assertIn("supports_ragged_verify_graph', False)",launcher)
+        self.assertNotIn('supports_ragged_verify_graph =',launcher)
+        diagnostic=(folder/'target_graph_diagnostic.py').read_text()
+        self.assertIn("env['SGLANG_DSPARK_RAGGED_VERIFY_GRAPH'] = '1'",diagnostic)
+        self.assertIn("if not final['admitted']",diagnostic)
+
 
 if __name__ == '__main__':unittest.main()
