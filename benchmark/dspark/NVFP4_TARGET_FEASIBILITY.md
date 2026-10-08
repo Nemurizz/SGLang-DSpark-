@@ -18,7 +18,8 @@ First recipe:
 - Target: public NVIDIA Qwen3-14B NVFP4, **W4A4** transformer linears, not W4A16.
 - Revision: `bc39319a4dc265d9bbb9a9731bc52c4988d9ece7`, ModelOpt producer 0.35.0.
 - BF16 LM head and embedding, BF16 unquantized DSpark draft, BF16 target/draft KV.
-- Existing FlashInfer 0.6.17 **native SM120 CUTLASS** FP4 backend; no new GEMM kernel.
+- Explicit `--quantization modelopt_fp4`, existing FlashInfer 0.6.17 **native
+  SM120 CUTLASS** FP4 backend; no new GEMM kernel.
 - FA4 fixed64 attention, splits=1, deterministic settings for BF16 operations.
 - CUDA graphs/radix/paired cache/adaptive draft/compact CUDA OFF.
 - Existing SPS table unchanged. Quantization may lower acceptance, so acceptance
@@ -62,6 +63,19 @@ unexplained ~60s baseline stall.
 7. [Author's SM120 Qwen3.8 deployment](https://github.com/darksidewalker/qwen3.8-27b-sglang-dspark-blackwell):
    integration inspiration only. Different model, head/KV recipe, draft and graph
    settings prevent importing the reported speed as our A/B result.
+8. [FlashInfer issue #3398](https://github.com/flashinfer-ai/flashinfer/issues/3398)
+   initially reported M-dependent zero outputs. Its merged
+   [fix #3497](https://github.com/flashinfer-ai/flashinfer/pull/3497) identified
+   incorrect global-scale dtype interpretation, not a proven dispatch problem.
+   The installed 0.6.17 wrapper normalizes scales to FP32. Attest actual target
+   `alpha` and `input_scale_inv` as FP32 scalars on every fused linear, packed
+   U8 weights, FP8 block scales and BF16 output; do not copy a speculative root
+   cause from an issue description into our diagnosis.
+9. [SGLang issue #36291](https://github.com/sgl-project/sglang/issues/36291)
+   reports a deterministic-flag coverage gap on a different Qwen3.8 hybrid
+   Mamba/DFlash2/SM121 configuration. It does not establish our dense Qwen3
+   failure, but reinforces using actual output tokens instead of configuration
+   or task scores alone as the reproducibility test.
 
 ## Why this is worth one bounded test
 
@@ -78,9 +92,13 @@ No theoretical bandwidth ratio is an end-to-end speedup claim.
    down), M=1/8/32/64, finite outputs and repeated-row exact equality. This is
    availability only, not model-level correctness or performance.
 2. Download ~10.544 GB of pinned weights to the separate shared volume (local
-   XFS has only ~2GB free); cross-check the three LFS SHA256 values against the
+   XFS initially had only ~2GB free); cross-check the three LFS SHA256 values against the
    official HF API read from the desktop. No overwrite or cleanup of baseline.
    Initial network attempts: official HF unreachable remotely, hf-mirror works.
+   On 2026-10-09 the user expanded local XFS to 80GB. Preserve the shared source
+   and old models; `stage_verified_checkpoint.py` copies only pinned manifest
+   entries to a fresh local folder, hashes every copy and publishes its verified
+   manifest last. Never time inference loading directly from shared FUSE.
 3. Audit same architecture and bitwise-identical BF16 embedding/LM-head tensor
    bytes against the preserved original checkpoint; no model swap disguised as
    quantization. New quantized ordinary target, graph/cache OFF, eight fixed512 prompts,
@@ -110,9 +128,18 @@ not paired-cache wins.
 
 ## Current result
 
-The native backend smoke passed all 16 shape cases. Five harness unit tests
-passed locally and remotely (parent-audit tests are additional). Installed
+The native backend smoke passed all 16 shape cases. Twelve harness/parent/staging
+unit tests passed locally and remotely. Download and local staging hashes passed,
+architecture matched, and BF16 embedding/LM-head tensor bytes matched the preserved
+original checkpoint. Installed
 FlashInfer `fp4_gemm_template_sm120.h` declares FP32 `ElementAccumulator` and
 `ElementCompute`; BF16 output still introduces rounding. No model quality,
 DSpark correctness or end-to-end gain has yet
 been proved. See the subsequent result record for download and serving gates.
+
+The first target launch (target-gate-01) stopped before any completed test request:
+offline auto-detection loaded `modelopt_fp4`, but `/server_info` retained
+`quantization=None`. Explicitly pinning `--quantization modelopt_fp4` makes the
+same checkpoint format auditable without weakening the metadata check. All
+first-launch evidence is preserved; v2 uses a fresh output folder. This startup
+attestation failure is not an output mismatch or measured numerical failure.
