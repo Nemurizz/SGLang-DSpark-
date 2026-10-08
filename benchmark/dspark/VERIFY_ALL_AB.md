@@ -25,7 +25,7 @@ Protocol is frozen in `verify_all_ab.PROTOCOL` BEFORE observing results:
 
 - Timing: p2048 c1 output128, no profiler or per-step diagnostic hooks.
 - Correctness: p2048 c1/c4/c8, every variant serial then two concurrent waves,
-  for full control and first candidate. All warmup/timing rows are also checked.
+  identically for EVERY arm. All warmup/timing rows are also checked.
 - Warmup: 24..64 requests in groups8, last3 TPOT means spread <=0.5%, group
   p95/p50 <=1.02. Preserve all records; failure ends the attempt.
 - Control: two consecutive windows64, TPOT and E2E mean spread <=0.5%, p95
@@ -44,7 +44,8 @@ cd /root/autodl-fs/dspark-verify-all-tools-20261008-h44/benchmark/dspark
 /root/conda-envs/sglang/bin/python -m unittest test_verify_all_policy test_verify_all_ab
 /root/conda-envs/sglang/bin/python verify_all_ab.py \
   --template /root/autodl-tmp/results/dspark-cache-balanced-ab-20261007-h34 \
-  --output /root/autodl-fs/dspark-verify-all-ab-20261008-h44
+  --output /root/autodl-fs/dspark-verify-all-ab-20261008-h45 \
+  --budget-origin /root/autodl-fs/dspark-verify-all-ab-20261008-h44/manifest.json
 ```
 
 Implementation inspiration (not transferable performance evidence):
@@ -53,3 +54,10 @@ and [SGLang Spec V2 article](https://www.lmsys.org/blog/2026-06-15-next-generati
 
 Status before execution: benefit UNPROVEN. Service checkout remains at
 `dspark-stable-fa4-fixed64-matrix128-passed-20261007` (`0577109`).
+
+Pre-candidate protocol repair: h44 was stopped during control acquisition,
+before any candidate ran and before a control admission decision. Its manifest,
+logs and every request are retained. Review caught asymmetric conditioning
+(initial version ran correctness only on control0 and first candidate). h45
+uses identical correctness conditioning on every arm. Same thresholds and
+original two-hour deadline. This is not a failed-control admission retry.

@@ -28,6 +28,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(PROTOCOL['candidate_p95_tolerance_ttft_tpot_e2e'], 0)
         self.assertEqual(PROTOCOL['request_retries'], 0)
         self.assertFalse(PROTOCOL['profiler'])
+        self.assertTrue(PROTOCOL['identical_correctness_preconditioning_every_arm'])
 
     def test_noise_guard(self):
         self.assertTrue(noise_gate(summary(), summary(100.1, 101.1))['admitted'])

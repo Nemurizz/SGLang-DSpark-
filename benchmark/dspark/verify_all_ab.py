@@ -10,6 +10,7 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import signal
 import subprocess
 import time
 from types import SimpleNamespace
@@ -23,6 +24,7 @@ from verify_all_policy_hook import POLICY
 PROTOCOL = {'timing_cell': 'p2048_c1', 'output_tokens': 128,
     'correctness_cells': ['p2048_c1', 'p2048_c4', 'p2048_c8'],
     'correctness_serial_variants_and_concurrent_rounds': 2,
+    'identical_correctness_preconditioning_every_arm': True,
     'warmup_min': 24, 'warmup_max': 64, 'warmup_group': 8,
     'warmup_last_three_tpot_mean_spread': .005, 'warmup_p95_over_p50': 1.02,
     'control_windows': 2, 'steady_requests_per_window': 64,
@@ -202,13 +204,19 @@ async def run(cli):
     dataset = json.loads((cli.template / 'dataset.json').read_text())
     refs = ab.load_frozen_references(Path(args.oracle_jsonl), dataset)
     tools = {p.name: sha(p) for p in Path(__file__).parent.glob('*.py')}
+    budget_origin = (json.loads(cli.budget_origin.read_text())['created_at']
+                     if cli.budget_origin else time.time())
+    if budget_origin > time.time():
+        raise ValueError('Budget origin cannot move the deadline into the future')
     manifest = {'protocol': PROTOCOL, 'policy': POLICY,
         'original_template_sha256': sha(cli.template / 'manifest.json'),
         'original_qualified_gpu': original['qualified_manifest']['gpu_identity'],
         'current_gpu': gpu, 'hardware_migration': 'UUID only; qualification pending new full oracle checks',
         'inherited_arithmetic_contract_id': args.profile_id,
         'execution_integrity_template': template, 'extra_sources_pinned_now': extra,
-        'tool_sha256': tools, 'created_at': time.time(), 'performance_claim': 'unproven'}
+        'tool_sha256': tools, 'created_at': time.time(), 'performance_claim': 'unproven',
+        'wall_budget_origin': budget_origin, 'wall_deadline': budget_origin + 7200,
+        'prior_aborted_record': str(cli.budget_origin) if cli.budget_origin else None}
     manifest['experiment_id'] = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
     cli.output.mkdir(parents=True, exist_ok=False)
     ab.dump(cli.output / 'manifest.json', manifest)
@@ -226,7 +234,7 @@ async def run(cli):
         arms, comparisons = {}, []
         for ordinal, variant in enumerate(PROTOCOL['candidate_order'], 1):
             arms[ordinal] = (await arm(args, template, refs, dataset, cli.output,
-                ordinal, variant, 1, correctness=ordinal == 2))[0]
+                ordinal, variant, 1, correctness=True))[0]
             if ordinal in (2, 4):
                 control, candidate = ((arms[1], arms[2]) if ordinal == 2 else (arms[4], arms[3]))
                 item = comparison(control, candidate)
@@ -241,8 +249,15 @@ async def run(cli):
         if all(item['e2e_gain_at_least_one_percent'] for item in comparisons):
             status['performance_claim'] = '>=1% mean E2E in BOTH orders; tested cell only; no p95 regression'
 
+    # Catch supervisor SIGTERM and run the owned server/telemetry cleanup.
+    current_task = asyncio.current_task()
+    asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, current_task.cancel)
     try:
-        await asyncio.wait_for(execute(), timeout=7200)
+        remaining = max(0, budget_origin + 7200 - time.time())
+        await asyncio.wait_for(execute(), timeout=remaining)
+    except asyncio.CancelledError:
+        status.update(status='safety_stopped', error_type='CancelledError',
+                      error='Supervisor stop; owned services cleaned up')
     except Exception as exc:
         status.update(status='safety_stopped', error_type=type(exc).__name__, error=str(exc))
     finally:
@@ -262,4 +277,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--template', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--budget-origin', type=Path,
+                        help='Original pre-result manifest; repairs cannot reset wall budget')
     raise SystemExit(asyncio.run(run(parser.parse_args())))
