@@ -8,6 +8,11 @@ import random
 from quality_data import sha
 
 
+def permitted(bf16_correct, candidate_correct, n):
+    # Human explicitly chose <=1 percentage point per fixed task, 2026-10-09.
+    return (bf16_correct - candidate_correct) * 100 <= n
+
+
 def paired_interval(deltas, draws=10000):
     rng = random.Random(20261009)
     n = len(deltas)
@@ -40,7 +45,9 @@ def report(root, output):
         raise ValueError('Different scored IDs')
     result = {'scope': 'Fixed heldout subsets, custom generative ARC and scalar MATH. NOT leaderboard/full-distribution noninferiority.',
         'dataset_sha256': manifests['bf16-quality']['dataset_sha256'], 'tasks': {},
-        'performance_benefit': 'unproven', 'created_from': {arm: sha(root / arm / 'scores.jsonl') for arm in scores}}
+        'performance_benefit': 'unproven', 'quality_tolerance_percentage_points': 1,
+        'quality_authorization': 'Human reply: each task at most 1 percentage point loss, 2026-10-09; prompts/items/grader unchanged',
+        'created_from': {arm: sha(root / arm / 'scores.jsonl') for arm in scores}}
     for task in sorted({r['task'] for r in scores['bf16-quality'].values()}):
         ids = [key for key, r in scores['bf16-quality'].items() if r['task'] == task]
         left = [scores['bf16-quality'][key]['grade']['correct'] for key in ids]
@@ -53,13 +60,16 @@ def report(root, output):
         item = {'n': len(ids), 'bf16_correct': sum(left), 'nvfp4_correct': sum(right),
             'bf16_score': sum(left)/len(ids), 'nvfp4_score': sum(right)/len(ids),
             'score_delta': sum(deltas)/len(ids), 'paired_bootstrap_95_interval': paired_interval(deltas),
+            'within_human_quality_budget': permitted(sum(left), sum(right), len(ids)),
             'bf16_wilson_95_interval': wilson(sum(left), len(ids)),
             'nvfp4_wilson_95_interval': wilson(sum(right), len(ids)),
             'lost_correct_ids': losses, 'gained_correct_ids': gains,
             'truncated': {arm: sum(scores[arm][key]['grade']['truncated'] for key in ids) for arm in scores}}
         result['tasks'][task] = item
     result['no_observed_per_task_loss'] = all(r['score_delta'] >= 0 for r in result['tasks'].values())
-    result['quality_gate'] = 'passed_for_fixed_subsets_only' if result['no_observed_per_task_loss'] else 'failed_observed_task_loss'
+    result['quality_gate'] = ('passed_for_fixed_subsets_only'
+        if all(r['within_human_quality_budget'] for r in result['tasks'].values())
+        else 'failed_observed_task_loss_beyond_one_percentage_point')
     if output.exists():
         raise ValueError('Preserve previous report; fresh output required')
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')

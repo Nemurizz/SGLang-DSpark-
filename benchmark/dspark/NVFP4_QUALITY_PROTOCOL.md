@@ -57,7 +57,13 @@ execution bugs.
 
 The 384-item quality run follows only successful execution gates, concurrency 8.
 Report correct totals, per-item paired discordances, truncations and uncertainty.
-Acceptance policy: no observed per-category score loss against BF16. This is an
+Initial acceptance policy: no observed per-category score loss against BF16.
+Human subsequently explicitly authorized **at most 1 percentage point loss per
+task**, before paired quality scores were available (2026-10-09). Only the
+acceptance rule changes; the dataset SHA, prompts, caps, selection and grader
+remain identical. The report implements the budget with exact integer counts:
+`100 * (bf16_correct - candidate_correct) <= n`. Thus a one-item loss out of 128
+passes (0.78125 points), but one out of 64 fails (1.5625 points). This is an
 observed subset criterion, not a claim of statistical noninferiority everywhere.
 
 ## Performance prerequisite and alternatives
