@@ -36,10 +36,15 @@ def validate_options(args, environment):
 
 
 def apply_to_planner(planner):
+    # This startup factory runs INSIDE capture_cuda_graphs(), before ModelRunner
+    # assigns decode_cuda_graph_runner. Missing means unassigned, not graph-on.
+    # validate_options and the unchanged numerical factory independently require
+    # resolved PREFILL/DECODE backends DISABLED before any planner mutation.
+    runner = vars(planner.model_runner).get('decode_cuda_graph_runner')
     if (not planner._is_verify_all or not planner.is_compact_mode or
             planner._dp_tier_gather_enabled or planner.gamma != 7 or
             planner.verify_num_draft_tokens != 8 or
-            planner.model_runner.decode_cuda_graph_runner is not None or
+            runner is not None or
             planner._schedule_cfg.max_verify_len != 0):
         raise ValueError('Planner is not the supported existing uniform eager policy')
     if planner._uniform_layout_cache:
@@ -111,8 +116,9 @@ def make_hook(config):
 
     if config.get('verify_policy') != POLICY:
         raise ValueError('Explicit verification policy identity required')
+    hook = fixed_policy_hook(config)  # Assert actual graph backends OFF first.
     environment = dict(os.environ)
     marker = install(DSparkVerifyPlanner, config, environment)
     if not marker['planner_instances']:
         bind_existing(DSparkVerifyPlanner, marker, config, environment, gc.get_objects())
-    return fixed_policy_hook(config)
+    return hook

@@ -84,3 +84,11 @@ control acquisition. It cannot resume a measured correctness/performance failure
 
 Source of lifecycle confirmation:
 [upstream hook setup](https://github.com/sgl-project/sglang/blob/main/python/sglang/srt/model_executor/model_runner_components/cuda_graph_setup.py).
+
+h46 also stopped before requests: the factory executes inside graph setup before
+`ModelRunner.decode_cuda_graph_runner` is assigned. The startup guard now allows
+that unassigned field ONLY together with explicit args graph-off and independently
+validated resolved PREFILL/DECODE DISABLED backends. An existing graph runner or
+already-created layout remains rejected. No geometry guard is weakened. h47 is
+the last startup attempt; another startup failure ends this candidate. h45
+controls remain the sole immutable controls; h46 failure logs are retained.

@@ -107,6 +107,16 @@ class Tests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     bind_existing(cls, marker, config, env(), planners)
 
+    def test_unassigned_graph_field_during_graph_off_startup(self):
+        with tempfile.TemporaryDirectory() as folder:
+            cls = planner_class()
+            p = cls(server_args=options())
+            del p.model_runner.decode_cuda_graph_runner
+            config = {'profile_id': 'frozen', 'policy_folder': folder}
+            marker = install(cls, config, env())
+            bind_existing(cls, marker, config, env(), [p])
+            self.assertIsNone(p.confidence_budget_prepare())
+
 
 if __name__ == '__main__':
     unittest.main()
