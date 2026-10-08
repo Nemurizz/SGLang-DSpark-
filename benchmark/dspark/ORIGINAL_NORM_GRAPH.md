@@ -60,3 +60,27 @@ second registration. Service stopped, no GPU process remained, serving source
 unchanged. Factory is now idempotent for identical opt-in/config identity;
 conflicting identities still fail closed. This is an initialization bug repair,
 not a retry of a failed timing/correctness comparison. h51 logs retained.
+
+## Final decision: rejected, h53
+
+Fresh baseline/baseline noise gate passed (TPOT mean spread 0.0668%, E2E
+0.0570%). First unprofiled AB, p2048 c1 output128, 64 steady samples/arm:
+
+| Metric (ms) | Baseline mean / p95 | Graph mean / p95 |
+|---|---:|---:|
+| TTFT | 255.623 / 257.590 | 260.748 / 264.225 |
+| TPOT | 18.9827 / 19.1635 | 18.9291 / 19.2012 |
+| E2E | 2666.608 / 2691.114 | 2664.919 / 2847.383 |
+
+Mean E2E improvement **0.0634%**, below 1%; p95 TTFT +2.5756%, TPOT +0.1969%,
+E2E +5.8069%. Stop immediately; BA not run. All 450 saved requests matched
+frozen tokens and five acceptance fields, including 117 serial/concurrent
+correctness checks. Candidate captures stayed 800 after seal; replays increased
+169550 -> 403550. Device-wide memory sampled 57005 -> 62711 MiB (+5706 MiB),
+not allocator peak. All sampled clock-limit reasons zero. Tail root cause is
+**unproven**; no GC/clock/queue causal claim and no discarded outliers.
+
+Serving baseline remains detached 0577109; main unchanged; 8357 untracked
+paths/list SHA unchanged. Owned candidate service stopped. Default opt-in OFF.
+nsys node count stayed 1636/decode and norm 990: this confirms unchanged kernel
+arithmetic, not E2E benefit. Do not retry this rejected timing comparison.
