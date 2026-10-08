@@ -81,7 +81,9 @@ No theoretical bandwidth ratio is an end-to-end speedup claim.
    XFS has only ~2GB free); cross-check the three LFS SHA256 values against the
    official HF API read from the desktop. No overwrite or cleanup of baseline.
    Initial network attempts: official HF unreachable remotely, hf-mirror works.
-3. New quantized ordinary target, graph/cache OFF, eight fixed512 prompts,
+3. Audit same architecture and bitwise-identical BF16 embedding/LM-head tensor
+   bytes against the preserved original checkpoint; no model swap disguised as
+   quantization. New quantized ordinary target, graph/cache OFF, eight fixed512 prompts,
    output128; serial and c4/c8 repeatability. Freeze a **separate** quant oracle.
 4. Same quantized target + BF16 DSpark: token-by-token equality to that oracle,
    then repeat serial/c4/c8 with all five acceptance fields exact within DSpark.
@@ -109,5 +111,8 @@ not paired-cache wins.
 ## Current result
 
 The native backend smoke passed all 16 shape cases. Five harness unit tests
-passed locally. No model quality, DSpark correctness or end-to-end gain has yet
+passed locally and remotely (parent-audit tests are additional). Installed
+FlashInfer `fp4_gemm_template_sm120.h` declares FP32 `ElementAccumulator` and
+`ElementCompute`; BF16 output still introduces rounding. No model quality,
+DSpark correctness or end-to-end gain has yet
 been proved. See the subsequent result record for download and serving gates.

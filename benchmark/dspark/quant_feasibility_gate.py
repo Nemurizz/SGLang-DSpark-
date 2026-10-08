@@ -187,6 +187,7 @@ async def main():
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--phase', choices=['target', 'dspark'], required=True)
     p.add_argument('--target-references', type=Path)
+    p.add_argument('--parent-audit', required=True, type=Path)
     cli = p.parse_args()
     if cli.output.exists():
         raise ValueError('Preserve evidence; use a fresh output folder')
@@ -214,6 +215,9 @@ async def main():
     model = json.loads((cli.checkpoint_root / 'manifest.json').read_text())
     if model['status'] != 'verified' or model['revision'] != REVISION:
         raise ab.SafetyFailure('Full model manifest is not verified')
+    parent_audit = json.loads(cli.parent_audit.read_text())
+    if parent_audit['status'] != 'passed_parent_and_format_only':
+        raise ab.SafetyFailure('Checkpoint parent/head/embedding audit did not pass')
     for f in model['files']:
         if (Path(args.model) / f['name']).stat().st_size != f['bytes']:
             raise ab.SafetyFailure('Checkpoint file changed after verification')
@@ -227,6 +231,8 @@ async def main():
             raise ValueError('Do not use references from an incomplete/failed target gate')
         if target_manifest['checkpoint_manifest'] != model or target_manifest['old_reference_sha256'] != frozen:
             raise ValueError('Target gate belongs to different checkpoint/input metadata')
+        if target_manifest.get('parent_audit_sha256') != digest(cli.parent_audit):
+            raise ValueError('Target gate belongs to a different checkpoint parent audit')
         rows = [json.loads(line) for line in cli.target_references.read_text().splitlines()]
         if len(rows) != 8 or any(not r['ordinary'] or r['model_revision'] != REVISION
                                 or r.get('profile_id') != PROFILE for r in rows):
@@ -243,6 +249,7 @@ async def main():
               'baseline_identity_before': before}
     ab.dump(cli.output / 'manifest.json', {'args': vars(args), 'baseline': before,
              'checkpoint_manifest': model, 'old_reference_sha256': frozen,
+             'parent_audit_sha256': digest(cli.parent_audit),
              'workload': 'p512_c8 fixed inputs, 128 output; serial/c4/c8 two repeats',
              'quality_gate': 'NOT covered by synthetic execution workload',
              'stop_on_any_token_or_within_dspark_acceptance_mismatch': True})
