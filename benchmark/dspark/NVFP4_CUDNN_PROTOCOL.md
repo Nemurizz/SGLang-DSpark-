@@ -24,6 +24,13 @@ repeats, variable EOS and long MATH reasoning. Existing wall time limits remain.
 Separate backend-labelled references and storage/server-info validation prevent
 mixing numerical contracts. CUTLASS remains the strict default in old helpers.
 
+Initial suite preflight refused a documentation/transcription hash with an
+extra digit, before launching any model. The file and both existing BF16 gate
+manifests agreed on the actual 64-character SHA256
+`c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a649488f`.
+Correct the recorded hash only; preserve initial suite.log and launch into a
+separate suite-v2.log. No evaluated request/input or failed safety gate is retried.
+
 Only then generate the same 384 scored BF16/candidate DSpark items with the same
 immutable dataset and jailed grader. Human criterion: each task score loss at
 most 1 percentage point; integer comparisons and paired uncertainty unchanged.

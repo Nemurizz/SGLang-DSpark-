@@ -16,7 +16,7 @@ from quant_feasibility_gate import baseline_identity, launch_args_from_template
 
 TEMPLATE = Path('/root/autodl-fs/dspark-verify-all-ab-20261008-h47/manifest.json')
 CHECKPOINT = Path('/root/autodl-tmp/models/Qwen3-14B-NVFP4-20261008-h63')
-DATA_SHA = 'c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a6499488f'
+DATA_SHA = 'c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a649488f'
 
 
 def run(root, previous):

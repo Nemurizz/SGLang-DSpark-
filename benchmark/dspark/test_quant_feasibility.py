@@ -107,6 +107,11 @@ class QuantGateTests(unittest.TestCase):
         self.assertEqual(len(OFFICIAL_LFS), 3)
         self.assertTrue(all(len(s) == 64 for s in OFFICIAL_LFS.values()))
 
+    def test_quality_dataset_hash_is_sha256_not_transcription(self):
+        from quality_cudnn_suite import DATA_SHA
+        self.assertEqual(len(DATA_SHA), 64)
+        self.assertEqual(DATA_SHA, 'c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a649488f')
+
 
 if __name__ == '__main__':
     unittest.main()

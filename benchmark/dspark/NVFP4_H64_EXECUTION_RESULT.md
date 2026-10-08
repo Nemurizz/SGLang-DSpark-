@@ -2,7 +2,7 @@
 
 Evidence root: `/root/autodl-tmp/dspark-quant-quality-20261009-h64`.
 Immutable dataset SHA256:
-`c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a6499488f`.
+`c4ba785e66d5535c7d454a25c19af692aab686c0ea94df204a12b0f6a649488f`.
 
 Both BF16 ordinary-AR and BF16 DSpark real-task sentinel gates passed all 56
 requests apiece, including variable EOS, long reasoning and c1/c4/c8 repeats.
