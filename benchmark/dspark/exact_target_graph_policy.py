@@ -9,6 +9,20 @@ import os
 from pathlib import Path
 
 
+def exact_host_mirror(layout, batch_size, replace):
+    """Read the CURRENT one-row device length; never infer it from the bucket.
+
+    No tensor values/pointers, indptr, padding or arithmetic are changed.
+    The immutable replacement supplies honest host metadata to the old guard.
+    """
+    if batch_size != 1 or layout.bs != 1 or layout.graph_num_tokens != 8 or layout.verify_lens_cpu is not None:
+        return layout, False
+    lens = layout.verify_lens.cpu().tolist()
+    if len(lens) != 1 or type(lens[0]) is not int or not 1 <= lens[0] <= 8:
+        raise ValueError('Invalid CURRENT device verify length')
+    return replace(layout, verify_lens_cpu=lens, total_verify_tokens=sum(lens)), True
+
+
 def make_hook(config):
     import torch
     from fixed_fa4_policy_hook import TILE, locked_options, validate_empty_compile_cache
@@ -19,6 +33,7 @@ def make_hook(config):
     from sglang.srt.model_executor.runner.decode_cuda_graph_runner import DecodeCudaGraphRunner
     from sglang.srt.speculative.dspark_components.dspark_worker_v2 import DSparkWorkerV2
     from exact_target_runtime import make_hook as attest
+    import msgspec
 
     if os.environ.get('SGLANG_DSPARK_EXACT_TARGET_GRAPH8') != '1':
         raise ValueError('Explicit isolated target graph opt-in required')
@@ -58,11 +73,21 @@ def make_hook(config):
         return 1
     DecodeCudaGraphRunner._ragged_capture_slots = capture_slots
     original_guard = DecodeCudaGraphRunner._can_run_ragged_verify_graph
-    counters = {'admitted': 0, 'fallback': 0, 'admitted_by_bs': {}}
+    mirror_enabled = os.environ.get('SGLANG_DSPARK_EXACT_GRAPH_HOST_MIRROR') == '1'
+    counters = {'admitted': 0, 'fallback': 0, 'admitted_by_bs': {},
+                'actual_execute':0, 'actual_execute_by_bs':{}, 'host_mirror_reads':0}
     if config.get('graph_diagnostic',False):
         counters['host_geometry_decisions'] = {}
     @functools.wraps(original_guard)
     def guard(self, fb, layout):
+        if mirror_enabled:
+            original_layout = layout
+            layout, read = exact_host_mirror(layout,fb.batch_size,msgspec.structs.replace)
+            if read:
+                if fb.spec_info.ragged_verify_layout is not original_layout:
+                    raise ValueError('Cannot replace an unrelated layout')
+                fb.spec_info.ragged_verify_layout = layout
+                counters['host_mirror_reads'] += 1
         allowed = original_guard(self, fb, layout)
         if config.get('graph_diagnostic',False):
             cap = self._captured_ragged_layouts.get(layout.graph_num_tokens)
@@ -84,6 +109,15 @@ def make_hook(config):
             counters['fallback'] += 1
         return allowed
     DecodeCudaGraphRunner._can_run_ragged_verify_graph = guard
+    original_execute = DecodeCudaGraphRunner.execute
+    @functools.wraps(original_execute)
+    def execute(self, fb, *args, **kwargs):
+        result = original_execute(self,fb,*args,**kwargs)
+        counters['actual_execute'] += 1
+        key = str(fb.batch_size)
+        counters['actual_execute_by_bs'][key] = counters['actual_execute_by_bs'].get(key,0)+1
+        return result
+    DecodeCudaGraphRunner.execute = execute
     original_draft_init = DSparkWorkerV2.init_cuda_graphs
     @functools.wraps(original_draft_init)
     def draft_init(self):
@@ -96,14 +130,17 @@ def make_hook(config):
         'diagnostic': config.get('graph_diagnostic',False), 'gemm': 'UNCHANGED',
         'original_exact_guard': 'CALLED UNCHANGED; additional 1x8 restriction',
         'target_capture_tokens': [8], 'draft_graph': False, 'prefill_graph': False,
+        'current_device_host_mirror':mirror_enabled,
         'framework_target_decode_graph': 'full opt-in', 'performance': 'UNPROVEN'},indent=2))
     attestation = attest(config)
     def combined(module, inputs, output):
         result = attestation(module,inputs,output)
-        if counters['admitted'] and not (folder/'graph_calls.json').exists():
+        if counters['actual_execute'] and not (folder/'graph_calls.json').exists():
             with (folder/'graph_calls.json').open('x') as out:json.dump(counters,out,indent=2)
         if (folder/'snapshot_graph').exists() and not (folder/'graph_final.json').exists():
             with (folder/'graph_final.json').open('x') as out:json.dump(counters,out,indent=2)
+        if (folder/'snapshot_warmup').exists() and not (folder/'graph_warmup.json').exists():
+            with (folder/'graph_warmup.json').open('x') as out:json.dump(counters,out,indent=2)
         return result
     DecodeCudaGraphRunner._dspark_exact_graph8 = {'folder':str(folder), 'hook':combined}
     return combined

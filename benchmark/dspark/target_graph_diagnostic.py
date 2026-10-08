@@ -24,6 +24,7 @@ class TargetGraphServer(QualifiedServer):
     def command(self):
         cmd, env = super().command()
         env['SGLANG_DSPARK_EXACT_TARGET_GRAPH8'] = '1' if self.candidate else '0'
+        env['SGLANG_DSPARK_EXACT_GRAPH_HOST_MIRROR'] = '1' if self.candidate else '0'
         env['SGLANG_DSPARK_TPOT_TRACE'] = '1' if self.diagnostic else '0'
         env['PYTHONPATH'] = str(Path(__file__).parent) + ':' + env.get('PYTHONPATH', '')
         if self.candidate:
@@ -154,7 +155,7 @@ async def run(cli):
         status['status'] = 'diagnostic_complete_NOT_performance_proof'
         if cli.candidate:
             final = json.loads((folder/'graph_policy'/'graph_final.json').read_text())
-            if not final['admitted'] or set(final['admitted_by_bs']) != {'1'}:
+            if not final['actual_execute'] or set(final['actual_execute_by_bs']) != {'1'}:
                 raise ab.SafetyFailure('No actual 1x8 graph admission; no-effect diagnostics are not graph validation')
     except asyncio.CancelledError:
         status.update(status='safety_stopped', error_type='CancelledError', error='Wall budget/supervisor stop')

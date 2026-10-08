@@ -44,3 +44,29 @@ launcher. Backend capability and the ORIGINAL admission guard are never overridd
 Assert actual capture layout and draft OFF before requests; require positive
 admissions only at bs1 before completing diagnostics or entering timing.
 No unprofiled A/B has failed or been retried for this candidate.
+
+## h55/h56: capture alone still not runtime replay
+
+h55 correctly captured 1x8 (0.126953 GiB) and kept draft graph OFF. 68 saved
+requests still matched the frozen oracle, but the two profiled p2048 requests
+(80 actual decode steps) contain ZERO cudaGraphLaunch APIs. The guard reported
+only two admissions outside that trace and 3616 fallbacks. h56 host-only guard
+facts show the exact rejection: runtime bs1, tier8, hidden FULL, but host length
+and live total both None, while capture has [8]. Do not classify these as successful
+graph correctness or E2E gains. No unprofiled A/B was attempted. The initial
+startup-only admission test was insufficient; actual execute counters and a
+positive steady-window delta are now required.
+
+## Separate host-mirror bridge candidate
+
+Branch exp/exact-target-graph8-host-mirror adds one guarded CURRENT D2H read for
+device-only bs1/tier8 layouts. msgspec immutable replacement preserves every
+device tensor/pointer and adds only the actual ordered CPU length and its sum;
+the forward batch's spec layout is updated to the replacement. The original
+guard is called unchanged and still rejects partial lengths, missing captures,
+multirow geometry and hidden-mode mismatches. No bucket-derived guess or stale
+mirror; no change to scheduling, GEMM, reduction or target attention arithmetic.
+The D2H synchronizes; that cost is included in unprofiled timing. The old guard
+already performed a device sum().item() for these unknown totals, so a bridge
+could exchange that wait for a host length AND enable replay, but gain remains
+UNPROVEN. Do not claim a free read or assume synchronization removal.

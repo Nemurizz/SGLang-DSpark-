@@ -65,7 +65,39 @@ class Guard(unittest.TestCase):
         self.assertNotIn('supports_ragged_verify_graph =',launcher)
         diagnostic=(folder/'target_graph_diagnostic.py').read_text()
         self.assertIn("env['SGLANG_DSPARK_RAGGED_VERIFY_GRAPH'] = '1'",diagnostic)
-        self.assertIn("if not final['admitted']",diagnostic)
+        self.assertIn("if not final['actual_execute']",diagnostic)
+
+    def test_host_mirror_uses_actual_not_bucket_values(self):
+        from exact_target_graph_policy import exact_host_mirror
+        from copy import copy
+        def replace(value,**kw):
+            out=copy(value)
+            for key,item in kw.items():setattr(out,key,item)
+            return out
+        for length in [1,7,8]:
+            device=NS(cpu=lambda:NS(tolist=lambda:[length]))
+            layout=NS(bs=1,graph_num_tokens=8,verify_lens_cpu=None,total_verify_tokens=None,
+                verify_lens=device,qo_indptr_device=object())
+            out,read=exact_host_mirror(layout,1,replace)
+            self.assertTrue(read)
+            self.assertEqual(out.verify_lens_cpu,[length])
+            self.assertEqual(out.total_verify_tokens,length)
+            self.assertIs(out.verify_lens,device)
+            self.assertIs(out.qo_indptr_device,layout.qo_indptr_device)
+            self.assertIsNone(layout.verify_lens_cpu)
+            self.assertEqual(self.call(self.layout([length],length)),length==8)
+        for bad in [0,9]:
+            layout=NS(bs=1,graph_num_tokens=8,verify_lens_cpu=None,
+                      verify_lens=NS(cpu=lambda:NS(tolist=lambda:[bad])))
+            with self.assertRaises(ValueError):exact_host_mirror(layout,1,replace)
+
+    def test_mirror_multirow_and_known_layout_not_read(self):
+        from exact_target_graph_policy import exact_host_mirror
+        for bs,tokens,lens in [(4,8,None),(1,16,None),(1,8,[7])]:
+            layout=NS(bs=bs,graph_num_tokens=tokens,verify_lens_cpu=lens,verify_lens=None)
+            result,read=exact_host_mirror(layout,bs,None)
+            self.assertIs(result,layout)
+            self.assertFalse(read)
 
 
 if __name__ == '__main__':unittest.main()
