@@ -51,6 +51,8 @@ class HighConcServer(QualityServer):
             # scheduler otherwise instantiates ChunkCache without the sidecar.
             cmd = [item for item in cmd if item != "--disable-radix-cache"]
             env["SGLANG_DSPARK_DISABLE_RADIX_CACHE"] = "0"
+            env["SGLANG_DSPARK_PREFIX_CACHE"] = "1"
+            env["SGLANG_DSPARK_PREFIX_CACHE_SHADOW"] = "0"
         marker = cmd.index("--max-running-requests")
         cmd[marker + 1] = str(self.max_running)
         cmd += ["--max-total-tokens", str(CAPACITY)]
@@ -119,6 +121,46 @@ async def drain_listener(port: int):
                 return
         await asyncio.sleep(.5)
     raise ab.SafetyFailure(f"Owned listener {port} did not drain")
+
+
+def validate_cache_profile(folder: Path, quant: bool, recipe: str):
+    """Validate the same profile as quality_run, with radix cache enabled."""
+    from stable_profile_hook import validate_runtime
+
+    info = json.loads((folder / "server_info.json").read_text())
+    expected = {
+        "enable_deterministic_inference": True,
+        "disable_cuda_graph": True,
+        "disable_radix_cache": False,
+        "attention_backend": "fa4",
+        "prefill_attention_backend": "fa4",
+        "decode_attention_backend": "fa4",
+        "dtype": "bfloat16",
+        "kv_cache_dtype": "bfloat16",
+        "bf16_gemm_backend": "torch",
+        "tp_size": 1,
+        "page_size": 1,
+        "speculative_algorithm": "DSPARK",
+    }
+    expected["quantization"] = "w8a8_fp8" if quant else None
+    if quant:
+        expected.update(speculative_draft_model_quantization=None,
+                        speculative_draft_kv_cache_dtype="bfloat16")
+    expected.update(speculative_draft_attention_backend="fa4")
+    for key, value in expected.items():
+        if info.get(key) != value:
+            raise ab.SafetyFailure(f"cache profile {key} differs: {info.get(key)!r} != {value!r}")
+    runtime = list((folder / "runtime").glob("runtime-*.json"))
+    if not runtime:
+        raise ab.SafetyFailure("Actual attention geometry attestation missing")
+    for path in runtime:
+        validate_runtime(json.loads(path.read_text()), fixed_tile=[64, 64])
+    if quant:
+        from fp8_profile_hook import validate_model
+        target = json.loads((folder / "runtime/target-backbone.json").read_text())
+        target.update(json.loads((folder / "runtime/target-head.json").read_text()))
+        validate_model(target)
+        validate_model(json.loads((folder / "runtime/draft-weights.json").read_text()))
 
 
 async def gather_checked(tasks, server):
@@ -221,7 +263,10 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
             # The profile hooks emit runtime geometry/weight attestations on the
             # first real forward, not during /server_info. Validate only after
             # the cold reference requests have materialized those files.
-            validate(folder, quant, False, "sgl_kernel_cutlass_fp8" if quant else "flashinfer_cutlass", recipe)
+            if CACHE_MODE == "full":
+                validate(folder, quant, False, "sgl_kernel_cutlass_fp8" if quant else "flashinfer_cutlass", recipe)
+            else:
+                validate_cache_profile(folder, quant, recipe)
 
             for cell, spec in dataset.items():
                 c = spec["concurrency"]
