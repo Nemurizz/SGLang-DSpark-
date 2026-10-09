@@ -274,7 +274,7 @@ def write_report(root, summaries, comparisons, status):
     dump(root / "status.json", status)
     lines = ["# Native W8A8 FP8 high-concurrency DSpark A/B", "",
              f"Status: {status['status']}", "",
-             f"Protocol: graphs/radix cache/compact scan/adaptive draft/KV quantization OFF; max_total_tokens={CAPACITY}; output=128; 32 measured requests per cell; BF16→FP8→FP8→BF16.",
+             f"Protocol: graphs/radix cache/compact scan/adaptive draft/KV quantization OFF; max_total_tokens={CAPACITY}; output=128; {REQUESTS} measured requests per cell; {WARMUP_BATCHES} warmup batches; BF16→FP8→FP8→BF16.",
              "Correctness is exact within each recipe (tokens plus five DSpark acceptance fields). BF16/FP8 cross-recipe token equality is not required.", "",
              "| Cell | Order | E2E gain mean | E2E gain p95 | TTFT p95 ratio | TPOT p95 ratio | BF16/FP8 peak MiB | BF16/FP8 acceptance | Pass |",
              "|---|---|---:|---:|---:|---:|---:|---:|---|"]
@@ -306,6 +306,12 @@ async def run(cli):
     args.ordinary = False
     tokenizer = __import__("transformers").AutoTokenizer.from_pretrained(args.tokenizer, trust_remote_code=True, local_files_only=True)
     selected_cells = ((8192, 4), (8192, 8)) if cli.long_context else CELLS
+    if cli.focus_cell:
+        selected_cells = ((int(cli.focus_cell.split("_")[0][1:]),
+                           int(cli.focus_cell.split("_")[1][1:])),)
+    global REQUESTS, WARMUP_BATCHES
+    REQUESTS = cli.requests
+    WARMUP_BATCHES = cli.warmup_batches
     if cli.long_context:
         CAPACITY = 131072
     dataset = {f"p{length}_c{c}": make_cell(tokenizer, length, c, cli.seed)
@@ -349,6 +355,9 @@ def main():
     parser.add_argument("--mem-fraction", type=float, default=.55)
     parser.add_argument("--long-context", action="store_true",
                         help="Run the separate 8K c4/c8 suite at 131072 total tokens")
+    parser.add_argument("--focus-cell", help="Run one cell, e.g. p512_c4")
+    parser.add_argument("--requests", type=int, default=32)
+    parser.add_argument("--warmup-batches", type=int, default=2)
     cli = parser.parse_args()
     raise SystemExit(asyncio.run(run(cli)))
 
