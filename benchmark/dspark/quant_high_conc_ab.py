@@ -274,7 +274,7 @@ def write_report(root, summaries, comparisons, status):
     dump(root / "status.json", status)
     lines = ["# Native W8A8 FP8 high-concurrency DSpark A/B", "",
              f"Status: {status['status']}", "",
-             "Protocol: graphs/radix cache/compact scan/adaptive draft/KV quantization OFF; max_total_tokens=32768; output=128; 32 measured requests per cell; BF16→FP8→FP8→BF16.",
+             f"Protocol: graphs/radix cache/compact scan/adaptive draft/KV quantization OFF; max_total_tokens={CAPACITY}; output=128; 32 measured requests per cell; BF16→FP8→FP8→BF16.",
              "Correctness is exact within each recipe (tokens plus five DSpark acceptance fields). BF16/FP8 cross-recipe token equality is not required.", "",
              "| Cell | Order | E2E gain mean | E2E gain p95 | TTFT p95 ratio | TPOT p95 ratio | BF16/FP8 peak MiB | BF16/FP8 acceptance | Pass |",
              "|---|---|---:|---:|---:|---:|---:|---:|---|"]
