@@ -29,6 +29,7 @@ REQUESTS = 32
 WARMUP_BATCHES = 2
 MAX_CONCURRENCY = 16
 ORDER = ("bf16_a", "fp8_a", "fp8_b", "bf16_b")
+CACHE_MODE = "full"
 CELLS = (
     (512, 4), (512, 8), (512, 16),
     (1024, 4), (1024, 8), (1024, 16),
@@ -134,7 +135,7 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
 
     folder = root / arm
     folder.mkdir(parents=True)
-    server = HighConcServer(args, "full", folder)
+    server = HighConcServer(args, CACHE_MODE, folder)
     sampler = ab.GPUSampler(folder / "gpu.jsonl", 100)
     base = f"http://127.0.0.1:{args.port}"
     timeout = aiohttp.ClientTimeout(total=args.request_timeout)
@@ -182,8 +183,12 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
                 row.update(arm=arm, recipe=recipe, quant=quant, cell=cell, variant=variant,
                            phase=phase, request_index=index, concurrency=spec["concurrency"])
                 append(folder / "requests.jsonl", row)
-                if row["cached_tokens"] or row["meta_info"].get("num_retractions", 0):
-                    raise ab.SafetyFailure(f"cache/retraction in {arm} {cell}")
+                if row["meta_info"].get("num_retractions", 0):
+                    raise ab.SafetyFailure(f"retraction in {arm} {cell}")
+                if phase == "reference" and row["cached_tokens"]:
+                    raise ab.SafetyFailure(f"cold reference unexpectedly cached in {arm} {cell}")
+                if CACHE_MODE == "full" and phase != "reference" and row["cached_tokens"]:
+                    raise ab.SafetyFailure(f"full-prefill control unexpectedly cached in {arm} {cell}")
                 key = (cell, variant)
                 if phase == "reference":
                     if key in references and references[key]["recipe"] == recipe:
@@ -219,12 +224,19 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
                 elapsed = time.perf_counter() - began
                 rows = [task.result() for task in tasks]
                 after = ab.info_stats(await ab.api(session, base, "/server_info"), required=False)
-                summary = ab.aggregate("full", cell, 0, rows, before, after,
+                summary = ab.aggregate(CACHE_MODE, cell, 0, rows, before, after,
                                        sampler.summary(sample_start), elapsed)
                 summary.update(arm=arm, recipe=recipe, quant=quant,
                                prompt_length=spec["prompt_length"], concurrency=c,
                                capacity=CAPACITY, requests=REQUESTS,
+                               cache_mode=CACHE_MODE,
                                throughput_tokens_per_s=summary["client_observed_output_tokens_per_s"])
+                if CACHE_MODE != "full":
+                    cache = summary["cache"]
+                    if not cache.get("token_rate_denominator_valid"):
+                        raise ab.SafetyFailure(f"cache counter denominator invalid for {arm} {cell}: {cache}")
+                    if cache.get("observed_paired_token_hit_rate", 0) <= 0:
+                        raise ab.SafetyFailure(f"paired cache produced no paired hit for {arm} {cell}: {cache}")
                 append(root / "cells.jsonl", summary)
                 summaries.append(summary)
                 print(json.dumps({"arm": arm, "cell": cell, "e2e_p50_ms": summary["e2e_ms"]["p50"],
@@ -274,7 +286,7 @@ def write_report(root, summaries, comparisons, status):
     dump(root / "status.json", status)
     lines = ["# Native W8A8 FP8 high-concurrency DSpark A/B", "",
              f"Status: {status['status']}", "",
-             f"Protocol: graphs/radix cache/compact scan/adaptive draft/KV quantization OFF; max_total_tokens={CAPACITY}; output=128; {REQUESTS} measured requests per cell; {WARMUP_BATCHES} warmup batches; BF16→FP8→FP8→BF16.",
+             f"Protocol: graphs/compact scan/adaptive draft/KV quantization OFF; cache_mode={CACHE_MODE}; max_total_tokens={CAPACITY}; output=128; {REQUESTS} measured requests per cell; {WARMUP_BATCHES} warmup batches; BF16→FP8→FP8→BF16.",
              "Correctness is exact within each recipe (tokens plus five DSpark acceptance fields). BF16/FP8 cross-recipe token equality is not required.", "",
              "| Cell | Order | E2E gain mean | E2E gain p95 | TTFT p95 ratio | TPOT p95 ratio | BF16/FP8 peak MiB | BF16/FP8 acceptance | Pass |",
              "|---|---|---:|---:|---:|---:|---:|---:|---|"]
@@ -285,7 +297,7 @@ def write_report(root, summaries, comparisons, status):
 
 
 async def run(cli):
-    global CAPACITY
+    global CAPACITY, CACHE_MODE
     root = cli.output.resolve()
     if root.exists():
         raise ValueError(f"Fresh output folder required: {root}")
@@ -314,12 +326,14 @@ async def run(cli):
     WARMUP_BATCHES = cli.warmup_batches
     if cli.long_context:
         CAPACITY = 131072
+    CACHE_MODE = cli.cache_mode
     dataset = {f"p{length}_c{c}": make_cell(tokenizer, length, c, cli.seed)
                for length, c in selected_cells}
     dump(root / "dataset.json", dataset)
     dump(root / "protocol.json", {"capacity": CAPACITY, "output_tokens": OUTPUT_TOKENS,
                                    "requests": REQUESTS, "warmup_batches": WARMUP_BATCHES,
-                                   "order": ORDER, "cells": list(dataset), "graphs_cache_compact_adaptive_kv_off": True})
+                                   "order": ORDER, "cells": list(dataset), "cache_mode": CACHE_MODE,
+                                   "graphs_compact_adaptive_kv_off": True})
     status = {"status": "running", "started_at": time.time(), "completed_arms": []}
     dump(root / "status.json", status)
     summaries = []
@@ -358,6 +372,7 @@ def main():
     parser.add_argument("--focus-cell", help="Run one cell, e.g. p512_c4")
     parser.add_argument("--requests", type=int, default=32)
     parser.add_argument("--warmup-batches", type=int, default=2)
+    parser.add_argument("--cache-mode", choices=("full", "paired"), default="full")
     cli = parser.parse_args()
     raise SystemExit(asyncio.run(run(cli)))
 
