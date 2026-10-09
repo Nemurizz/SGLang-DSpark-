@@ -44,6 +44,13 @@ class HighConcServer(QualityServer):
 
     def command(self):
         cmd, env = super().command()
+        if CACHE_MODE != "full":
+            # The safety profiles intentionally disable upstream radix cache.
+            # A cache experiment must explicitly undo that profile choice;
+            # merely setting the DSpark sidecar env is insufficient because the
+            # scheduler otherwise instantiates ChunkCache without the sidecar.
+            cmd = [item for item in cmd if item != "--disable-radix-cache"]
+            env["SGLANG_DSPARK_DISABLE_RADIX_CACHE"] = "0"
         marker = cmd.index("--max-running-requests")
         cmd[marker + 1] = str(self.max_running)
         cmd += ["--max-total-tokens", str(CAPACITY)]
@@ -167,6 +174,11 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
                 raise ab.SafetyFailure(f"max_total_tokens not resolved: {info.get('max_total_tokens')}")
             if info.get("max_running_requests") not in (None, MAX_CONCURRENCY):
                 raise ab.SafetyFailure(f"max_running_requests not resolved: {info.get('max_running_requests')}")
+            expected_radix_disabled = CACHE_MODE == "full"
+            if bool(info.get("disable_radix_cache")) != expected_radix_disabled:
+                raise ab.SafetyFailure(
+                    f"radix cache mode not resolved: disable_radix_cache={info.get('disable_radix_cache')} "
+                    f"expected={expected_radix_disabled}")
 
             async def one(cell, variant, phase, index):
                 spec = dataset[cell]
