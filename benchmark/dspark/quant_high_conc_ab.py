@@ -162,7 +162,6 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
                     await asyncio.sleep(.5)
             info = await ab.api(session, base, "/server_info")
             ab.dump(folder / "server_info.json", info)
-            validate(folder, quant, False, "sgl_kernel_cutlass_fp8" if quant else "flashinfer_cutlass", recipe)
             if info.get("max_total_tokens") != CAPACITY:
                 raise ab.SafetyFailure(f"max_total_tokens not resolved: {info.get('max_total_tokens')}")
             if info.get("max_running_requests") not in (None, MAX_CONCURRENCY):
@@ -202,6 +201,10 @@ async def run_arm(args, root: Path, arm: str, dataset: dict,
                 for variant in range(spec["concurrency"]):
                     await ab.api(session, base, "/flush_cache?timeout=10", "POST")
                     await one(cell, variant, "reference", variant)
+            # The profile hooks emit runtime geometry/weight attestations on the
+            # first real forward, not during /server_info. Validate only after
+            # the cold reference requests have materialized those files.
+            validate(folder, quant, False, "sgl_kernel_cutlass_fp8" if quant else "flashinfer_cutlass", recipe)
 
             for cell, spec in dataset.items():
                 c = spec["concurrency"]
