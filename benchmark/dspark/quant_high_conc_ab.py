@@ -285,6 +285,7 @@ def write_report(root, summaries, comparisons, status):
 
 
 async def run(cli):
+    global CAPACITY
     root = cli.output.resolve()
     if root.exists():
         raise ValueError(f"Fresh output folder required: {root}")
@@ -304,7 +305,11 @@ async def run(cli):
     args.reference_verify_plans = False
     args.ordinary = False
     tokenizer = __import__("transformers").AutoTokenizer.from_pretrained(args.tokenizer, trust_remote_code=True, local_files_only=True)
-    dataset = {f"p{length}_c{c}": make_cell(tokenizer, length, c, cli.seed) for length, c in CELLS}
+    selected_cells = ((8192, 4), (8192, 8)) if cli.long_context else CELLS
+    if cli.long_context:
+        CAPACITY = 131072
+    dataset = {f"p{length}_c{c}": make_cell(tokenizer, length, c, cli.seed)
+               for length, c in selected_cells}
     dump(root / "dataset.json", dataset)
     dump(root / "protocol.json", {"capacity": CAPACITY, "output_tokens": OUTPUT_TOKENS,
                                    "requests": REQUESTS, "warmup_batches": WARMUP_BATCHES,
@@ -342,6 +347,8 @@ def main():
     parser.add_argument("--seed", type=int, default=20261007)
     parser.add_argument("--port", type=int, default=30119)
     parser.add_argument("--mem-fraction", type=float, default=.55)
+    parser.add_argument("--long-context", action="store_true",
+                        help="Run the separate 8K c4/c8 suite at 131072 total tokens")
     cli = parser.parse_args()
     raise SystemExit(asyncio.run(run(cli)))
 
