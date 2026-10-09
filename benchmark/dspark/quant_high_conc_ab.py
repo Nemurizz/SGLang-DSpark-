@@ -30,6 +30,7 @@ WARMUP_BATCHES = 2
 MAX_CONCURRENCY = 16
 ORDER = ("bf16_a", "fp8_a", "fp8_b", "bf16_b")
 CACHE_MODE = "full"
+GRAPHS_ON = False
 CELLS = (
     (512, 4), (512, 8), (512, 16),
     (1024, 4), (1024, 8), (1024, 16),
@@ -130,7 +131,7 @@ def validate_cache_profile(folder: Path, quant: bool, recipe: str):
     info = json.loads((folder / "server_info.json").read_text())
     expected = {
         "enable_deterministic_inference": True,
-        "disable_cuda_graph": True,
+        "disable_cuda_graph": not GRAPHS_ON,
         "disable_radix_cache": False,
         "attention_backend": "fa4",
         "prefill_attention_backend": "fa4",
@@ -343,7 +344,7 @@ def write_report(root, summaries, comparisons, status):
     dump(root / "status.json", status)
     lines = ["# Native W8A8 FP8 high-concurrency DSpark A/B", "",
              f"Status: {status['status']}", "",
-             f"Protocol: graphs/compact scan/adaptive draft/KV quantization OFF; cache_mode={CACHE_MODE}; max_total_tokens={CAPACITY}; output=128; {REQUESTS} measured requests per cell; {WARMUP_BATCHES} warmup batches; BF16→FP8→FP8→BF16.",
+             f"Protocol: standard_cuda_graphs={GRAPHS_ON}; ragged DSpark graph/compact scan/adaptive draft/KV quantization OFF; cache_mode={CACHE_MODE}; max_total_tokens={CAPACITY}; output=128; {REQUESTS} measured requests per cell; {WARMUP_BATCHES} warmup batches; BF16→FP8→FP8→BF16.",
              "Correctness is exact within each recipe (tokens plus five DSpark acceptance fields). BF16/FP8 cross-recipe token equality is not required.", "",
              "| Cell | Order | E2E gain mean | E2E gain p95 | TTFT p95 ratio | TPOT p95 ratio | BF16/FP8 peak MiB | BF16/FP8 acceptance | Pass |",
              "|---|---|---:|---:|---:|---:|---:|---:|---|"]
@@ -354,7 +355,7 @@ def write_report(root, summaries, comparisons, status):
 
 
 async def run(cli):
-    global CAPACITY, CACHE_MODE
+    global CAPACITY, CACHE_MODE, GRAPHS_ON
     root = cli.output.resolve()
     if root.exists():
         raise ValueError(f"Fresh output folder required: {root}")
@@ -369,7 +370,7 @@ async def run(cli):
     args.cache_budget_fraction = .25
     args.startup_timeout = 900
     args.request_timeout = 300
-    args.enable_standard_graphs = False
+    args.enable_standard_graphs = cli.enable_standard_graphs
     args.deterministic_control_only = False
     args.reference_verify_plans = False
     args.ordinary = False
@@ -384,12 +385,14 @@ async def run(cli):
     if cli.long_context:
         CAPACITY = 131072
     CACHE_MODE = cli.cache_mode
+    GRAPHS_ON = cli.enable_standard_graphs
     dataset = {f"p{length}_c{c}": make_cell(tokenizer, length, c, cli.seed)
                for length, c in selected_cells}
     dump(root / "dataset.json", dataset)
     dump(root / "protocol.json", {"capacity": CAPACITY, "output_tokens": OUTPUT_TOKENS,
                                    "requests": REQUESTS, "warmup_batches": WARMUP_BATCHES,
                                    "order": ORDER, "cells": list(dataset), "cache_mode": CACHE_MODE,
+                                   "standard_cuda_graphs": GRAPHS_ON,
                                    "graphs_compact_adaptive_kv_off": True})
     status = {"status": "running", "started_at": time.time(), "completed_arms": []}
     dump(root / "status.json", status)
@@ -430,6 +433,8 @@ def main():
     parser.add_argument("--requests", type=int, default=32)
     parser.add_argument("--warmup-batches", type=int, default=2)
     parser.add_argument("--cache-mode", choices=("full", "paired"), default="full")
+    parser.add_argument("--enable-standard-graphs", action="store_true",
+                        help="Smoke-test standard CUDA graphs; ragged DSpark graph remains off")
     cli = parser.parse_args()
     raise SystemExit(asyncio.run(run(cli)))
 
