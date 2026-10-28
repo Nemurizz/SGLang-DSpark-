@@ -1,0 +1,126 @@
+--- a/sglang/python/sglang/srt/speculative/dspark_components/dspark_planner.py
++++ b/sglang/python/sglang/srt/speculative/dspark_components/dspark_planner.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import logging
++import time
+ from typing import Optional, Union
+ 
+ import msgspec
+@@ -271,6 +272,19 @@
+     def is_compact_mode(self) -> bool:
+         return self._ragged_verify_mode is RaggedVerifyMode.COMPACT
+ 
++    def set_dynamic_max_verify_len(self, max_len: Optional[int]) -> None:
++        """Set a per-request upper bound for adaptive DSpark verification.
++
++        The captured graphs remain sized for the configured gamma. This only
++        changes the confidence scheduler's row cap, so shortening the active
++        verify window is exact and does not require graph recapture.
++        """
++        if max_len is None:
++            self._schedule_cfg.max_verify_len = 0
++            return
++        value = max(1, min(int(max_len), self.gamma + 1))
++        self._schedule_cfg.max_verify_len = value
++
+     @property
+     def is_verify_all(self) -> bool:
+         return self._is_verify_all
+@@ -1232,6 +1246,7 @@
+     budget: int
+     predicted_step_seconds: Optional[float] = None
+     predicted_theta: Optional[float] = None
++    planner_cpu_ms: Optional[float] = None
+ 
+ 
+ def compute_verify_token_budget(
+@@ -1346,6 +1361,7 @@
+         current_generation: torch.Tensor,
+         req_pool_indices_cpu: torch.Tensor,
+     ) -> int:
++        planner_started = time.perf_counter_ns()
+         lagged_confidence, lagged_generation = self._shift_to_lag(
+             confidence=confidence,
+             generation=generation,
+@@ -1360,7 +1376,10 @@
+         if forced_frac is not None:
+             full_budget = int(survival[:, : self.cfg.resolved_max_verify_len()].numel())
+             forced_budget = max(0, int(float(forced_frac) * full_budget))
+-            self.last_decision = VerifyBudgetDecision(budget=forced_budget)
++            self.last_decision = VerifyBudgetDecision(
++                budget=forced_budget,
++                planner_cpu_ms=(time.perf_counter_ns() - planner_started) / 1e6,
++            )
+             return forced_budget
+         decision = compute_verify_token_budget(
+             history_survival_probs=survival,
+@@ -1370,7 +1389,12 @@
+                 num_requests=int(survival.shape[0])
+             ),
+         )
+-        self.last_decision = decision
++        self.last_decision = VerifyBudgetDecision(
++            budget=decision.budget,
++            predicted_step_seconds=decision.predicted_step_seconds,
++            predicted_theta=decision.predicted_theta,
++            planner_cpu_ms=(time.perf_counter_ns() - planner_started) / 1e6,
++        )
+         return decision.budget
+ 
+     def take_last_decision(self) -> Optional[VerifyBudgetDecision]:
+--- a/sglang/python/sglang/srt/speculative/dspark_components/dspark_observability.py
++++ b/sglang/python/sglang/srt/speculative/dspark_components/dspark_observability.py
+@@ -120,6 +120,7 @@
+     verify_tokens_graph_key: int = -1
+     predicted_step_ms: Optional[float] = None
+     predicted_theta: Optional[float] = None
++    planner_cpu_ms: Optional[float] = None
+     step_cpu_ms: Optional[float] = None
+     step_gpu_ms: Optional[float] = None
+     draft_gpu_ms: Optional[float] = None
+@@ -140,6 +141,7 @@
+     verify_tokens_graph_key: int
+     predicted_step_ms: Optional[float]
+     predicted_theta: Optional[float]
++    planner_cpu_ms: Optional[float]
+     verify_path: VerifyPathDetail | None
+     verify_lens: Optional[torch.Tensor]
+     confidence: Optional[torch.Tensor]
+@@ -165,6 +167,7 @@
+     verify_tokens_graph_key: int
+     predicted_step_ms: Optional[float]
+     predicted_theta: Optional[float]
++    planner_cpu_ms: Optional[float]
+     verify_path: VerifyPathDetail | None
+     step_cpu_ms: Optional[float]
+     rids: Optional[list[str]]
+@@ -270,6 +273,7 @@
+             verify_tokens_graph_key=int(obs.verify_tokens_graph_key),
+             predicted_step_ms=obs.predicted_step_ms,
+             predicted_theta=obs.predicted_theta,
++            planner_cpu_ms=obs.planner_cpu_ms,
+             verify_path=obs.verify_path,
+             step_cpu_ms=step_cpu_ms,
+             rids=obs.rids,
+@@ -370,6 +374,7 @@
+             record.verify_tokens_graph_key = pending.verify_tokens_graph_key
+             record.predicted_step_ms = pending.predicted_step_ms
+             record.predicted_theta = pending.predicted_theta
++            record.planner_cpu_ms = pending.planner_cpu_ms
+         if InfoComponent.VERIFY_PATH in self._components:
+             record.verify_path = pending.verify_path
+         if InfoComponent.STEP_CPU_TIME in self._components:
+@@ -973,6 +978,11 @@
+                     verify_tokens_graph_key=num_verify_tokens,
+                     predicted_step_ms=predicted_step_ms,
+                     predicted_theta=predicted_theta,
++                    planner_cpu_ms=(
++                        None
++                        if budget_decision is None
++                        else budget_decision.planner_cpu_ms
++                    ),
+                     verify_path=verify_path,
+                     verify_lens=layout.verify_lens if layout is not None else None,
+                     confidence=confidence,
