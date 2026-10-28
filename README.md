@@ -4,7 +4,7 @@
 
 项目的主线是：先确认真实执行路径和性能瓶颈，再实现局部改动，通过逐 token 正确性检查、真实任务质量检查与无 profiler 的服务级 A/B 判断是否保留。仓库同时保存有效方案、被否决的候选和未解决问题。
 
-> **阅读范围与状态：** `main` 保存早期动态验证源码快照、patch 和原始结果；后续工作在 `exp/*` 分支，未整体合并到 `main`。本首页根据截至 **2026-10-16** 的公开分支和内部文档整理，下面的源码、协议和结果链接固定到对应提交，不能视为全部功能已在默认分支启用。
+> **阅读范围与状态：** `main` 保存早期动态验证源码快照、patch 和原始结果；后续工作在 `exp/*` 分支，未整体合并到 `main`。本首页根据截至 **2026-10-29** 的公开分支和内部文档整理，下面的源码、协议和结果链接固定到对应提交，不能视为全部功能已在默认分支启用。
 >
 > **名称说明：** 这里的 DSpark 是推测解码方案，主要测量硬件是 RTX PRO 6000 Blackwell Server Edition，**不是 NVIDIA DGX Spark**。
 
@@ -145,6 +145,7 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 ### 4.2 早期 ABBA 请求数勘误
 
 保留历史目录名 [`results/abba-4x256/`][early-results]，但其中 `A1/B1/B2/A2.jsonl` **各只有一个聚合记录，`completed=64`，日志的 `num_prompts` 也为 64**。原 README 的“4×256 requests”不符合已公开数据；`random_output_len=256` 是输出长度配置，不能当作请求数。
+results/semantic-ab-20261029/  semantic AR/full/dynamic strict comparison and raw logs
 
 | Arm | completed | mean E2E ms | E2E p95 ms |
 |---|---:|---:|---:|
@@ -155,6 +156,26 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 
 两次均值汇总约有 1.31% 差异，但 B1 慢于 A1、B2 快于 A2，存在顺序/波动影响。历史记录称 91 项测试及固定输出检查通过；这些聚合 JSONL 不包含逐请求 token IDs，因此不能据此重新验证全部输出一致性。仓库组装时没有可用 pytest，保留的是测试文件和历史结果，不是新一轮 91-test 复跑。
 
+
+## 4.3 Semantic strict A/B comparison (2026-10-29)
+
+We ran ordinary AR, DSpark full verify, and DSpark dynamic verify with the same 12 fixed prompts (4 code, 4 math, 4 open QA), the same 512-token input shape, 128 output tokens, deterministic 2 req/s arrival, and c=1/4/8. Cache/radix, FP8, and CUDA Graph were disabled to isolate verifier/planner behavior. Each cell has 12 requests.
+
+The complete raw bundle, runner, server logs, and category table are in [`results/semantic-ab-20261029/`](results/semantic-ab-20261029/). The headline results below are mean/p95 in milliseconds:
+
+| path | c | acceptance | planner CPU | GPU step | TTFT | TPOT | E2E |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| AR | 1 | N/A | N/A | N/A | 34328.1/61853.1 | 51.45/53.99 | 40862.0/68338.6 |
+| AR | 4 | N/A | N/A | N/A | 4811.8/9460.8 | 51.00/51.58 | 11289.3/15928.1 |
+| AR | 8 | N/A | N/A | N/A | 1076.7/2982.0 | 51.69/52.64 | 7641.2/9410.3 |
+| full | 1 | 1.000 | N/A | 59.94/63.12 | 3330.7/5889.9 | 7.35/7.65 | 4264.6/6814.5 |
+| full | 4 | 1.000 | N/A | 58.17/63.16 | 802.7/1617.8 | 8.93/8.32 | 1936.9/2991.3 |
+| full | 8 | 1.000 | N/A | 59.13/63.22 | 580.2/1677.0 | 9.40/8.98 | 1774.6/3114.9 |
+| dynamic | 1 | 1.000 | 0.176/0.201 | 63.97/65.28 | 3744.1/6669.7 | 8.06/8.19 | 4767.2/7647.1 |
+| dynamic | 4 | 1.000 | 0.189/0.232 | 60.94/64.97 | 834.8/1612.6 | 9.53/8.95 | 2045.1/3080.0 |
+| dynamic | 8 | 1.000 | 0.186/0.254 | 60.63/65.08 | 547.1/1627.1 | 9.68/9.20 | 1776.7/3094.0 |
+
+This run shows the expected decode-throughput advantage of speculative verification. Dynamic planning is slightly worse than static full verify at c=1 and c=4 because compact planning/layout overhead is visible; at c=8 it is effectively tied with full verify. Acceptance was 1.0 for every semantic category, so this fixed padded prompt set is a systems-path baseline, not evidence of answer-quality improvement. No exact-match, code unit-test, or LLM-judge score was collected in this run; see `RESULTS.md` for the required next quality loop and all limitations.
 ## 5. 没有成功或尚未解决的路线
 
 | 路线 | 观察 | 决策 |
