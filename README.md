@@ -309,3 +309,7 @@ This supplement measures only the DSpark CPU planner and its real compact-verify
 - `step_cpu_ms` in the serving records is the full decode-step CPU interval. The supplement does not label it as planner-exclusive time. `predicted_step_ms` comes from the existing SPS table and must not be compared directly with the BF16/no-Graph target GPU time.
 
 The complete protocol, raw per-cell records, server configuration, and rerun scripts are in [`results/cpu-planner-retest-20261029/`](results/cpu-planner-retest-20261029/RESULTS.md).
+
+## 4.4 CPU planner cache service A/B (2026-10-29)
+
+The planner cache was tested before/after in the same semantic serving protocol. `dynamic_uncached` bypasses only the additive step-time vector cache; `dynamic_cached` uses the optimized cache. With input/output 512/128, 2 req/s, c=1/4/8 and 12 requests per cell, full planner CPU fell 37.7%, 40.7%, and 35.2%. Acceptance stayed at 1.000. E2E changes are reported with independent-process and dynamic-budget limitations, so they are not attributed entirely to the cache. See [`results/planner-cpu-semantic-ab-20261029/`](results/planner-cpu-semantic-ab-20261029/).
