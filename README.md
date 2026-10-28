@@ -313,3 +313,7 @@ The complete protocol, raw per-cell records, server configuration, and rerun scr
 ## 4.4 CPU planner cache service A/B (2026-10-29)
 
 The planner cache was tested before/after in the same semantic serving protocol. `dynamic_uncached` bypasses only the additive step-time vector cache; `dynamic_cached` uses the optimized cache. With input/output 512/128, 2 req/s, c=1/4/8 and 12 requests per cell, full planner CPU fell 37.7%, 40.7%, and 35.2%. Acceptance stayed at 1.000. E2E changes are reported with independent-process and dynamic-budget limitations, so they are not attributed entirely to the cache. See [`results/planner-cpu-semantic-ab-20261029/`](results/planner-cpu-semantic-ab-20261029/).
+
+## 4.5 Repeated CPU planner cache A/B (2026-10-29)
+
+The planner cache A/B was repeated five times per mode and concurrency (30 shuffled server cells total), with paired bootstrap intervals and a same-process survival-tensor microbenchmark. Planner CPU reductions remain stable; the E2E paired intervals cross zero under this workload, so the result supports a CPU-path optimization rather than a fixed end-to-end speedup. See [`results/planner-cpu-repeated-ab-20261029/`](results/planner-cpu-repeated-ab-20261029/).
