@@ -1,0 +1,167 @@
+[
+  {
+    "concurrency": 1,
+    "planner_cpu_ms": {
+      "uncached_mean": 0.306596137254902,
+      "cached_mean": 0.19094773529411765,
+      "uncached_p95": 0.45864,
+      "cached_p95": 0.253956,
+      "mean_reduction_pct": 37.7201105650705
+    },
+    "step_cpu_ms": {
+      "uncached_mean": 64.931709375,
+      "cached_mean": 65.74335625,
+      "uncached_p95": 74.2749,
+      "cached_p95": 74.7394,
+      "mean_reduction_pct": -1.2500007820716765
+    },
+    "step_gpu_ms": {
+      "uncached_mean": 64.92404460784314,
+      "cached_mean": 65.71875784313725,
+      "uncached_p95": 70.8343,
+      "cached_p95": 70.6847,
+      "mean_reduction_pct": -1.2240661223347533
+    },
+    "ttft_ms": {
+      "uncached_mean": 3850.530860324701,
+      "cached_mean": 3894.068238014976,
+      "uncached_p95": 6826.377037912607,
+      "cached_p95": 6934.641160070896,
+      "mean_reduction_pct": -1.1306850735538285
+    },
+    "tpot_ms": {
+      "uncached_mean": 8.179028783105998,
+      "cached_mean": 8.287412764045001,
+      "uncached_p95": 8.426923590792915,
+      "cached_p95": 8.484681855564512,
+      "mean_reduction_pct": -1.3251448773829089
+    },
+    "e2e_ms": {
+      "uncached_mean": 4889.267515779163,
+      "cached_mean": 4946.569659048691,
+      "uncached_p95": 7825.326695106924,
+      "cached_p95": 7994.79556735605,
+      "mean_reduction_pct": -1.171998527071736
+    },
+    "acceptance": {
+      "uncached": 1.0,
+      "cached": 1.0
+    },
+    "budget": {
+      "uncached_mean": 7,
+      "cached_mean": 7,
+      "uncached_p95": 7,
+      "cached_p95": 7
+    }
+  },
+  {
+    "concurrency": 4,
+    "planner_cpu_ms": {
+      "uncached_mean": 0.30932303125,
+      "cached_mean": 0.18358208695652173,
+      "uncached_p95": 0.397879,
+      "cached_p95": 0.219168,
+      "mean_reduction_pct": 40.650365989673865
+    },
+    "step_cpu_ms": {
+      "uncached_mean": 62.300422222222224,
+      "cached_mean": 61.08956610169491,
+      "uncached_p95": 72.162,
+      "cached_p95": 65.174,
+      "mean_reduction_pct": 1.9435761064479666
+    },
+    "step_gpu_ms": {
+      "uncached_mean": 62.61953333333334,
+      "cached_mean": 61.19907794117647,
+      "uncached_p95": 69.9597,
+      "cached_p95": 65.1204,
+      "mean_reduction_pct": 2.268390255474385
+    },
+    "ttft_ms": {
+      "uncached_mean": 988.5228731824706,
+      "cached_mean": 835.927969077602,
+      "uncached_p95": 1772.4142456427217,
+      "cached_p95": 1614.6449632942677,
+      "mean_reduction_pct": 15.436658902348046
+    },
+    "tpot_ms": {
+      "uncached_mean": 9.878164335102664,
+      "cached_mean": 9.535130167751527,
+      "uncached_p95": 9.170086203714995,
+      "cached_p95": 8.775877898309643,
+      "mean_reduction_pct": 3.4726509472224896
+    },
+    "e2e_ms": {
+      "uncached_mean": 2243.049743740509,
+      "cached_mean": 2046.889500382046,
+      "uncached_p95": 3241.028699092567,
+      "cached_p95": 3066.6409488767385,
+      "mean_reduction_pct": 8.745247130870405
+    },
+    "acceptance": {
+      "uncached": 1.0,
+      "cached": 1.0
+    },
+    "budget": {
+      "uncached_mean": 22.3125,
+      "cached_mean": 20.594202898550726,
+      "uncached_p95": 28,
+      "cached_p95": 28
+    }
+  },
+  {
+    "concurrency": 8,
+    "planner_cpu_ms": {
+      "uncached_mean": 0.30454145588235293,
+      "cached_mean": 0.19742697101449275,
+      "uncached_p95": 0.357298,
+      "cached_p95": 0.3326,
+      "mean_reduction_pct": 35.17238221558889
+    },
+    "step_cpu_ms": {
+      "uncached_mean": 61.4304220338983,
+      "cached_mean": 60.761093333333335,
+      "uncached_p95": 67.5807,
+      "cached_p95": 65.1775,
+      "mean_reduction_pct": 1.0895720367924895
+    },
+    "step_gpu_ms": {
+      "uncached_mean": 61.60248507462686,
+      "cached_mean": 61.25950735294118,
+      "uncached_p95": 65.3901,
+      "cached_p95": 65.0988,
+      "mean_reduction_pct": 0.5567595548624259
+    },
+    "ttft_ms": {
+      "uncached_mean": 567.2770720751336,
+      "cached_mean": 554.6299833028266,
+      "uncached_p95": 1681.1134712770581,
+      "cached_p95": 1647.4829958751798,
+      "mean_reduction_pct": 2.229437676027185
+    },
+    "tpot_ms": {
+      "uncached_mean": 9.948820030937592,
+      "cached_mean": 9.844550887352526,
+      "uncached_p95": 9.841867986567847,
+      "cached_p95": 9.749590895894006,
+      "mean_reduction_pct": 1.0480553800432908
+    },
+    "e2e_ms": {
+      "uncached_mean": 1830.7772160042077,
+      "cached_mean": 1804.8879459965974,
+      "uncached_p95": 3227.9475815594196,
+      "cached_p95": 3181.4456889405847,
+      "mean_reduction_pct": 1.4141136224163509
+    },
+    "acceptance": {
+      "uncached": 1.0,
+      "cached": 1.0
+    },
+    "budget": {
+      "uncached_mean": 21,
+      "cached_mean": 20.695652173913043,
+      "uncached_p95": 49,
+      "cached_p95": 42
+    }
+  }
+]
