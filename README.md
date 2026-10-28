@@ -276,3 +276,15 @@ TTFT 取首个带 token 的 SSE frame；TPOT 是首末 token 到达间隔除以�
 [quality-protocol]: https://github.com/Nemurizz/SGLang-DSpark-/blob/b946561934fcdf9143aa6e4e814b6c35588291ba/benchmark/dspark/NVFP4_QUALITY_PROTOCOL.md
 [norm-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/e70cfd6097618929084a7260a9185d32cc07b6cf/docs/DSPARK_RESIDUAL_NORM_AB_20261008.md
 [norm-graph-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/9d90c615374cf4083de5306c76cdd4fffdbf01a2/benchmark/dspark/ORIGINAL_NORM_GRAPH.md
+
+## CPU planner supplementary measurement (2026-10-29)
+
+This supplement measures only the DSpark CPU planner and its real compact-verify serving path. It does not claim a cache, FP8, CUDA Graph, or semantic-quality improvement. The run used Qwen3-14B with `dspark_qwen3_14b_block7` on an NVIDIA RTX PRO 6000 Blackwell Server Edition.
+
+- Target and KV cache used BF16; FP8, prefix/radix cache, CUDA Graph, compact CUDA scan, and simulated acceptance were disabled. The service ran with `SGLANG_RAGGED_VERIFY_MODE=compact` and `SGLANG_SIMULATE_ACC_LEN=-1`, so acceptance lengths came from real execution.
+- The serving matrix used random token IDs for hardware/planner shape measurement, input lengths 512/2048/8192, concurrency 1/4/8/16 where the 131072-token capacity allowed it, and output length 128. `p8192/c16` was recorded as capacity-skipped because the prompt alone fills the configured token capacity.
+- At concurrency 1, the observed planner selected budget 7 and verify length 8 throughout these cells. At higher concurrency, budgets formed different steps (for example, up to 112 at p2048/c16), and the records captured the corresponding compact/full token counts and accepted lengths.
+- The isolated additive-cost-vector microbenchmark measured uncached median planner time of about 84.3–94.2 us versus 38.7–42.6 us with the per-request-count cache, about 2.18–2.21x, with identical budget decisions. This is a CPU micro-path result, not an end-to-end speedup claim.
+- `step_cpu_ms` in the serving records is the full decode-step CPU interval. The supplement does not label it as planner-exclusive time. `predicted_step_ms` comes from the existing SPS table and must not be compared directly with the BF16/no-Graph target GPU time.
+
+The complete protocol, raw per-cell records, server configuration, and rerun scripts are in [`results/cpu-planner-retest-20261029/`](results/cpu-planner-retest-20261029/RESULTS.md).

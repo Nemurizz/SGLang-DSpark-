@@ -1,0 +1,105 @@
+{
+  "table": "/root/autodl-tmp/results/sps-probes/dspark14-sps-probe-20260830-210115/qwen3-14b-rtxpro6000-additive-sps.json",
+  "table_type": "SpsAdditiveCostTable",
+  "gamma": 7,
+  "repeats": 20000,
+  "warmup": 2000,
+  "cells": [
+    {
+      "num_requests": 1,
+      "candidate_count": 9,
+      "uncached": {
+        "n": 20000,
+        "mean_us": 88.30915355,
+        "median_us": 84.3215,
+        "p95_us": 89.018,
+        "p99_us": 184.27,
+        "min_us": 82.246,
+        "max_us": 1417.037
+      },
+      "cached": {
+        "n": 20000,
+        "mean_us": 39.85305875,
+        "median_us": 38.6665,
+        "p95_us": 40.321,
+        "p99_us": 54.504,
+        "min_us": 37.571,
+        "max_us": 380.653
+      },
+      "speedup_median": 2.1807378480079658,
+      "budget": 8
+    },
+    {
+      "num_requests": 4,
+      "candidate_count": 33,
+      "uncached": {
+        "n": 20000,
+        "mean_us": 90.4527641,
+        "median_us": 87.162,
+        "p95_us": 93.285,
+        "p99_us": 130.516,
+        "min_us": 84.201,
+        "max_us": 1074.555
+      },
+      "cached": {
+        "n": 20000,
+        "mean_us": 41.00660435,
+        "median_us": 39.366,
+        "p95_us": 41.435,
+        "p99_us": 72.734,
+        "min_us": 38.229,
+        "max_us": 2233.332
+      },
+      "speedup_median": 2.214144185337601,
+      "budget": 32
+    },
+    {
+      "num_requests": 8,
+      "candidate_count": 65,
+      "uncached": {
+        "n": 20000,
+        "mean_us": 91.1742395,
+        "median_us": 88.272,
+        "p95_us": 93.45,
+        "p99_us": 123.202,
+        "min_us": 85.697,
+        "max_us": 800.669
+      },
+      "cached": {
+        "n": 20000,
+        "mean_us": 42.18196465,
+        "median_us": 40.169,
+        "p95_us": 44.681,
+        "p99_us": 77.29,
+        "min_us": 39.043,
+        "max_us": 639.616
+      },
+      "speedup_median": 2.197515497025069,
+      "budget": 64
+    },
+    {
+      "num_requests": 16,
+      "candidate_count": 129,
+      "uncached": {
+        "n": 20000,
+        "mean_us": 96.18821155,
+        "median_us": 94.242,
+        "p95_us": 96.294,
+        "p99_us": 107.22,
+        "min_us": 92.714,
+        "max_us": 783.962
+      },
+      "cached": {
+        "n": 20000,
+        "mean_us": 43.38963865,
+        "median_us": 42.583,
+        "p95_us": 43.189,
+        "p99_us": 49.173,
+        "min_us": 41.633,
+        "max_us": 363.952
+      },
+      "speedup_median": 2.213136697743231,
+      "budget": 128
+    }
+  ]
+}
