@@ -1,0 +1,6711 @@
+{
+  "summary": {
+    "arm": "full",
+    "concurrency": 4,
+    "arrival_rate": 2.0,
+    "input_len": 512,
+    "output_len": 128,
+    "requests": 12,
+    "ttft_ms": {
+      "n": 12,
+      "mean": 802.6879339789351,
+      "median": 648.5578762367368,
+      "p95": 1617.8027465939522,
+      "min": 126.53357535600662,
+      "max": 1951.595184393227
+    },
+    "tpot_ms": {
+      "n": 12,
+      "mean": 8.930722228312508,
+      "median": 7.680334865782909,
+      "p95": 8.319897650499044,
+      "min": 7.040109852050233,
+      "max": 22.557600276676688
+    },
+    "e2e_ms": {
+      "n": 12,
+      "mean": 1936.8896569746237,
+      "median": 1930.9190278872848,
+      "p95": 2991.348810493946,
+      "min": 1075.8411474525928,
+      "max": 3008.2221860066056
+    },
+    "scheduled_delay_ms": {
+      "n": 12,
+      "mean": 0.09363098070025444,
+      "median": 0.09146612137556076,
+      "p95": 0.0966070219874382,
+      "min": 0.07171928882598877,
+      "max": 0.1424923539161682
+    },
+    "spec_accept_rate": {
+      "n": 12,
+      "mean": 1.0,
+      "median": 1.0,
+      "p95": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    },
+    "spec_accept_length": {
+      "n": 12,
+      "mean": 8.0,
+      "median": 8.0,
+      "p95": 8.0,
+      "min": 8.0,
+      "max": 8.0
+    },
+    "spec_num_correct_drafts": {
+      "n": 12,
+      "mean": 112,
+      "median": 112.0,
+      "p95": 112,
+      "min": 112,
+      "max": 112
+    },
+    "spec_num_proposed_drafts": {
+      "n": 12,
+      "mean": 112,
+      "median": 112.0,
+      "p95": 112,
+      "min": 112,
+      "max": 112
+    },
+    "spec_verify_ct": {
+      "n": 12,
+      "mean": 16,
+      "median": 16.0,
+      "p95": 16,
+      "min": 16,
+      "max": 16
+    },
+    "planner_cpu_ms": null,
+    "step_cpu_ms": {
+      "n": 62,
+      "mean": 55.032364516129036,
+      "median": 55.87225,
+      "p95": 63.114,
+      "min": 48.7448,
+      "max": 71.5142
+    },
+    "step_gpu_ms": {
+      "n": 71,
+      "mean": 58.1717,
+      "median": 57.9102,
+      "p95": 63.1623,
+      "min": 54.534,
+      "max": 63.5526
+    },
+    "draft_gpu_ms": {
+      "n": 72,
+      "mean": 9.782944444444444,
+      "median": 9.730550000000001,
+      "p95": 10.4459,
+      "min": 9.1441,
+      "max": 11.0444
+    },
+    "target_verify_gpu_ms": {
+      "n": 71,
+      "mean": 47.65895352112676,
+      "median": 47.4516,
+      "p95": 51.9199,
+      "min": 44.4079,
+      "max": 52.2884
+    },
+    "budget": null,
+    "num_verify_tokens": {
+      "n": 72,
+      "mean": 22.666666666666668,
+      "median": 24.0,
+      "p95": 32,
+      "min": 8,
+      "max": 32
+    },
+    "record_accept_len": {
+      "n": 204,
+      "mean": 8,
+      "median": 8.0,
+      "p95": 8,
+      "min": 8,
+      "max": 8
+    },
+    "selected_path_counts": {
+      "non_compact": 72
+    }
+  },
+  "responses": [
+    {
+      "rid": "full-c4-code-0",
+      "category": "code",
+      "index": 0,
+      "prompt_sha256": "f4b867291f766cf546fabf5bab9c3832bb2d33330668bb61c2370498f44d122c",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.09620562195777893,
+      "ttft_ms": 126.53357535600662,
+      "e2e_ms": 2991.348810493946,
+      "tpot_ms": 22.557600276676688,
+      "meta": {
+        "id": "full-c4-code-0",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 2.98512215167284,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5477
+    },
+    {
+      "rid": "full-c4-code-1",
+      "category": "code",
+      "index": 1,
+      "prompt_sha256": "f292cfec3fda3e244fb3189c6f24746b311fc473665d03c24ba981f7bc2d2d17",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.09034667164087296,
+      "ttft_ms": 1951.595184393227,
+      "e2e_ms": 3008.2221860066056,
+      "tpot_ms": 8.319897650499044,
+      "meta": {
+        "id": "full-c4-code-1",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 3.0024140868335962,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5581
+    },
+    {
+      "rid": "full-c4-code-2",
+      "category": "code",
+      "index": 2,
+      "prompt_sha256": "eefa1537ff05deaeb39011f6c65f31f46b370bcb797b044391bb1aa3f23f5827",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.09582005441188812,
+      "ttft_ms": 1617.8027465939522,
+      "e2e_ms": 2567.0292861759663,
+      "tpot_ms": 7.474224721118222,
+      "meta": {
+        "id": "full-c4-code-2",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 2.5612314948812127,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5537
+    },
+    {
+      "rid": "full-c4-code-3",
+      "category": "code",
+      "index": 3,
+      "prompt_sha256": "2a9272bf81d697e265fa1a009a98043eb0eec25021464e3abe8311f6a52bcd61",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.1424923539161682,
+      "ttft_ms": 1117.6152722910047,
+      "e2e_ms": 2066.6873771697283,
+      "tpot_ms": 7.473008699832469,
+      "meta": {
+        "id": "full-c4-code-3",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 2.0607265178114176,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5592
+    },
+    {
+      "rid": "full-c4-math-0",
+      "category": "math",
+      "index": 0,
+      "prompt_sha256": "ccb9436819feeb8f8b1ada907b23eb96240a259ee01b0bce33bfa5b7251f7c39",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.09151455014944077,
+      "ttft_ms": 1188.1282813847065,
+      "e2e_ms": 2241.601822897792,
+      "tpot_ms": 8.295067256008545,
+      "meta": {
+        "id": "full-c4-math-0",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 2.2360610980540514,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5511
+    },
+    {
+      "rid": "full-c4-math-1",
+      "category": "math",
+      "index": 1,
+      "prompt_sha256": "a980303cba7e5dd3a332ac4950a50608b27aa317b033cba6d6cfc9e090911208",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.0966070219874382,
+      "ttft_ms": 1206.0582926496863,
+      "e2e_ms": 2237.60789912194,
+      "tpot_ms": 8.122437846238219,
+      "meta": {
+        "id": "full-c4-math-1",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 2.2320858109742403,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5442
+    },
+    {
+      "rid": "full-c4-math-2",
+      "category": "math",
+      "index": 2,
+      "prompt_sha256": "2f6ed921ba3f910ee53beac6eac56dc1ed6c7f975331eebb9d8faabdf0216bbe",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.08306466042995453,
+      "ttft_ms": 862.9921739920974,
+      "e2e_ms": 1795.1506786048412,
+      "tpot_ms": 7.339830744982235,
+      "meta": {
+        "id": "full-c4-math-2",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 1.7889195336028934,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5513
+    },
+    {
+      "rid": "full-c4-math-3",
+      "category": "math",
+      "index": 3,
+      "prompt_sha256": "e4e23797b179818105efe7c7dedfba0b1648f30fa92867623978e7397e8c4252",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.0910172238945961,
+      "ttft_ms": 362.8209996968508,
+      "e2e_ms": 1294.8203161358833,
+      "tpot_ms": 7.338577294795532,
+      "meta": {
+        "id": "full-c4-math-3",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 1.289559775032103,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5511
+    },
+    {
+      "rid": "full-c4-open_qa-0",
+      "category": "open_qa",
+      "index": 0,
+      "prompt_sha256": "408714a00bdaa2a61ec10af7050649223b4910faf87c99817ea189d108757e86",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.07171928882598877,
+      "ttft_ms": 422.1369242295623,
+      "e2e_ms": 1425.9162014350295,
+      "tpot_ms": 7.903773836263522,
+      "meta": {
+        "id": "full-c4-open_qa-0",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 1.4205310810357332,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5477
+    },
+    {
+      "rid": "full-c4-open_qa-1",
+      "category": "open_qa",
+      "index": 1,
+      "prompt_sha256": "41264be7c2069d559ced25680fe7d3475edbcddf670c66c1616a068237b33647",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.09334739297628403,
+      "ttft_ms": 434.12357848137617,
+      "e2e_ms": 1435.7020948082209,
+      "tpot_ms": 7.886445010447596,
+      "meta": {
+        "id": "full-c4-open_qa-1",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 1.4301427332684398,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5511
+    },
+    {
+      "rid": "full-c4-open_qa-2",
+      "category": "open_qa",
+      "index": 2,
+      "prompt_sha256": "94b52ee81f22e7ec57bba3c6fd36334f3d5dbe96e19940919a9f9ea8507d73dd",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.08001923561096191,
+      "ttft_ms": 160.70098243653774,
+      "e2e_ms": 1102.7480633929372,
+      "tpot_ms": 7.417693550837791,
+      "meta": {
+        "id": "full-c4-open_qa-2",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 1.0977107863873243,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5511
+    },
+    {
+      "rid": "full-c4-open_qa-3",
+      "category": "open_qa",
+      "index": 3,
+      "prompt_sha256": "ca1c4e0c8048d79e6a60184fe0f109b0f9a3242261ae7b9563459ff7faefe00c",
+      "status": "ok",
+      "error": null,
+      "scheduled_delay_ms": 0.09141769260168076,
+      "ttft_ms": 181.74719624221325,
+      "e2e_ms": 1075.8411474525928,
+      "tpot_ms": 7.040109852050233,
+      "meta": {
+        "id": "full-c4-open_qa-3",
+        "finish_reason": {
+          "type": "length",
+          "length": 128
+        },
+        "prompt_tokens": 512,
+        "weight_version": "default",
+        "num_retractions": 0,
+        "reasoning_tokens": 0,
+        "completion_tokens": 128,
+        "cached_tokens": 0,
+        "weight_versions": [
+          {
+            "version": "default",
+            "start": 0,
+            "end": 128
+          }
+        ],
+        "cached_tokens_details": null,
+        "dp_rank": null,
+        "e2e_latency": 1.0708637591451406,
+        "spec_accept_rate": 1.0,
+        "spec_accept_length": 8.0,
+        "spec_num_correct_drafts": 112,
+        "spec_num_proposed_drafts": 112,
+        "spec_verify_ct": 16,
+        "spec_accepted_drafts": 112,
+        "spec_proposed_drafts": 112,
+        "spec_correct_drafts_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ],
+        "spec_accept_histogram": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          16
+        ]
+      },
+      "text_chars": 5442
+    }
+  ],
+  "records": [
+    {
+      "forward_ct": 11,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_gpu_ms": 62.8754,
+      "draft_gpu_ms": 11.0444,
+      "target_verify_gpu_ms": 50.9071,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 12,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 49.9964,
+      "step_gpu_ms": 63.4019,
+      "draft_gpu_ms": 10.4111,
+      "target_verify_gpu_ms": 52.2404,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 13,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 51.0863,
+      "step_gpu_ms": 63.1623,
+      "draft_gpu_ms": 10.4459,
+      "target_verify_gpu_ms": 51.9854,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 14,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 63.114,
+      "step_gpu_ms": 63.0211,
+      "draft_gpu_ms": 10.3537,
+      "target_verify_gpu_ms": 51.9199,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 15,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 62.88,
+      "step_gpu_ms": 63.0068,
+      "draft_gpu_ms": 10.3373,
+      "target_verify_gpu_ms": 51.9159,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 16,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 63.17,
+      "step_gpu_ms": 63.1175,
+      "draft_gpu_ms": 10.4521,
+      "target_verify_gpu_ms": 51.9179,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 17,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 63.2818,
+      "step_gpu_ms": 63.4592,
+      "draft_gpu_ms": 10.4336,
+      "target_verify_gpu_ms": 52.2884,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 18,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 63.4226,
+      "step_gpu_ms": 63.1906,
+      "draft_gpu_ms": 10.4378,
+      "target_verify_gpu_ms": 52.0096,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-code-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 20,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "draft_gpu_ms": 10.3886,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-1"
+        }
+      ]
+    },
+    {
+      "forward_ct": 22,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_gpu_ms": 63.5526,
+      "draft_gpu_ms": 10.7212,
+      "target_verify_gpu_ms": 50.7597,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 23,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.8296,
+      "step_gpu_ms": 58.4192,
+      "draft_gpu_ms": 10.1673,
+      "target_verify_gpu_ms": 47.5432,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 24,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 50.4937,
+      "step_gpu_ms": 57.9102,
+      "draft_gpu_ms": 9.7013,
+      "target_verify_gpu_ms": 47.5054,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 25,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.4067,
+      "step_gpu_ms": 57.9958,
+      "draft_gpu_ms": 9.7188,
+      "target_verify_gpu_ms": 47.5678,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 26,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.6747,
+      "step_gpu_ms": 57.8376,
+      "draft_gpu_ms": 9.6286,
+      "target_verify_gpu_ms": 47.4849,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 27,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 57.3836,
+      "step_gpu_ms": 57.7238,
+      "draft_gpu_ms": 9.7116,
+      "target_verify_gpu_ms": 47.3098,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 28,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 57.7605,
+      "step_gpu_ms": 57.9378,
+      "draft_gpu_ms": 9.684,
+      "target_verify_gpu_ms": 47.539,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 29,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 57.965,
+      "step_gpu_ms": 57.9388,
+      "draft_gpu_ms": 9.6937,
+      "target_verify_gpu_ms": 47.5438,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-0"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 30,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 58.3593,
+      "step_gpu_ms": 59.2118,
+      "draft_gpu_ms": 9.8105,
+      "target_verify_gpu_ms": 48.6717,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 32,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_gpu_ms": 55.5424,
+      "draft_gpu_ms": 9.9922,
+      "target_verify_gpu_ms": 44.7585,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 33,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 48.8539,
+      "step_gpu_ms": 57.1878,
+      "draft_gpu_ms": 9.6553,
+      "target_verify_gpu_ms": 46.8239,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 34,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 48.7448,
+      "step_gpu_ms": 57.7199,
+      "draft_gpu_ms": 9.7198,
+      "target_verify_gpu_ms": 47.2858,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 35,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.0893,
+      "step_gpu_ms": 57.8555,
+      "draft_gpu_ms": 9.7105,
+      "target_verify_gpu_ms": 47.4358,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 36,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 56.4852,
+      "step_gpu_ms": 57.9042,
+      "draft_gpu_ms": 9.73,
+      "target_verify_gpu_ms": 47.4552,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 37,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 58.0569,
+      "step_gpu_ms": 57.8622,
+      "draft_gpu_ms": 9.748,
+      "target_verify_gpu_ms": 47.4152,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 38,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 57.6893,
+      "step_gpu_ms": 57.9696,
+      "draft_gpu_ms": 9.7341,
+      "target_verify_gpu_ms": 47.5187,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-code-1"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 39,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 58.5132,
+      "step_gpu_ms": 59.5569,
+      "draft_gpu_ms": 9.7665,
+      "target_verify_gpu_ms": 49.0675,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-code-2"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-code-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-math-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 41,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_gpu_ms": 57.6016,
+      "draft_gpu_ms": 10.2051,
+      "target_verify_gpu_ms": 46.5935,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-1"
+        }
+      ]
+    },
+    {
+      "forward_ct": 43,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_gpu_ms": 56.0578,
+      "draft_gpu_ms": 10.4723,
+      "target_verify_gpu_ms": 44.8004,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 44,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.5886,
+      "step_gpu_ms": 54.7039,
+      "draft_gpu_ms": 9.1858,
+      "target_verify_gpu_ms": 44.8414,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 45,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 48.9857,
+      "step_gpu_ms": 54.6121,
+      "draft_gpu_ms": 9.1732,
+      "target_verify_gpu_ms": 44.7678,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 46,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.0362,
+      "step_gpu_ms": 54.534,
+      "draft_gpu_ms": 9.1996,
+      "target_verify_gpu_ms": 44.6524,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 47,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.352,
+      "step_gpu_ms": 54.825,
+      "draft_gpu_ms": 9.1653,
+      "target_verify_gpu_ms": 44.9602,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 48,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 51.2599,
+      "step_gpu_ms": 57.9603,
+      "draft_gpu_ms": 9.8109,
+      "target_verify_gpu_ms": 47.4382,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 49,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 57.9196,
+      "step_gpu_ms": 57.9806,
+      "draft_gpu_ms": 9.8003,
+      "target_verify_gpu_ms": 47.4516,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 50,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 71.5142,
+      "step_gpu_ms": 58.0398,
+      "draft_gpu_ms": 9.8847,
+      "target_verify_gpu_ms": 47.4451,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-0"
+        },
+        {
+          "req_pool_index": 2,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 51,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 61.5942,
+      "step_gpu_ms": 57.538,
+      "draft_gpu_ms": 9.774,
+      "target_verify_gpu_ms": 47.0727,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 53,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_gpu_ms": 55.2207,
+      "draft_gpu_ms": 10.0382,
+      "target_verify_gpu_ms": 44.4079,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 54,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 50.6595,
+      "step_gpu_ms": 55.4434,
+      "draft_gpu_ms": 9.1505,
+      "target_verify_gpu_ms": 45.5885,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 55,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 50.1959,
+      "step_gpu_ms": 56.9906,
+      "draft_gpu_ms": 9.6848,
+      "target_verify_gpu_ms": 46.6145,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 56,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 50.8642,
+      "step_gpu_ms": 57.2425,
+      "draft_gpu_ms": 9.6788,
+      "target_verify_gpu_ms": 46.8715,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 57,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 49.5238,
+      "step_gpu_ms": 57.2431,
+      "draft_gpu_ms": 9.7378,
+      "target_verify_gpu_ms": 46.8076,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 58,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 55.5781,
+      "step_gpu_ms": 57.0624,
+      "draft_gpu_ms": 9.7145,
+      "target_verify_gpu_ms": 46.6616,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 59,
+      "bs": 4,
+      "mode": "static",
+      "num_running_reqs": 4,
+      "num_verify_tokens": 32,
+      "verify_tokens_graph_key": 32,
+      "step_cpu_ms": 57.2052,
+      "step_gpu_ms": 57.2764,
+      "draft_gpu_ms": 9.7905,
+      "target_verify_gpu_ms": 46.7926,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 32,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 2,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-math-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 60,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 57.4887,
+      "step_gpu_ms": 58.1693,
+      "draft_gpu_ms": 9.7055,
+      "target_verify_gpu_ms": 47.7455,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-math-2"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-math-3"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-0"
+        }
+      ]
+    },
+    {
+      "forward_ct": 62,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_gpu_ms": 57.7419,
+      "draft_gpu_ms": 10.2648,
+      "target_verify_gpu_ms": 46.6745,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-1"
+        }
+      ]
+    },
+    {
+      "forward_ct": 63,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 50.0125,
+      "step_gpu_ms": 56.1679,
+      "draft_gpu_ms": 9.2846,
+      "target_verify_gpu_ms": 46.189,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-1"
+        }
+      ]
+    },
+    {
+      "forward_ct": 64,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 50.7765,
+      "step_gpu_ms": 58.8713,
+      "draft_gpu_ms": 9.6841,
+      "target_verify_gpu_ms": 48.4623,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-1"
+        }
+      ]
+    },
+    {
+      "forward_ct": 66,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_gpu_ms": 57.2657,
+      "draft_gpu_ms": 10.2483,
+      "target_verify_gpu_ms": 46.2382,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 67,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 53.0449,
+      "step_gpu_ms": 56.8571,
+      "draft_gpu_ms": 9.1772,
+      "target_verify_gpu_ms": 46.9765,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 68,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 48.9457,
+      "step_gpu_ms": 58.4151,
+      "draft_gpu_ms": 9.6615,
+      "target_verify_gpu_ms": 48.0409,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 69,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 49.0173,
+      "step_gpu_ms": 58.4396,
+      "draft_gpu_ms": 9.7188,
+      "target_verify_gpu_ms": 48.0164,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 70,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 54.2841,
+      "step_gpu_ms": 58.5952,
+      "draft_gpu_ms": 9.7352,
+      "target_verify_gpu_ms": 48.1505,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 71,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 58.5002,
+      "step_gpu_ms": 58.5507,
+      "draft_gpu_ms": 9.6712,
+      "target_verify_gpu_ms": 48.1827,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-0"
+        },
+        {
+          "req_pool_index": 1,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 72,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 58.9464,
+      "step_gpu_ms": 59.3304,
+      "draft_gpu_ms": 9.9436,
+      "target_verify_gpu_ms": 48.659,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 73,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 58.9757,
+      "step_gpu_ms": 58.8099,
+      "draft_gpu_ms": 9.6968,
+      "target_verify_gpu_ms": 48.3988,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-2"
+        }
+      ]
+    },
+    {
+      "forward_ct": 75,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_gpu_ms": 57.0834,
+      "draft_gpu_ms": 10.2394,
+      "target_verify_gpu_ms": 46.064,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 512,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 76,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 49.1371,
+      "step_gpu_ms": 55.3615,
+      "draft_gpu_ms": 9.1874,
+      "target_verify_gpu_ms": 45.4866,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 520,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 77,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 49.4863,
+      "step_gpu_ms": 55.5305,
+      "draft_gpu_ms": 9.2622,
+      "target_verify_gpu_ms": 45.5726,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 528,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 78,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 49.3222,
+      "step_gpu_ms": 55.4926,
+      "draft_gpu_ms": 9.1441,
+      "target_verify_gpu_ms": 45.6724,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 536,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 79,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 49.4548,
+      "step_gpu_ms": 55.3461,
+      "draft_gpu_ms": 9.2006,
+      "target_verify_gpu_ms": 45.4646,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 2266,
+          "draft_tokens": [
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 544,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 80,
+      "bs": 3,
+      "mode": "static",
+      "num_running_reqs": 3,
+      "num_verify_tokens": 24,
+      "verify_tokens_graph_key": 24,
+      "step_cpu_ms": 55.2322,
+      "step_gpu_ms": 55.6242,
+      "draft_gpu_ms": 9.2411,
+      "target_verify_gpu_ms": 45.7052,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 24,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 1,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-1"
+        },
+        {
+          "req_pool_index": 3,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 8356,
+          "draft_tokens": [
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 552,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 81,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 55.6381,
+      "step_gpu_ms": 56.0549,
+      "draft_gpu_ms": 9.2334,
+      "target_verify_gpu_ms": 46.1126,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 315,
+          "draft_tokens": [
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 560,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 82,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 56.119,
+      "step_gpu_ms": 56.0691,
+      "draft_gpu_ms": 9.2262,
+      "target_verify_gpu_ms": 46.1434,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 374,
+          "draft_tokens": [
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 568,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 83,
+      "bs": 2,
+      "mode": "static",
+      "num_running_reqs": 2,
+      "num_verify_tokens": 16,
+      "verify_tokens_graph_key": 16,
+      "step_cpu_ms": 56.1064,
+      "step_gpu_ms": 55.9881,
+      "draft_gpu_ms": 9.2201,
+      "target_verify_gpu_ms": 46.0724,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 16,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 3,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 576,
+          "draft_tokens": [
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13
+          ],
+          "rid": "full-c4-open_qa-2"
+        },
+        {
+          "req_pool_index": 4,
+          "prefix_len": 576,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 84,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 57.3762,
+      "step_gpu_ms": 59.2681,
+      "draft_gpu_ms": 9.7967,
+      "target_verify_gpu_ms": 48.7762,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 584,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 85,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.2079,
+      "step_gpu_ms": 59.1729,
+      "draft_gpu_ms": 9.7138,
+      "target_verify_gpu_ms": 48.7424,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 592,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 86,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.2504,
+      "step_gpu_ms": 59.3797,
+      "draft_gpu_ms": 9.7352,
+      "target_verify_gpu_ms": 48.94,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 600,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 87,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.5453,
+      "step_gpu_ms": 59.5199,
+      "draft_gpu_ms": 9.8084,
+      "target_verify_gpu_ms": 49.0035,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 608,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 949,
+          "draft_tokens": [
+            8356,
+            28431,
+            2266,
+            13,
+            576,
+            1681,
+            374
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 88,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.4143,
+      "step_gpu_ms": 59.2958,
+      "draft_gpu_ms": 9.7342,
+      "target_verify_gpu_ms": 48.856,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 616,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 1681,
+          "draft_tokens": [
+            315,
+            264,
+            8356,
+            28431,
+            2266,
+            13,
+            576
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 89,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.3552,
+      "step_gpu_ms": 59.2671,
+      "draft_gpu_ms": 9.6866,
+      "target_verify_gpu_ms": 48.8774,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 624,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 13,
+          "draft_tokens": [
+            374,
+            949,
+            315,
+            264,
+            8356,
+            28431,
+            2266
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 90,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.3896,
+      "step_gpu_ms": 59.4944,
+      "draft_gpu_ms": 9.7557,
+      "target_verify_gpu_ms": 49.0256,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 632,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 28431,
+          "draft_tokens": [
+            576,
+            1681,
+            374,
+            949,
+            315,
+            264,
+            8356
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    },
+    {
+      "forward_ct": 91,
+      "bs": 1,
+      "mode": "static",
+      "num_running_reqs": 1,
+      "num_verify_tokens": 8,
+      "verify_tokens_graph_key": 8,
+      "step_cpu_ms": 59.4457,
+      "step_gpu_ms": 59.3352,
+      "draft_gpu_ms": 9.7311,
+      "target_verify_gpu_ms": 48.8985,
+      "verify_path": {
+        "global_num_reqs": null,
+        "compact_candidate_graph_tokens": null,
+        "full_logical_tokens": 8,
+        "full_width_graph_tokens": null,
+        "selected_graph_tokens": null,
+        "selected_path": "non_compact",
+        "token_savings_ratio": null,
+        "run_compact": false,
+        "can_run_cuda_graph": false,
+        "pack_invocations": 0,
+        "scatter_invocations": 0
+      },
+      "reqs": [
+        {
+          "req_pool_index": 4,
+          "prefix_len": 640,
+          "verify_len": 8,
+          "acc_len": 8,
+          "correct_drafts": 7,
+          "cap_trim": 0,
+          "bonus_token": 264,
+          "draft_tokens": [
+            2266,
+            13,
+            576,
+            1681,
+            374,
+            949,
+            315
+          ],
+          "rid": "full-c4-open_qa-3"
+        }
+      ]
+    }
+  ],
+  "server_info": {
+    "model_path": "/root/autodl-tmp/models/Qwen3-14B",
+    "speculative_algorithm": "DSPARK",
+    "max_running_requests": 4,
+    "max_total_num_tokens": 131072,
+    "dtype": "bfloat16",
+    "disable_cuda_graph": true
+  }
+}
