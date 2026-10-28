@@ -1,0 +1,35 @@
+--- a/dspark_planner.py
++++ b/dspark_planner.py
+@@ -1,6 +1,7 @@
+ from __future__ import annotations
+ 
+ import logging
++import os
+ import time
+ from typing import Optional, Union
+ 
+@@ -1352,6 +1353,9 @@
+         self._carry_generation: Optional[torch.Tensor] = None
+         self._carry_pos = 0
+         self._additive_step_time_cache: dict[int, torch.Tensor] = {}
++        self._disable_additive_step_time_cache = os.environ.get(
++            "SGLANG_DSPARK_DISABLE_PLANNER_COST_CACHE", "0"
++        ).strip().lower() in {"1", "true", "yes", "on"}
+ 
+     def compute_budget(
+         self,
+@@ -1385,8 +1389,12 @@
+             history_survival_probs=survival,
+             sps_table=self.sps_table,
+             cfg=self.cfg,
+-            cached_additive_step_time=self._cached_additive_step_time(
+-                num_requests=int(survival.shape[0])
++            cached_additive_step_time=(
++                None
++                if self._disable_additive_step_time_cache
++                else self._cached_additive_step_time(
++                    num_requests=int(survival.shape[0])
++                )
+             ),
+         )
+         self.last_decision = VerifyBudgetDecision(
