@@ -1,0 +1,25 @@
+{
+  "cache_mode": "paired",
+  "capacity": 32768,
+  "cells": [
+    "p512_c4",
+    "p512_c8",
+    "p512_c16",
+    "p1024_c4",
+    "p1024_c8",
+    "p1024_c16",
+    "p2048_c4",
+    "p2048_c8"
+  ],
+  "graphs_compact_adaptive_kv_off": true,
+  "order": [
+    "bf16_a",
+    "nvfp4_a",
+    "nvfp4_b",
+    "bf16_b"
+  ],
+  "output_tokens": 128,
+  "requests": 32,
+  "standard_cuda_graphs": false,
+  "warmup_batches": 2
+}

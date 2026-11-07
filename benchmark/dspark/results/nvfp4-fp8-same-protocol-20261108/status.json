@@ -1,0 +1,15 @@
+{
+  "comparison_count": 16,
+  "completed_arms": [
+    "bf16_a",
+    "nvfp4_a",
+    "nvfp4_b",
+    "bf16_b"
+  ],
+  "completed_at": 1794082807.1749103,
+  "passed_cells": [],
+  "passed_orders": 0,
+  "performance_claim": "descriptive high-concurrency matrix; per-cell pass requires >1% E2E mean gain in both orders and no p95 regression",
+  "started_at": 1794081364.4257567,
+  "status": "completed"
+}

@@ -119,9 +119,12 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 | FP8 设备显存 | 峰值 **36177 → 24129 MiB**，约减少 **33.3%** | 对应上一行实验；设备级采样，不是纯权重或 allocator 峰值 |
 | FP8 较高并发矩阵 | p512～p2048 的合法组合约降低 **10%～25%**；8K c4/c8 约 **31%～32%** | 分容量 suite、AB/BA；不是生产吞吐上限或真实流量回放 |
 | paired cache 直接 on/off | BF16 E2E 降低 **20.9%～24.8%**；FP8 降低 **15.0%～16.8%** | p512/c4、32 measured requests、100% 热前缀、特定预热/容量配置 |
+| FP8/NVFP4 同协议 DSpark 矩阵 | FP8 平均 E2E **+5.12%**；NVFP4 平均 E2E **−69.85%**，但 NVFP4 峰值显存约 **23.1 GiB** | 8 格、每格 32 measured requests、AB/BA、paired cache、BF16 draft；结论只适用于当前 ModelOpt NVFP4 路径与 DSpark verify 几何 |
 | 另一套复用率扫描 | 0/25/50/100% 完整前缀复用时，E2E 分别降低 **1.20% / -0.05% / 1.69% / 2.37%** | BF16 p512/c4、16 measured requests、2 warmup batches；固定顺序，不能与上一行拼接 |
 
 结果入口：[FP8 原生结果][fp8-result]、[FP8 较高并发矩阵][fp8-concurrency]、[cache/graph 结果][cache-result]、[前缀复用率扫描][cache-sweep]。
+
+新增的同协议量化对照见 [NVFP4/FP8 DSpark 矩阵][nvfp4-fp8-same-protocol]；它把同一请求轨迹下的 E2E、TTFT/TPOT p95、acceptance 和设备峰值显存放在一张表里。
 
 注意：
 
@@ -295,6 +298,7 @@ TTFT 取首个带 token 的 SSE frame；TPOT 是首末 token 到达间隔除以�
 [cache-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/b946561934fcdf9143aa6e4e814b6c35588291ba/benchmark/dspark/FP8_DSPARK_CACHE_GRAPH_RESULT_20261009.md
 [cache-sweep]: https://github.com/Nemurizz/SGLang-DSpark-/blob/b946561934fcdf9143aa6e4e814b6c35588291ba/benchmark/dspark/CACHE_HIT_RATE_SWEEP_RESULT_20261009.md
 [quality-protocol]: https://github.com/Nemurizz/SGLang-DSpark-/blob/b946561934fcdf9143aa6e4e814b6c35588291ba/benchmark/dspark/NVFP4_QUALITY_PROTOCOL.md
+[nvfp4-fp8-same-protocol]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/NVFP4_DSPARK_FP8_SAME_PROTOCOL_20261108.md
 [norm-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/e70cfd6097618929084a7260a9185d32cc07b6cf/docs/DSPARK_RESIDUAL_NORM_AB_20261008.md
 [norm-graph-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/9d90c615374cf4083de5306c76cdd4fffdbf01a2/benchmark/dspark/ORIGINAL_NORM_GRAPH.md
 
@@ -317,3 +321,4 @@ The planner cache was tested before/after in the same semantic serving protocol.
 ## 4.5 Repeated CPU planner cache A/B (2026-10-29)
 
 The planner cache A/B was repeated five times per mode and concurrency (30 shuffled server cells total), with paired bootstrap intervals and a same-process survival-tensor microbenchmark. Planner CPU reductions remain stable; the E2E paired intervals cross zero under this workload, so the result supports a CPU-path optimization rather than a fixed end-to-end speedup. See [`results/planner-cpu-repeated-ab-20261029/`](results/planner-cpu-repeated-ab-20261029/).
+
