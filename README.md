@@ -128,6 +128,8 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 
 小 M kernel/scale-layout 的候选筛选和否决记录见 [NVFP4 小 M 冒烟实验][nvfp4-smallm-experiment]。
 
+缓存正确性 gate 与 natural partial recovery 的阶段结果见 [paired cache correctness/recovery 状态][cache-correctness-recovery-20261116]。
+
 注意：
 
 - FP8 的 p2048/c1 实验中 acceptance 从 BF16 32.97% 变为 FP8 40.70%，E2E 变化包含接受行为变化，不能全部归因于 GEMM 变快。
@@ -302,6 +304,7 @@ TTFT 取首个带 token 的 SSE frame；TPOT 是首末 token 到达间隔除以�
 [quality-protocol]: https://github.com/Nemurizz/SGLang-DSpark-/blob/b946561934fcdf9143aa6e4e814b6c35588291ba/benchmark/dspark/NVFP4_QUALITY_PROTOCOL.md
 [nvfp4-fp8-same-protocol]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/NVFP4_DSPARK_FP8_SAME_PROTOCOL_20261108.md
 [nvfp4-smallm-experiment]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/NVFP4_SMALL_M_KERNEL_EXPERIMENT_20261113.md
+[cache-correctness-recovery-20261116]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_CORRECTNESS_RECOVERY_STATUS_20261116.md
 [norm-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/e70cfd6097618929084a7260a9185d32cc07b6cf/docs/DSPARK_RESIDUAL_NORM_AB_20261008.md
 [norm-graph-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/9d90c615374cf4083de5306c76cdd4fffdbf01a2/benchmark/dspark/ORIGINAL_NORM_GRAPH.md
 
@@ -324,6 +327,7 @@ The planner cache was tested before/after in the same semantic serving protocol.
 ## 4.5 Repeated CPU planner cache A/B (2026-10-29)
 
 The planner cache A/B was repeated five times per mode and concurrency (30 shuffled server cells total), with paired bootstrap intervals and a same-process survival-tensor microbenchmark. Planner CPU reductions remain stable; the E2E paired intervals cross zero under this workload, so the result supports a CPU-path optimization rather than a fixed end-to-end speedup. See [`results/planner-cpu-repeated-ab-20261029/`](results/planner-cpu-repeated-ab-20261029/).
+
 
 
 
