@@ -138,6 +138,8 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 
 第五项生产形状到达率回放见 [paired cache arrival-rate replay 实验][cache-arrival-replay-20261117]。在固定 hot/cold 请求轨迹下，1 req/s 夜间低负载时 paired 慢 28.68%，4 req/s 日间和 20 req/s 峰值分别快 5.36%/5.19%，64 请求加权后整体快 2.31%；本轮没有按阶段采集到可用的 GPU busy 时间序列，因此不把它包装成 GPU 饱和度因果结论。
 
+第六项 GPU 饱和度对齐实验见 [GPU saturation aligned replay][cache-gpu-saturation-20261117]。NVML 采样显示日间/峰值阶段 GPU busy 均值约 90%～97%，但本轮 paired 在这两个阶段仍慢 8.19%/6.42%；与第五项同轨迹复跑的收益方向不稳定，因此当前证据支持重复配对实验和外层 admission 研究，不支持固定 GPU 阈值或稳定端到端收益结论。
+
 注意：
 
 - FP8 的 p2048/c1 实验中 acceptance 从 BF16 32.97% 变为 FP8 40.70%，E2E 变化包含接受行为变化，不能全部归因于 GEMM 变快。
@@ -317,6 +319,7 @@ TTFT 取首个带 token 的 SSE frame；TPOT 是首末 token 到达间隔除以�
 [cache-hit-rate-sweep-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_HIT_RATE_MIXED_SWEEP_20261117.md
 [cache-prime-eviction-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_PRIME_EVICTION_20261117.md
 [cache-arrival-replay-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_ARRIVAL_RATE_REPLAY_20261117.md
+[cache-gpu-saturation-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_GPU_SATURATION_20261117.md
 [norm-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/e70cfd6097618929084a7260a9185d32cc07b6cf/docs/DSPARK_RESIDUAL_NORM_AB_20261008.md
 [norm-graph-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/9d90c615374cf4083de5306c76cdd4fffdbf01a2/benchmark/dspark/ORIGINAL_NORM_GRAPH.md
 
