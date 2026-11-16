@@ -1,0 +1,16 @@
+{
+  "concurrency": 4,
+  "dtype": "bfloat16",
+  "graph": "off",
+  "prompt_length": 512,
+  "requests": 8,
+  "reuse_rates": [
+    0,
+    10,
+    25,
+    50,
+    75,
+    100
+  ],
+  "warmup_batches": 2
+}
