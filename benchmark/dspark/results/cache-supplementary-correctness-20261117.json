@@ -1,0 +1,131 @@
+{
+  "results": [
+    {
+      "details": {
+        "paired_hit_len": 8,
+        "stats": {
+          "full_recovery_calls": 0,
+          "full_recovery_tokens": 0,
+          "match_calls": 1,
+          "max_tokens": 25,
+          "metadata_evictions": 0,
+          "paired_hit_tokens": 0,
+          "partial_recovery_calls": 0,
+          "partial_recovery_tokens": 0,
+          "ready_tokens": 8,
+          "target_hit_tokens": 0,
+          "tracked_tokens": 8
+        }
+      },
+      "name": "simultaneous_same_prefix_fill",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "max_hit": 5,
+        "min_hit": 5,
+        "reader_samples": 500,
+        "stats": {
+          "full_recovery_calls": 0,
+          "full_recovery_tokens": 0,
+          "match_calls": 500,
+          "max_tokens": 25,
+          "metadata_evictions": 0,
+          "paired_hit_tokens": 0,
+          "partial_recovery_calls": 0,
+          "partial_recovery_tokens": 0,
+          "ready_tokens": 10,
+          "target_hit_tokens": 0,
+          "tracked_tokens": 10
+        }
+      },
+      "name": "split_read_race",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "after_success_hit": 8,
+        "before_completion_hit": 0,
+        "stats": {
+          "full_recovery_calls": 0,
+          "full_recovery_tokens": 0,
+          "match_calls": 2,
+          "max_tokens": 25,
+          "metadata_evictions": 0,
+          "paired_hit_tokens": 0,
+          "partial_recovery_calls": 0,
+          "partial_recovery_tokens": 0,
+          "ready_tokens": 8,
+          "target_hit_tokens": 0,
+          "tracked_tokens": 8
+        }
+      },
+      "name": "cancel_does_not_retain_readiness",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "a_hit": 0,
+        "b_hit": 0,
+        "d_hit": 0,
+        "stats": {
+          "full_recovery_calls": 0,
+          "full_recovery_tokens": 0,
+          "match_calls": 4,
+          "max_tokens": 1,
+          "metadata_evictions": 3,
+          "paired_hit_tokens": 0,
+          "partial_recovery_calls": 0,
+          "partial_recovery_tokens": 0,
+          "ready_tokens": 0,
+          "target_hit_tokens": 0,
+          "tracked_tokens": 0
+        }
+      },
+      "name": "lru_eviction_during_request",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "new_fingerprint_hit": 0,
+        "old_hit": 8,
+        "stats": {
+          "full_recovery_calls": 0,
+          "full_recovery_tokens": 0,
+          "match_calls": 2,
+          "max_tokens": 25,
+          "metadata_evictions": 0,
+          "paired_hit_tokens": 0,
+          "partial_recovery_calls": 0,
+          "partial_recovery_tokens": 0,
+          "ready_tokens": 0,
+          "target_hit_tokens": 0,
+          "tracked_tokens": 0
+        }
+      },
+      "name": "fingerprint_change_invalidates",
+      "status": "PASS"
+    },
+    {
+      "details": {
+        "pending_hit": 0,
+        "ready_hit": 8,
+        "stats": {
+          "full_recovery_calls": 0,
+          "full_recovery_tokens": 0,
+          "match_calls": 2,
+          "max_tokens": 25,
+          "metadata_evictions": 0,
+          "paired_hit_tokens": 0,
+          "partial_recovery_calls": 0,
+          "partial_recovery_tokens": 0,
+          "ready_tokens": 8,
+          "target_hit_tokens": 0,
+          "tracked_tokens": 8
+        }
+      },
+      "name": "async_stream_not_ready",
+      "status": "PASS"
+    }
+  ]
+}

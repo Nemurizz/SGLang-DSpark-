@@ -136,7 +136,7 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 
 第四项 prime/eviction 完整账本见 [paired cache prime/eviction 实验][cache-prime-eviction-20261117]。本轮按要求记录了单请求 TTFT、累计 N 请求 E2E、cache CPU、metadata memory、GPU memory、eviction、recovery 和 queue wait；在 `p512/c4` 单 cell 合成轨迹上，paired 累计 E2E 比 full 低 4.70%，但该结果尚未经过多轮 ABBA。
 
-第五项应先完成 paired cache 补充正确性场景：并发同前缀填充、split 节点读取、取消与 readiness、LRU eviction、fingerprint 失效和异步 stream ready 顺序。第六项在 correctness/recovery 通过后，再独立做 paired cache 与 FP8、compact scan、adaptive draft、CUDA Graph、KV quantization、长上下文/高饱和度的 AB/BA 组合，不把到达率或 GPU 观测实验当作这两项的替代。
+第五、六项补充正确性与组合开关 AB/BA 结果见 [cache correctness and combinations][cache-correctness-combinations-20261117]：六类 sidecar 边界测试全部通过；FP8 组合 smoke 通过，compact scan 和长上下文方向不稳定，adaptive draft 与 KV quantization 暴露配置/后端错误，CUDA Graph smoke 通过但使用了独立的非 fixed-FA4 graph 配置。
 
 注意：
 
@@ -316,6 +316,7 @@ TTFT 取首个带 token 的 SSE frame；TPOT 是首末 token 到达间隔除以�
 [cache-baseline-divergence-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_BASELINE_FIRST_DIVERGENCE_20261117.md
 [cache-hit-rate-sweep-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_HIT_RATE_MIXED_SWEEP_20261117.md
 [cache-prime-eviction-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_PRIME_EVICTION_20261117.md
+[cache-correctness-combinations-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_CORRECTNESS_AND_COMBINATIONS_20261117.md
 [cache-arrival-replay-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_ARRIVAL_RATE_REPLAY_20261117.md
 [cache-gpu-saturation-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_GPU_SATURATION_20261117.md
 [norm-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/e70cfd6097618929084a7260a9185d32cc07b6cf/docs/DSPARK_RESIDUAL_NORM_AB_20261008.md

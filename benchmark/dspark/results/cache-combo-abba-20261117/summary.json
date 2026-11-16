@@ -1,0 +1,206 @@
+{
+  "adaptive_draft": {
+    "arms": [
+      [
+        0,
+        false,
+        "passed"
+      ],
+      [
+        1,
+        true,
+        "failed"
+      ],
+      [
+        2,
+        true,
+        "failed"
+      ],
+      [
+        3,
+        false,
+        "passed"
+      ]
+    ]
+  },
+  "compact_scan": {
+    "abba_gain": -0.014532977330991237,
+    "arms": [
+      [
+        0,
+        false,
+        "passed"
+      ],
+      [
+        1,
+        true,
+        "passed"
+      ],
+      [
+        2,
+        true,
+        "passed"
+      ],
+      [
+        3,
+        false,
+        "passed"
+      ]
+    ],
+    "off_cached_tokens": [
+      2044,
+      2044
+    ],
+    "off_mean_e2e_ms": 4122.4067660514265,
+    "on_cached_tokens": [
+      2044,
+      2044
+    ],
+    "on_gpu_peak_mib": [
+      38955,
+      38957
+    ],
+    "on_mean_e2e_ms": 4182.317610131577
+  },
+  "cuda_graph": {
+    "abba_gain": 0.28610607619200423,
+    "arms": [
+      [
+        0,
+        false,
+        "passed"
+      ],
+      [
+        1,
+        true,
+        "passed"
+      ],
+      [
+        2,
+        true,
+        "passed"
+      ],
+      [
+        3,
+        false,
+        "passed"
+      ]
+    ],
+    "off_cached_tokens": [
+      2044,
+      2044
+    ],
+    "off_mean_e2e_ms": 4198.002537945285,
+    "on_cached_tokens": [
+      2044,
+      2044
+    ],
+    "on_gpu_peak_mib": [
+      42257,
+      42257
+    ],
+    "on_mean_e2e_ms": 2996.9285039696842
+  },
+  "fp8": {
+    "abba_gain": 0.042137117783098366,
+    "arms": [
+      [
+        0,
+        false,
+        "passed"
+      ],
+      [
+        1,
+        true,
+        "passed"
+      ],
+      [
+        2,
+        true,
+        "passed"
+      ],
+      [
+        3,
+        false,
+        "passed"
+      ]
+    ],
+    "off_cached_tokens": [
+      2044,
+      2044
+    ],
+    "off_mean_e2e_ms": 4046.4369643013924,
+    "on_cached_tokens": [
+      2044,
+      2044
+    ],
+    "on_gpu_peak_mib": [
+      26907,
+      26907
+    ],
+    "on_mean_e2e_ms": 3875.9317733347416
+  },
+  "kv_quant": {
+    "arms": [
+      [
+        0,
+        false,
+        "passed"
+      ],
+      [
+        1,
+        true,
+        "failed"
+      ],
+      [
+        2,
+        true,
+        "failed"
+      ],
+      [
+        3,
+        false,
+        "passed"
+      ]
+    ]
+  },
+  "long_high_saturation": {
+    "abba_gain": 0.021452700153028914,
+    "arms": [
+      [
+        0,
+        false,
+        "passed"
+      ],
+      [
+        1,
+        true,
+        "passed"
+      ],
+      [
+        2,
+        true,
+        "passed"
+      ],
+      [
+        3,
+        false,
+        "passed"
+      ]
+    ],
+    "off_cached_tokens": [
+      8188,
+      8188
+    ],
+    "off_mean_e2e_ms": 4279.720453545451,
+    "on_cached_tokens": [
+      8188,
+      8188
+    ],
+    "on_gpu_peak_mib": [
+      40523,
+      40523
+    ],
+    "on_mean_e2e_ms": 4187.908893916756
+  }
+}

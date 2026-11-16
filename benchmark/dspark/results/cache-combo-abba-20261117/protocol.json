@@ -1,0 +1,32 @@
+{
+  "concurrency": 4,
+  "features": [
+    "fp8",
+    "compact_scan",
+    "adaptive_draft",
+    "kv_quant",
+    "cuda_graph",
+    "long_high_saturation"
+  ],
+  "notes": [
+    "Each feature is isolated; graph smoke deliberately removes fixed FA4 hook/deterministic mode and may fail at startup.",
+    "AB/BA here is a smoke protocol, not the 64-request production gate."
+  ],
+  "order": [
+    "off",
+    "on",
+    "on",
+    "off"
+  ],
+  "output_tokens": 128,
+  "paired_cache": true,
+  "prompt_lengths": {
+    "adaptive_draft": 512,
+    "compact_scan": 512,
+    "cuda_graph": 512,
+    "fp8": 512,
+    "kv_quant": 512,
+    "long_high_saturation": 2048
+  },
+  "smoke_requests": 4
+}
