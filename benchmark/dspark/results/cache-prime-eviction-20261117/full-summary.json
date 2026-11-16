@@ -1,0 +1,72 @@
+{
+  "cold": {
+    "acceptance": null,
+    "cache_after": {},
+    "cache_before": {},
+    "e2e_mean_ms": 8019.067008513957,
+    "e2e_p95_ms": 9704.305254667997,
+    "elapsed_s": 9.804631212726235,
+    "phase": "cold",
+    "requests": 8,
+    "tpot_mean_ms": 20.646409661413767,
+    "tpot_p95_ms": 29.217990813410182,
+    "ttft_mean_ms": 5396.85761439614,
+    "ttft_p95_ms": 7257.310014870018
+  },
+  "evict": {
+    "acceptance": null,
+    "cache_after": {},
+    "cache_before": {},
+    "e2e_mean_ms": 11438.034433638677,
+    "e2e_p95_ms": 20317.72206015885,
+    "elapsed_s": 20.35482515580952,
+    "phase": "evict",
+    "requests": 32,
+    "tpot_mean_ms": 18.454812429973664,
+    "tpot_p95_ms": 22.095699295196244,
+    "ttft_mean_ms": 9094.195733428933,
+    "ttft_p95_ms": 17948.27823927626
+  },
+  "prime": {
+    "acceptance": null,
+    "cache_after": {},
+    "cache_before": {},
+    "e2e_mean_ms": 2614.505523815751,
+    "e2e_p95_ms": 2888.285015616566,
+    "elapsed_s": 2.89789716899395,
+    "phase": "prime",
+    "requests": 4,
+    "tpot_mean_ms": 18.61636712780501,
+    "tpot_p95_ms": 20.73047566997606,
+    "ttft_mean_ms": 250.1096809282899,
+    "ttft_p95_ms": 265.5868479050696
+  },
+  "rehit": {
+    "acceptance": null,
+    "cache_after": {},
+    "cache_before": {},
+    "e2e_mean_ms": 3816.989963874221,
+    "e2e_p95_ms": 5132.522605266422,
+    "elapsed_s": 5.133974205702543,
+    "phase": "rehit",
+    "requests": 8,
+    "tpot_mean_ms": 18.227678971130434,
+    "tpot_p95_ms": 20.617039340335552,
+    "ttft_mean_ms": 1502.008780138567,
+    "ttft_p95_ms": 3062.9910190589726
+  },
+  "warm": {
+    "acceptance": null,
+    "cache_after": {},
+    "cache_before": {},
+    "e2e_mean_ms": 3989.424786064774,
+    "e2e_p95_ms": 5371.091448608786,
+    "elapsed_s": 5.372755251824856,
+    "phase": "warm",
+    "requests": 8,
+    "tpot_mean_ms": 19.10678482629124,
+    "tpot_p95_ms": 21.55574697517152,
+    "ttft_mean_ms": 1562.7850305754691,
+    "ttft_p95_ms": 3198.4832253307104
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "cache_budget_fraction": 0.25,
+  "concurrency": 4,
+  "mode_order": [
+    "full",
+    "paired"
+  ],
+  "output_tokens": 128,
+  "phase_sizes": {
+    "cold": 8,
+    "evict": 32,
+    "prime": 4,
+    "rehit": 8,
+    "warm": 8
+  },
+  "prompt_length": 512,
+  "trace": "deterministic synthetic hot/cold/eviction sequence"
+}

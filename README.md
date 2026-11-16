@@ -134,6 +134,8 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 
 第三项 mixed hit-rate sweep 结果见 [paired cache mixed hit-rate sweep][cache-hit-rate-sweep-20261117]。
 
+第四项缓存生命周期实验（预热、稳定命中、metadata 淘汰、回访与 partial recovery）见 [paired cache prime/eviction 实验][cache-prime-eviction-20261117]。该实验的五阶段请求级 E2E 加权后整体慢 1.29%，但确认了 70 次 metadata eviction 和 4 次 partial recovery（2016 token），说明缓存生命周期和命中收益必须分开观测。
+
 注意：
 
 - FP8 的 p2048/c1 实验中 acceptance 从 BF16 32.97% 变为 FP8 40.70%，E2E 变化包含接受行为变化，不能全部归因于 GEMM 变快。
@@ -311,6 +313,7 @@ TTFT 取首个带 token 的 SSE frame；TPOT 是首末 token 到达间隔除以�
 [cache-correctness-recovery-20261116]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_CORRECTNESS_RECOVERY_STATUS_20261116.md
 [cache-baseline-divergence-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_BASELINE_FIRST_DIVERGENCE_20261117.md
 [cache-hit-rate-sweep-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_HIT_RATE_MIXED_SWEEP_20261117.md
+[cache-prime-eviction-20261117]: https://github.com/Nemurizz/SGLang-DSpark-/blob/main/benchmark/dspark/CACHE_PRIME_EVICTION_20261117.md
 [norm-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/e70cfd6097618929084a7260a9185d32cc07b6cf/docs/DSPARK_RESIDUAL_NORM_AB_20261008.md
 [norm-graph-result]: https://github.com/Nemurizz/SGLang-DSpark-/blob/9d90c615374cf4083de5306c76cdd4fffdbf01a2/benchmark/dspark/ORIGINAL_NORM_GRAPH.md
 
