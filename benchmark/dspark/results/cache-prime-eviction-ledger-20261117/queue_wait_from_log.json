@@ -1,0 +1,78 @@
+{
+  "full": {
+    "cold_miss": {
+      "queue_wait_mean_ms": 0.2,
+      "queue_wait_p95_ms": 0.2,
+      "queue_wait_max_ms": 0.2,
+      "samples": 1
+    },
+    "first_prime": {
+      "queue_wait_mean_ms": 0.23,
+      "queue_wait_p95_ms": 0.26,
+      "queue_wait_max_ms": 0.3,
+      "samples": 4
+    },
+    "warm_hit": {
+      "queue_wait_mean_ms": 0.2525,
+      "queue_wait_p95_ms": 0.28,
+      "queue_wait_max_ms": 0.33,
+      "samples": 4
+    },
+    "mixed_hit_miss": {
+      "queue_wait_mean_ms": 1483.2549999999999,
+      "queue_wait_p95_ms": 3035.85,
+      "queue_wait_max_ms": 3201.29,
+      "samples": 8
+    },
+    "eviction_pressure": {
+      "queue_wait_mean_ms": 6108.819375,
+      "queue_wait_p95_ms": 8254.54,
+      "queue_wait_max_ms": 8662.42,
+      "samples": 32
+    },
+    "rehit_after_eviction": {
+      "queue_wait_mean_ms": 0.185,
+      "queue_wait_p95_ms": 0.19,
+      "queue_wait_max_ms": 0.23,
+      "samples": 4
+    }
+  },
+  "paired": {
+    "cold_miss": {
+      "queue_wait_mean_ms": 0.25,
+      "queue_wait_p95_ms": 0.25,
+      "queue_wait_max_ms": 0.25,
+      "samples": 1
+    },
+    "first_prime": {
+      "queue_wait_mean_ms": 0.6425,
+      "queue_wait_p95_ms": 0.69,
+      "queue_wait_max_ms": 0.75,
+      "samples": 4
+    },
+    "warm_hit": {
+      "queue_wait_mean_ms": 1.0725,
+      "queue_wait_p95_ms": 1.25,
+      "queue_wait_max_ms": 1.3,
+      "samples": 4
+    },
+    "mixed_hit_miss": {
+      "queue_wait_mean_ms": 1363.04,
+      "queue_wait_p95_ms": 2800.02,
+      "queue_wait_max_ms": 2919.62,
+      "samples": 8
+    },
+    "eviction_pressure": {
+      "queue_wait_mean_ms": 5743.7309374999995,
+      "queue_wait_p95_ms": 7753.12,
+      "queue_wait_max_ms": 8159.57,
+      "samples": 32
+    },
+    "rehit_after_eviction": {
+      "queue_wait_mean_ms": 0.7575000000000001,
+      "queue_wait_p95_ms": 0.83,
+      "queue_wait_max_ms": 0.88,
+      "samples": 4
+    }
+  }
+}

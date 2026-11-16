@@ -1,0 +1,30 @@
+{
+  "cell": "p512/c4",
+  "concurrency": 4,
+  "metadata_budget_fraction": 0.25,
+  "notes": [
+    "cache CPU is temporary inclusive Python-side instrumentation",
+    "metadata memory is shallow Python-object estimate",
+    "queue_wait comes from SGLang request time stats when exposed",
+    "eviction_pressure and rehit_after_eviction are reported separately under the fifth ledger item"
+  ],
+  "output_tokens": 128,
+  "phase_order": [
+    "cold_miss",
+    "first_prime",
+    "warm_hit",
+    "mixed_hit_miss",
+    "eviction_pressure",
+    "rehit_after_eviction"
+  ],
+  "phase_sizes": {
+    "cold_miss": 1,
+    "eviction_pressure": 32,
+    "first_prime": 4,
+    "mixed_hit_miss": 8,
+    "rehit_after_eviction": 4,
+    "warm_hit": 4
+  },
+  "profile": "0577109/fixed64/128",
+  "prompt_length": 512
+}

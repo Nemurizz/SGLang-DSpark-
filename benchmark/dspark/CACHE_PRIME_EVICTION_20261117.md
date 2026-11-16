@@ -1,59 +1,53 @@
-# DSpark 成对前缀缓存：预热、命中、淘汰与回访实验（2026-11-17）
+# DSpark paired cache：prime / eviction 完整账本（2026-11-17）
 
-## 这项实验要回答什么
+这次实验按同一个 `p512/c4` cell 记录完整生命周期：`cold_miss → first_prime → warm_hit → mixed_hit_miss → eviction_pressure → rehit_after_eviction`。full-prefill 和 paired cache 使用同一组 token IDs、同一输出长度 128、同一 FA4 fixed64 profile（`0577109`），独立进程运行。paired 侧临时加入了 Python-side cache instrumentation；服务结束后已恢复原始源码。
 
-前两项缓存实验分别回答了“功能能不能正确执行”和“发生 partial recovery 时 worker 是否真的执行了恢复”。第三项 mixed hit-rate sweep 只改变请求复用率，尚未覆盖缓存长期运行时更容易出问题的生命周期：缓存先被预热，随后被大量新前缀挤压，原来的热前缀再回来时还能不能继续命中，命中不足时能不能恢复 draft 状态。
+除了服务端返回的 TTFT/TPOT/E2E，本轮还保存了：请求级累计 E2E、SGLang `ReqTimeStats` 的 queue wait、sidecar cache CPU、metadata 浅层内存估算、NVML 设备显存、eviction/recovery counters 和逐请求 token/acceptance 对照。metadata memory 是 Python 对象的浅层估算，不能当成 GPU KV 显存；cache CPU 是 sidecar 方法的包含式计时，嵌套方法会被分别计入。
 
-因此本实验把一条固定请求轨迹拆成五个阶段：
+## 逐阶段结果
 
-1. `cold`：8 个从未出现过的冷前缀，观察冷启动成本；
-2. `prime`：4 个热前缀第一次进入缓存，建立 target 与 draft 的 paired metadata；
-3. `warm`：重复这 4 个热前缀两轮，观察稳定命中；
-4. `evict`：连续加入 32 个新冷前缀，制造 metadata 容量压力；
-5. `rehit`：再次访问热前缀，观察仍然命中的部分，以及触发的 partial recovery。
+| 阶段 | N | Full TTFT 均值 ms | Paired TTFT 均值 ms | Full 累计 E2E ms | Paired 累计 E2E ms | Full queue wait 均值 ms | Paired queue wait 均值 ms | Paired cache CPU ms | metadata bytes 前→后 | GPU peak MiB | eviction / recovery |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| cold_miss | 1 | 2799.39 | 2633.14 | 7150.41 | 6855.15 | 0.20 | 0.25 | 0.225 | 192→1560 | 38687 | 0 / 0 |
+| first_prime | 4 | 259.16 | 257.02 | 11108.61 | 10443.47 | 0.23 | 0.64 | 0.319 | 1560→5028 | 38973 | 0 / 0 |
+| warm_hit | 4 | 262.69 | 1888.47 | 11018.59 | 16984.79 | 0.25 | 1.07 | 0.363 | 5028→7340 | 38973 | 0 / 0 |
+| mixed_hit_miss | 8 | 1718.87 | 1558.86 | 34166.37 | 31443.30 | 1483.25 | 1363.04 | 0.672 | 7340→11654 | 38973 | 0 / 0 |
+| eviction_pressure | 32 | 9739.66 | 9153.69 | 391572.03 | 367853.63 | 6108.82 | 5743.73 | 2.941 | 11654→13488 | 38973 | 64 / 0 |
+| rehit_after_eviction | 4 | 247.45 | 253.42 | 10625.33 | 10168.43 | 0.19 | 0.76 | 0.313 | 13488→15456 | 38973 | 5 / 4 |
 
-每个阶段的请求顺序、输入构造和并发都固定。`full` 服务关闭 radix cache，作为 full-prefill 对照；`paired` 服务开启 DSpark target/draft 成对前缀缓存。两套服务独立启动，配置均为当前通过验证的 FA4 fixed64 profile（`0577109`）、Qwen3-14B、DSpark block7、BF16 target/KV、CUDA Graph/compact scan/adaptive draft 关闭，`p512/c4`，输出 128 token。每阶段分别为 8/4/8/32/8 个并发请求。实验使用合成的确定性 hot/cold 轨迹，不代表生产到达率分布。
+queue wait 来自服务端日志中的 `ReqTimeStats(queue_duration=...)`，并按阶段请求数量切分；启动阶段额外的 6-token 内部请求已剔除。混合和 eviction 阶段的 queue wait 明显上升，说明这两段的 E2E 主要已经受到请求排队影响。
 
-## 结果
+## 这组账本说明了什么
 
-`E2E change = 1 - paired/full`，正数表示 paired 更快；负数表示 paired 更慢。p95 是该阶段请求级 p95，缓存计数来自 paired 服务的阶段前后差值。
+第一，缓存生命周期事件真实发生了。`warm_hit` 阶段 paired 命中 2044 个 token；`eviction_pressure` 阶段发生 64 次 metadata eviction；`rehit_after_eviction` 仍有 2044 个 target-hit token，其中 28 个 token 直接 paired 命中，另外 4 次 partial recovery 共计划恢复 2016 个 token，并再发生 5 次 eviction。每个 paired 请求的输出 token 和五项 acceptance metadata 都通过了 full-prefill 对照。
 
-| 阶段 | 请求数 | Full E2E 均值（ms） | Paired E2E 均值（ms） | E2E 变化 | Full p95（ms） | Paired p95（ms） | Paired target 命中 token | metadata eviction | partial recovery |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| cold | 8 | 8019.07 | 8408.35 | -4.85% | 9704.31 | 10442.91 | 40 | 0 | 0 |
-| prime | 4 | 2614.51 | 2942.82 | -12.56% | 2888.29 | 3197.43 | 28 | 0 | 0 |
-| warm | 8 | 3989.42 | 5618.62 | -40.84% | 5371.09 | 6990.69 | 4088 | 0 | 0 |
-| evict | 32 | 11438.03 | 11112.47 | **+2.85%** | 20317.72 | 19766.11 | 317 | 70 | 0 |
-| rehit | 8 | 3816.99 | 3744.70 | **+1.89%** | 5132.52 | 5037.32 | 2072 | 5 | 4 次 / 2016 token |
+第二，metadata 和 GPU KV 是两个不同的容量维度。paired metadata 浅层估算从 192 bytes 增长到 15456 bytes，GPU 设备显存峰值约 38.7～39.0 GiB；eviction 发生时 GPU 仍有容量余量。因此只监控 GPU 显存不能判断 draft readiness metadata 是否已经被挤出。
 
-这组数据有两个需要分开看的结论。
+第三，cache CPU 本身很小，但不是零。各阶段 sidecar 方法包含式 CPU 时间约 0.225～2.941 ms；eviction pressure 的增量最大。这个数字是 Python-side instrumentation 的归因结果，包含 wrapper 和嵌套调用开销，适合做数量级账本，不适合当作无插桩服务延迟。
 
-第一，生命周期计数确实发生了预期事件。`warm` 阶段累计命中 4088 个 token；`evict` 阶段产生 70 次 metadata eviction；`rehit` 阶段仍然命中 2072 个 token，同时出现 4 次 partial recovery，共恢复 2016 个 token。也就是说，淘汰没有把缓存状态简单地变成“全有”或“全无”，而是留下了可复用的连续前缀，并对 draft 不完整的部分走了恢复路径。这证明本实验捕获到了成对缓存的真实生命周期，而非只统计一个静态命中率。
+第四，warm hit 没有自动转化成更低的服务 E2E：该阶段 paired 的 TTFT 均值升到 1888.47 ms，而 full 为 262.69 ms。此阶段只有 4 个并发请求、输出短，且 sidecar/readiness 与调度成本在总时间中占比很高。到了 mixed 和 eviction 阶段，paired 的累计 E2E 分别比 full 低 7.97% 和 6.05%，说明高排队压力下省下的 prefill 工作开始抵消部分 cache 管理成本。
 
-第二，单阶段 E2E 不能直接等同于缓存收益。`warm` 阶段 paired 比 full 慢 40.84%，说明在这条高并发、短请求批次的合成轨迹中，服务级调度、sidecar bookkeeping 和两套状态维护的开销超过了被省掉的 prefill 工作。`evict` 和 `rehit` 阶段 paired 分别快 2.85% 和 1.89%，但幅度很小，不能据此声称生产加速。把五个阶段按请求数加权后，full 的请求级 E2E 总和为 503078.98 ms，paired 为 509543.80 ms，paired 整体 **慢 1.29%**；按服务阶段墙钟时间相加，full 为 43.56 s，paired 为 45.61 s。
+六个阶段的请求级累计 E2E 总和为：full **465641.36 ms**，paired **443748.78 ms**，paired 在这条单次合成轨迹上整体快 **4.70%**。这是一个 cell 的描述性结果，不能外推为稳定生产收益；它也没有证明实际 worker fallback 已经等于 sidecar 的 recovery plan。当前代码仍只暴露 plan counters，因此 recovery 的“实际执行次数”应标为未独立测量。
 
-## 为什么 warm 阶段反而变慢
+## 需要特别保留的边界
 
-这个结果并不矛盾。当前实验每阶段同时发出 4 个请求，且热前缀只包含 4 个固定 prompt。`warm` 阶段虽然 target 命中 token 很多，但每个请求仍然要经过 paired metadata 查找、readiness 判断、请求生命周期更新和 DSpark verify；实验还关闭了 CUDA Graph 和 compact scan，剩余 decode/verify 时间在短输出下占比不低。full 对照则没有 sidecar 的维护路径。由此可见，“命中 token 多”是必要条件，不能单独推出 E2E 一定更快；还需要把节省的 prefill 时间与 cache lookup、调度和 recovery 成本放在同一条请求轨迹上比较。
+- `cold_miss` 的 sidecar `match_calls=2`，而请求数为 1，说明存在匹配重试；不能把该阶段的 token hit rate 当成有效请求分母。
+- 当前只有一个 `p512/c4` cell、一次 full/paired 顺序，没有 ABBA、多轮重复或置信区间；p95 只作描述。
+- metadata memory 是浅层 Python 对象估算；GPU memory 是 NVML 设备级峰值，不是 PyTorch allocator peak。
+- queue wait 已从 `ReqTimeStats` 日志提取，但没有逐请求 RID 与客户端响应行的严格配对；本报告使用阶段顺序和样本数切分，阶段级统计可用，逐请求因果归因仍需 trace ID。
+- mixed、eviction 和 rehit 的结果包含排队效应；不能把 TTFT/E2E 的变化全部归因于 cache lookup 或 prefix hit。
 
-## 对工程设计的启示
+## 下一步
 
-- 缓存容量至少应同时看 GPU KV 容量和 paired metadata 预算。本实验在 GPU 仍能运行时就产生了 metadata eviction，说明两者不是同一个瓶颈。
-- 不能只保留 `target_hit_tokens`。`target` 命中后，draft 是否连续 ready、缺口大小、是否发生 partial recovery，决定了命中是否能转化成真正的计算节省。
-- 热前缀回访可以采用分层策略：先复用连续 ready 前缀；缺失后缀进入 partial recovery；只有没有可安全复用的连续前缀时才 full-prefill。这样可以避免因少量 metadata 淘汰而把整个请求退化成冷启动。
-- 对生产调度，下一步应把请求到达时间、前缀长度、热度分布和实际 batch 混合进轨迹，并重复多轮。当前结果只有一个固定合成轨迹、每阶段 4～32 个请求，没有给出稳定的收益区间。
-
-## 结论边界
-
-这项任务验证了：在 DSpark paired cache 中，预热、稳定命中、metadata 淘汰和回访后的 partial recovery 都能在同一次服务运行中观测到；它没有证明 paired cache 在所有生产负载下更快。当前配置下，淘汰压力阶段和回访阶段只有约 2% 的均值收益，五阶段累计反而慢 1.29%。要形成可用于容量规划的结论，还需要真实业务 trace、不同 metadata budget、低/中/高到达率以及至少 5～10 个随机化重复轮次。
+按图片中的任务顺序，下一项应先做补充正确性场景：两个请求同时填充同一前缀、split 节点被另一请求读取、取消时 readiness 保留、LRU eviction 与请求并发、fingerprint 变化失效、以及 target/draft 异步 stream 尚未完成时不能提前标 ready。只有这些场景通过，才进入组合开关 AB/BA。
 
 ## 原始证据
 
-- 远端结果目录：`/root/autodl-fs/dspark-cache-prime-eviction-20261117`
-- 本地原始 JSON：[results/cache-prime-eviction-20261117/result.json](results/cache-prime-eviction-20261117/result.json)
-- 实验协议：[results/cache-prime-eviction-20261117/protocol.json](results/cache-prime-eviction-20261117/protocol.json)
-- 远端阶段摘要：[results/cache-prime-eviction-20261117/remote-report.md](results/cache-prime-eviction-20261117/remote-report.md)
+- 远端结果目录：`/root/autodl-fs/dspark-cache-prime-eviction-ledger-20261117`
+- 本地账本结果：[results/cache-prime-eviction-ledger-20261117/result.json](results/cache-prime-eviction-ledger-20261117/result.json)
+- queue wait 阶段统计：[results/cache-prime-eviction-ledger-20261117/queue_wait_from_log.json](results/cache-prime-eviction-ledger-20261117/queue_wait_from_log.json)
+- GPU 采样：[full-gpu-samples.jsonl](results/cache-prime-eviction-ledger-20261117/full-gpu-samples.jsonl)、[paired-gpu-samples.jsonl](results/cache-prime-eviction-ledger-20261117/paired-gpu-samples.jsonl)
 
 ## 任务状态
 
-第四个任务已完成。下一项任务尚未开始。
+图片中第 4 项已按要求补齐账本字段并完成一个 `p512/c4` cell。第 5 项补充正确性场景尚未开始。

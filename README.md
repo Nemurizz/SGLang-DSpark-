@@ -134,11 +134,9 @@ NVFP4 另走固定离线 W4A4 checkpoint，并尝试 CUTLASS/cuDNN 后端。boun
 
 第三项 mixed hit-rate sweep 结果见 [paired cache mixed hit-rate sweep][cache-hit-rate-sweep-20261117]。
 
-第四项缓存生命周期实验（预热、稳定命中、metadata 淘汰、回访与 partial recovery）见 [paired cache prime/eviction 实验][cache-prime-eviction-20261117]。该实验的五阶段请求级 E2E 加权后整体慢 1.29%，但确认了 70 次 metadata eviction 和 4 次 partial recovery（2016 token），说明缓存生命周期和命中收益必须分开观测。
+第四项 prime/eviction 完整账本见 [paired cache prime/eviction 实验][cache-prime-eviction-20261117]。本轮按要求记录了单请求 TTFT、累计 N 请求 E2E、cache CPU、metadata memory、GPU memory、eviction、recovery 和 queue wait；在 `p512/c4` 单 cell 合成轨迹上，paired 累计 E2E 比 full 低 4.70%，但该结果尚未经过多轮 ABBA。
 
-第五项生产形状到达率回放见 [paired cache arrival-rate replay 实验][cache-arrival-replay-20261117]。在固定 hot/cold 请求轨迹下，1 req/s 夜间低负载时 paired 慢 28.68%，4 req/s 日间和 20 req/s 峰值分别快 5.36%/5.19%，64 请求加权后整体快 2.31%；本轮没有按阶段采集到可用的 GPU busy 时间序列，因此不把它包装成 GPU 饱和度因果结论。
-
-第六项 GPU 饱和度对齐实验见 [GPU saturation aligned replay][cache-gpu-saturation-20261117]。NVML 采样显示日间/峰值阶段 GPU busy 均值约 90%～97%，但本轮 paired 在这两个阶段仍慢 8.19%/6.42%；与第五项同轨迹复跑的收益方向不稳定，因此当前证据支持重复配对实验和外层 admission 研究，不支持固定 GPU 阈值或稳定端到端收益结论。
+第五项应先完成 paired cache 补充正确性场景：并发同前缀填充、split 节点读取、取消与 readiness、LRU eviction、fingerprint 失效和异步 stream ready 顺序。第六项在 correctness/recovery 通过后，再独立做 paired cache 与 FP8、compact scan、adaptive draft、CUDA Graph、KV quantization、长上下文/高饱和度的 AB/BA 组合，不把到达率或 GPU 观测实验当作这两项的替代。
 
 注意：
 
