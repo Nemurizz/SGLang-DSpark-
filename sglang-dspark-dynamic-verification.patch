@@ -602,14 +602,18 @@ index edde1bb..264a5d4 100644
 +    ) -> Optional[torch.Tensor]:
 +        if not isinstance(self.sps_table, SpsAdditiveCostTable):
 +            return None
++        required_budgets = (
++            num_requests * self.cfg.resolved_max_verify_len() + 1
++        )
 +        cached = self._additive_step_time_cache.get(num_requests)
-+        if cached is None:
++        # Adaptive draft length can expand the candidate pool after the first
++        # planner call. The cache is keyed by request count, so grow a vector
++        # built for a shorter pool before budget selection uses it.
++        if cached is None or cached.numel() < required_budgets:
 +            cached = _additive_step_time_tensor(
 +                table=self.sps_table,
 +                num_requests=num_requests,
-+                num_budgets=(
-+                    num_requests * self.cfg.resolved_max_verify_len() + 1
-+                ),
++                num_budgets=required_budgets,
 +            )
 +            self._additive_step_time_cache[num_requests] = cached
 +        return cached
