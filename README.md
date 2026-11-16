@@ -18,9 +18,11 @@
 
 ## 执行流程
 
-![DSpark serving architecture](assets/dspark-architecture.png)
+![SGLang 推测解码执行流程](assets/dspark-execution-flow.png)
 
-`1 请求` · `2 调度` · `3 Target / Draft 与 KV` · `4 Verify / Acceptance` · `5 输出与 KV 提交`
+![推测解码推理服务架构](assets/dspark-inference-service.png)
+
+![调度、预算规划与 KV 缓存运行时架构](assets/dspark-runtime-architecture.png)
 
 ## 核心改动
 
