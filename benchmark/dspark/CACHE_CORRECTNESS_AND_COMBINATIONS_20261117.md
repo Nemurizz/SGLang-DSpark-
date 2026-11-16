@@ -25,9 +25,9 @@
 |---|---:|---:|---|---|
 | paired cache + native FP8 | +4.15% | +4.28% | PASS | 通过 smoke；ON 峰值显存 26907 MiB，BF16 paired 约 38955 MiB |
 | paired cache + compact scan | -5.46% | +2.38% | PASS | 方向不稳定；AB 的 E2E p95 ratio 1.052，不能宣称收益 |
-| paired cache + adaptive draft | 未测得 | 未测得 | ON 启动后失败 | planner 报 `cached additive step-time vector is shorter than the candidate pool: 7 < 13` |
+| paired cache + adaptive draft | 修复后完成 smoke | 修复后完成 smoke | PASS（修复前失败） | planner 缓存按当前 candidate pool 长度扩容；修复后 8 请求完成，cached tokens=3529 |
 | paired cache + CUDA Graph | +31.54% | +25.40% | PASS | graph smoke 通过；ON 峰值约 42257 MiB，但它移除了 fixed FA4 hook 和 deterministic flag，不是纯 graph-only 隔离收益 |
-| paired cache + KV quantization | 未测得 | 未测得 | ON 首个请求失败 | FA4 报 `q.dtype torch.bfloat16 != k.dtype torch.float8_e4m3fn`，当前 Q/K dtype/backend 不匹配 |
+| paired cache + KV quantization | 修复后完成 smoke | 修复后完成 smoke | PASS（源码自动路由） | FP8 KV + FA4 自动切到 FlashInfer；8 请求完成，cached tokens=3529；deterministic+FA4+FP8 改为启动期可操作报错 |
 | paired cache + long/high saturation（p2048/c4） | -1.95% | +5.92% | PASS | 同一组合方向不稳定，不能宣称长上下文稳定加速 |
 
 补充尾延迟结果：FP8 AB/BA 的 E2E p95 ratio 为 0.984/0.992；compact scan 为 1.052/0.977；CUDA Graph 为 0.696/0.761；long/high saturation 为 1.019/0.940。compact scan 的 AB 尾延迟已退化，long/high saturation 的 AB 均值和 p95 也没有通过稳定收益门槛。
@@ -38,9 +38,9 @@ FP8 是本轮最干净的成功组合：paired cache 命中保持在 2044 token�
 
 compact scan 的功能路径能跑通，但收益受 request geometry 和 launch/synchronization 成本影响，AB/BA 方向相反；这正是不能把“手写 CUDA kernel 能加载”写成“服务加速”的原因。
 
-adaptive draft 不是简单把环境变量打开就能用。当前 SPS additive cost vector 只有 7 个候选，而 adaptive candidate pool 需要 13 个，planner 选择直接抛错。正确修复方向是补齐与 candidate pool 对齐的 profile/缓存向量，并重新做 planner correctness，再测性能。
+adaptive draft 的故障来自按 request 数缓存 planner cost vector，candidate pool 在 adaptive 调整后变长。现已在每次命中缓存时检查当前所需长度并扩容；修复后服务 smoke 通过。后续再测性能时仍要做多轮 ABBA，不能把兼容性 smoke 当成收益证明。
 
-KV quantization 的失败发生在 FA4 attention 输入 dtype 校验：Q 仍是 BF16，而 KV 变成 FP8。它是 backend/attention dtype 组合不成立，不是“KV quantization 没有收益”。需要为该 KV dtype 选择匹配的 attention backend 或补齐 Q/K 转换路径，不能强行吞掉断言。
+KV quantization 的失败发生在 FA4 attention 输入 dtype 校验：Q 仍是 BF16，而 KV 变成 FP8。现已在 server_args 的兼容阶段把非 deterministic 的 FP8+FA4 组合自动路由到支持 FP8 KV dequant 的 FlashInfer，并对 deterministic+FA4+FP8 提前给出明确错误；没有吞掉 kernel assertion。
 
 CUDA Graph smoke 的 ON arm 确实成功运行，但为了绕开当前 fixed FA4 profile 对“deterministic + graph off”的强制约束，测试移除了 fixed hook 和 deterministic flag。因此它证明的是“paired cache + 标准 graph 配置可以运行并在本 smoke 中更快”，不能直接与 fixed64 graph-off 基线相加，也不能当成严格的单变量 graph gain。
 
