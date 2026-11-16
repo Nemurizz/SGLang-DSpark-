@@ -18,22 +18,9 @@
 
 ## 执行流程
 
-```mermaid
-flowchart LR
-    A[Request] --> B[Scheduler]
-    B --> C[Target RadixCache]
-    C --> D{Target + Draft prefix ready?}
-    D -->|hit| E[Draft proposal]
-    D -->|partial hit| F[Target prefill + Draft KV recovery]
-    D -->|miss| G[Full prefill]
-    F --> E
-    G --> E
-    E --> H[Budget planner]
-    H --> I[Verify layout / CUDA Graph]
-    I --> J[Target verify]
-    J --> K[Acceptance finalize]
-    K --> L[Commit KV and stream output]
-```
+![DSpark serving architecture](assets/dspark-architecture.png)
+
+`1 请求` · `2 调度` · `3 Target / Draft 与 KV` · `4 Verify / Acceptance` · `5 输出与 KV 提交`
 
 ## 核心改动
 
